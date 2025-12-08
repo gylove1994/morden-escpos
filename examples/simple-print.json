@@ -1,0 +1,13 @@
+{
+  "name": "简单打印",
+  "commands": [
+    { "type": "align", "value": "ct" },
+    { "type": "style", "value": "b" },
+    { "type": "size", "width": 2, "height": 2 },
+    { "type": "text", "content": "Hello World!" },
+    { "type": "size", "width": 1, "height": 1 },
+    { "type": "style", "value": "normal" },
+    { "type": "feed", "lines": 2 },
+    { "type": "cut" }
+  ]
+}

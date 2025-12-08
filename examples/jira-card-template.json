@@ -1,0 +1,76 @@
+{
+  "name": "JIRA卡片打印",
+  "config": {
+    "encoding": "GB18030",
+    "width": 48
+  },
+  "commands": [
+    { "type": "align", "value": "ct" },
+    { "type": "style", "value": "b" },
+    { "type": "size", "width": 2, "height": 2 },
+    { "type": "text", "content": "{{type}} {{key}}" },
+    { "type": "size", "width": 1, "height": 1 },
+    { "type": "style", "value": "normal" },
+    { "type": "newLine" },
+    { "type": "drawLine" },
+    { "type": "align", "value": "lt" },
+    { "type": "style", "value": "b" },
+    { "type": "text", "content": "标题:" },
+    { "type": "style", "value": "normal" },
+    { "type": "newLine" },
+    { "type": "text", "content": "{{title}}" },
+    { "type": "newLine" },
+    { "type": "drawLine" },
+    {
+      "type": "tableCustom",
+      "data": [
+        { "text": "状态", "align": "left", "width": 0.5 },
+        { "text": "{{status}}", "align": "right", "width": 0.5 }
+      ]
+    },
+    {
+      "type": "tableCustom",
+      "data": [
+        { "text": "优先级", "align": "left", "width": 0.5 },
+        { "text": "{{priority}}", "align": "right", "width": 0.5 }
+      ]
+    },
+    {
+      "type": "tableCustom",
+      "data": [
+        { "text": "负责人", "align": "left", "width": 0.5 },
+        { "text": "{{assignee}}", "align": "right", "width": 0.5 }
+      ]
+    },
+    {
+      "type": "tableCustom",
+      "data": [
+        { "text": "创建日期", "align": "left", "width": 0.5 },
+        { "text": "{{createdDate}}", "align": "right", "width": 0.5 }
+      ]
+    },
+    {
+      "type": "tableCustom",
+      "data": [
+        { "text": "到期日期", "align": "left", "width": 0.5 },
+        { "text": "{{dueDate}}", "align": "right", "width": 0.5 }
+      ]
+    },
+    { "type": "drawLine" },
+    { "type": "text", "content": "描述:" },
+    { "type": "newLine" },
+    { "type": "text", "content": "{{description}}" },
+    { "type": "newLine" },
+    { "type": "drawLine" },
+    { "type": "text", "content": "标签:" },
+    { "type": "newLine" },
+    { "type": "text", "content": "{{labels}}" },
+    { "type": "newLine" },
+    { "type": "drawLine" },
+    { "type": "align", "value": "ct" },
+    { "type": "qrcode", "content": "{{url}}", "version": 3, "level": "M", "size": 6 },
+    { "type": "newLine" },
+    { "type": "newLine" },
+    { "type": "cut" }
+  ]
+}

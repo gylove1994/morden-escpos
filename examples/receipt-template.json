@@ -1,0 +1,70 @@
+{
+  "name": "订单打印",
+  "config": {
+    "encoding": "GB18030",
+    "width": 48
+  },
+  "commands": [
+    { "type": "align", "value": "ct" },
+    { "type": "style", "value": "b" },
+    { "type": "size", "width": 2, "height": 2 },
+    { "type": "text", "content": "*** 购物小票 ***" },
+    { "type": "size", "width": 1, "height": 1 },
+    { "type": "style", "value": "normal" },
+    { "type": "newLine" },
+    { "type": "drawLine" },
+    { "type": "align", "value": "lt" },
+    { "type": "text", "content": "订单号: {{orderNumber}}" },
+    { "type": "text", "content": "日期: {{date}}" },
+    { "type": "text", "content": "收银员: {{cashier}}" },
+    { "type": "drawLine" },
+    {
+      "type": "tableCustom",
+      "data": [
+        { "text": "商品", "align": "left", "width": 0.4 },
+        { "text": "单价", "align": "right", "width": 0.2 },
+        { "text": "数量", "align": "right", "width": 0.15 },
+        { "text": "小计", "align": "right", "width": 0.25 }
+      ]
+    },
+    { "type": "drawLine", "character": "-" },
+    {
+      "type": "tableCustom",
+      "data": [
+        { "text": "{{items.0.name}}", "align": "left", "width": 0.4 },
+        { "text": "¥{{items.0.price}}", "align": "right", "width": 0.2 },
+        { "text": "{{items.0.quantity}}", "align": "right", "width": 0.15 },
+        { "text": "¥{{items.0.subtotal}}", "align": "right", "width": 0.25 }
+      ]
+    },
+    {
+      "type": "tableCustom",
+      "data": [
+        { "text": "{{items.1.name}}", "align": "left", "width": 0.4 },
+        { "text": "¥{{items.1.price}}", "align": "right", "width": 0.2 },
+        { "text": "{{items.1.quantity}}", "align": "right", "width": 0.15 },
+        { "text": "¥{{items.1.subtotal}}", "align": "right", "width": 0.25 }
+      ]
+    },
+    {
+      "type": "tableCustom",
+      "data": [
+        { "text": "{{items.2.name}}", "align": "left", "width": 0.4 },
+        { "text": "¥{{items.2.price}}", "align": "right", "width": 0.2 },
+        { "text": "{{items.2.quantity}}", "align": "right", "width": 0.15 },
+        { "text": "¥{{items.2.subtotal}}", "align": "right", "width": 0.25 }
+      ]
+    },
+    { "type": "drawLine" },
+    { "type": "align", "value": "rt" },
+    { "type": "size", "width": 2, "height": 2 },
+    { "type": "text", "content": "合计: ¥{{total}}" },
+    { "type": "size", "width": 1, "height": 1 },
+    { "type": "newLine" },
+    { "type": "align", "value": "ct" },
+    { "type": "text", "content": "谢谢惠顾，欢迎再次光临！" },
+    { "type": "newLine" },
+    { "type": "newLine" },
+    { "type": "cut" }
+  ]
+}

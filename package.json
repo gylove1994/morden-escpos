@@ -42,11 +42,14 @@
     "node": ">=16.0.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "rimraf dist && tsc",
     "start": "tsc && node dist/index.js",
     "prepublishOnly": "pnpm build",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@types/qr-image": "^3.2.9",
@@ -63,8 +66,11 @@
     "@types/get-pixels": "^3.3.4",
     "@types/ndarray": "^1.0.14",
     "@types/node": "^24.9.1",
+    "@vitest/ui": "^4.0.15",
     "eslint": "^9.37.0",
+    "rimraf": "^6.0.1",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
   }
 }
