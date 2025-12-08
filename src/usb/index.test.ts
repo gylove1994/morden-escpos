@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import USBAdapter from '../usb/index';
+import USBAdapter from './index';
 
 describe('uSBAdapter', () => {
   describe('findPrinter', () => {
