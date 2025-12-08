@@ -11,6 +11,7 @@
 - 💪 现代化的 API 设计
 - 🌍 多编码支持（GB18030、UTF-8 等）
 - 🔧 丰富的文本格式化选项
+- 📋 **支持JSON格式配置打印任务**
 
 ## 安装
 
@@ -75,6 +76,141 @@ adapter.open((error) => {
 });
 ```
 
+### 使用 JSON 格式（推荐）
+
+本库支持使用 JSON 格式来配置打印任务，便于序列化、存储和动态生成打印任务。
+
+#### 基础示例
+
+```typescript
+import { PrinterController } from 'morden-node-escpos';
+import type { PrintJobJSON } from 'morden-node-escpos';
+
+const controller = new PrinterController({
+  encoding: 'GBK',
+  width: 48,
+});
+
+await controller.init();
+
+// 使用 JSON 对象
+const printJob: PrintJobJSON = {
+  name: '简单打印',
+  commands: [
+    { type: 'align', value: 'ct' },
+    { type: 'text', content: 'Hello World!' },
+    { type: 'feed', lines: 2 },
+    { type: 'cut' },
+  ],
+};
+
+await controller.executeJob(printJob);
+await controller.flush();
+await controller.close();
+```
+
+#### 从 JSON 文件读取
+
+```typescript
+import { promises as fs } from 'node:fs';
+
+const jsonString = await fs.readFile('print-job.json', 'utf-8');
+await controller.executeFromJSON(jsonString);
+```
+
+#### 完整打印示例
+
+```json
+{
+  "name": "订单打印",
+  "config": {
+    "encoding": "GBK",
+    "width": 48
+  },
+  "commands": [
+    { "type": "align", "value": "ct" },
+    { "type": "style", "value": "b" },
+    { "type": "size", "width": 2, "height": 2 },
+    { "type": "text", "content": "欢迎光临" },
+    { "type": "size", "width": 1, "height": 1 },
+    { "type": "style", "value": "normal" },
+    { "type": "drawLine" },
+    { "type": "align", "value": "lt" },
+    { "type": "text", "content": "订单号: 20231025001" },
+    { "type": "tableCustom", "data": [
+      { "text": "商品", "align": "left", "width": 0.5 },
+      { "text": "数量", "align": "center", "width": 0.25 },
+      { "text": "金额", "align": "right", "width": 0.25 }
+    ]},
+    { "type": "drawLine" },
+    { "type": "qrcode", "content": "https://example.com", "version": 3, "level": "l", "size": 6 },
+    { "type": "feed", "lines": 2 },
+    { "type": "cut" }
+  ]
+}
+```
+
+#### JSON 格式的优势
+
+- ✅ **序列化**: 打印任务可以被序列化为 JSON 字符串
+- ✅ **配置化**: 打印格式可以作为配置文件管理
+- ✅ **动态生成**: 可以根据业务逻辑动态构建打印任务
+- ✅ **跨语言**: 其他语言也能生成打印任务
+- ✅ **版本控制**: 打印模板可以纳入版本控制系统
+
+#### JIRA 卡片打印模板
+
+本库提供了 JIRA 卡片打印模板，可以方便地打印任务卡片：
+
+```typescript
+import { PrinterController } from 'morden-node-escpos';
+import { createJiraCardPrintJob } from './examples/jira-card-example';
+
+const controller = new PrinterController({
+  encoding: 'GBK',
+  width: 48,
+});
+
+await controller.init();
+
+// 使用模板函数创建JIRA卡片打印任务
+const printJob = createJiraCardPrintJob({
+  type: 'BUG',
+  key: 'PROJ-123',
+  title: '修复登录页面的验证码显示问题',
+  status: '进行中',
+  priority: '高',
+  assignee: '张三',
+  createdDate: '2024-01-15',
+  dueDate: '2024-01-20',
+  description: '登录页面的验证码图片无法正常显示，用户无法完成登录流程。',
+  labels: ['bug', 'frontend', 'urgent'],
+  url: 'https://your-jira-instance.atlassian.net/browse/PROJ-123',
+});
+
+await controller.executeJob(printJob);
+await controller.flush();
+await controller.close();
+```
+
+或者直接从 JSON 文件读取模板：
+
+```typescript
+import { promises as fs } from 'node:fs';
+
+const jsonString = await fs.readFile('jira-card-template.json', 'utf-8');
+await controller.executeFromJSON(jsonString);
+```
+
+查看完整的 JSON 格式文档：[JSON_FORMAT.md](docs/JSON_FORMAT.md)
+
+示例文件：
+- [simple-print.json](examples/simple-print.json) - 简单文本打印
+- [print-job-example.json](examples/print-job-example.json) - 完整收据打印
+- [use-json-example.ts](examples/use-json-example.ts) - TypeScript 使用示例
+- [jira-card-template.json](jira-card-template.json) - JIRA卡片打印模板
+- [jira-card-example.ts](examples/jira-card-example.ts) - JIRA卡片打印示例
+
 ## API 文档
 
 ### Printer
@@ -133,7 +269,7 @@ printer.barcode(
   {
     width: 2,
     height: 50,
-    position: 'blw',  // 位置: 'off' | 'abv' | 'blw' | 'bth'
+    position: 'blw', // 位置: 'off' | 'abv' | 'blw' | 'bth'
     font: 'a'
   }
 );
@@ -145,9 +281,9 @@ printer.barcode(
 // 标准二维码
 printer.qrcode(
   'https://example.com',
-  3,      // 版本 (1-40)
-  'M',    // 纠错级别: 'L' | 'M' | 'Q' | 'H'
-  6       // 大小
+  3, // 版本 (1-40)
+  'M', // 纠错级别: 'L' | 'M' | 'Q' | 'H'
+  6 // 大小
 );
 
 // 二维码图片（更好的兼容性）
@@ -302,13 +438,13 @@ sudo udevadm trigger
 
 ### 常见问题
 
-**Q: 打印中文乱码？**  
+**Q: 打印中文乱码？**
 A: 确保使用正确的编码，如 `GB18030` 或 `GBK`
 
-**Q: 找不到打印机？**  
+**Q: 找不到打印机？**
 A: 检查 USB 连接，使用 `USBAdapter.findPrinter()` 查看可用设备
 
-**Q: 图片打印不清晰？**  
+**Q: 图片打印不清晰？**
 A: 尝试使用不同的密度参数 (`s8`, `d8`, `s24`, `d24`)
 
 ## License
@@ -323,4 +459,3 @@ MIT
 
 - [ESC/POS 命令参考](https://reference.epson-biz.com/modules/ref_escpos/index.php)
 - [Node USB 文档](https://github.com/node-usb/node-usb)
-

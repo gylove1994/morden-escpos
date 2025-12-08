@@ -1,6 +1,6 @@
 {
   "name": "morden-node-escpos",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packageManager": "pnpm@9.15.9+sha256.cf86a7ad764406395d4286a6d09d730711720acc6d93e9dce9ac7ac4dc4a28a7",
   "description": "A modern ESC/POS printer driver for Node.js with TypeScript support",
   "author": "",
@@ -64,6 +64,7 @@
     "@types/ndarray": "^1.0.14",
     "@types/node": "^24.9.1",
     "eslint": "^9.37.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }

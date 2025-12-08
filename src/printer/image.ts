@@ -60,7 +60,7 @@ export default class Image {
 
           if (ld[i] === undefined)
             ld[i] = 0;
-          
+
           l = y * density + b;
           // todo: fix this
           if (l < this.size.height!) {

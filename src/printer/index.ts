@@ -648,61 +648,48 @@ export class Printer<AdapterCloseArgs extends []> extends EventEmitter {
    * @return {[Printer]} printer  [the escpos printer instance]
    */
   qrcode(content: string, version?: number | undefined, level?: QRLevel | undefined, size?: number | undefined) {
-    if (this._model !== 'qsprinter') {
-      this.buffer.write(_.CODE2D_FORMAT.TYPE_QR);
-      this.buffer.write(_.CODE2D_FORMAT.CODE2D);
-      this.buffer.writeUInt8(version ?? 3);
-      this.buffer.write(_.CODE2D_FORMAT[
-        `QR_LEVEL_${utils.upperCase(level ?? 'L')}` as const
-      ]);
-      this.buffer.writeUInt8(size ?? 6);
-      this.buffer.writeUInt16LE(content.length);
-      this.buffer.write(content);
+    // 使用标准的 ESC/POS GS ( k 格式，大多数打印机都支持
+    const dataRaw = iconv.encode(content, 'utf8');
+    if (dataRaw.length < 1 || dataRaw.length > 2710) {
+      throw new Error('Invalid code length in byte. Must be between 1 and 2710');
     }
-    else {
-      const dataRaw = iconv.encode(content, 'utf8');
-      if (dataRaw.length < 1 && dataRaw.length > 2710) {
-        throw new Error('Invalid code length in byte. Must be between 1 and 2710');
-      }
 
-      // Set pixel size
-      if (!size || (size && typeof size !== 'number'))
-        size = _.MODEL.QSPRINTER.CODE2D_FORMAT.PIXEL_SIZE.DEFAULT;
-      else if (size && size < _.MODEL.QSPRINTER.CODE2D_FORMAT.PIXEL_SIZE.MIN)
-        size = _.MODEL.QSPRINTER.CODE2D_FORMAT.PIXEL_SIZE.MIN;
-      else if (size && size > _.MODEL.QSPRINTER.CODE2D_FORMAT.PIXEL_SIZE.MAX)
-        size = _.MODEL.QSPRINTER.CODE2D_FORMAT.PIXEL_SIZE.MAX;
-      this.buffer.write(_.MODEL.QSPRINTER.CODE2D_FORMAT.PIXEL_SIZE.CMD);
-      this.buffer.writeUInt8(size);
+    // QR Code: 选择模型 - GS ( k pL pH cn fn n (model 49 = QR)
+    // Function 165: 选择 QR code 模型
+    this.buffer.write('\x1D\x28\x6B\x04\x00\x31\x41\x32\x00'); // Model 2
 
-      // Set version
-      if (!version || (version && typeof version !== 'number'))
-        version = _.MODEL.QSPRINTER.CODE2D_FORMAT.VERSION.DEFAULT;
-      else if (version && version < _.MODEL.QSPRINTER.CODE2D_FORMAT.VERSION.MIN)
-        version = _.MODEL.QSPRINTER.CODE2D_FORMAT.VERSION.MIN;
-      else if (version && version > _.MODEL.QSPRINTER.CODE2D_FORMAT.VERSION.MAX)
-        version = _.MODEL.QSPRINTER.CODE2D_FORMAT.VERSION.MAX;
-      this.buffer.write(_.MODEL.QSPRINTER.CODE2D_FORMAT.VERSION.CMD);
-      this.buffer.writeUInt8(version);
+    // 设置模块大小 (size)
+    let qrSize = size ?? 6;
+    if (qrSize < 1)
+      qrSize = 1;
+    if (qrSize > 16)
+      qrSize = 16;
+    this.buffer.write('\x1D\x28\x6B\x03\x00\x31\x43');
+    this.buffer.writeUInt8(qrSize);
 
-      // Set level
-      this.buffer.write(_.MODEL.QSPRINTER.CODE2D_FORMAT.LEVEL.CMD);
-      // todo: maybe will need to fix this
-      this.buffer.write(String.fromCharCode(_.MODEL.QSPRINTER.CODE2D_FORMAT.LEVEL.OPTIONS[
-        utils.upperCase(level ?? 'L')
-      ]));
+    // 设置纠错等级
+    const levelMap = {
+      L: 48, // '0'
+      M: 49, // '1'
+      Q: 50, // '2'
+      H: 51, // '3'
+    };
+    const qrLevel = levelMap[utils.upperCase(level ?? 'L') as keyof typeof levelMap] ?? 48;
+    this.buffer.write('\x1D\x28\x6B\x03\x00\x31\x45');
+    this.buffer.writeUInt8(qrLevel);
 
-      // Transfer data(code) to buffer
-      this.buffer.write(_.MODEL.QSPRINTER.CODE2D_FORMAT.SAVEBUF.CMD_P1);
-      this.buffer.writeUInt16LE(dataRaw.length + _.MODEL.QSPRINTER.CODE2D_FORMAT.LEN_OFFSET);
-      this.buffer.write(_.MODEL.QSPRINTER.CODE2D_FORMAT.SAVEBUF.CMD_P2);
-      this.buffer.write(dataRaw);
+    // 存储数据到符号存储区
+    const pL = (dataRaw.length + 3) % 256;
+    const pH = Math.floor((dataRaw.length + 3) / 256);
+    this.buffer.write('\x1D\x28\x6B');
+    this.buffer.writeUInt8(pL);
+    this.buffer.writeUInt8(pH);
+    this.buffer.write('\x31\x50\x30'); // cn=49, fn=80, m=48
+    this.buffer.write(dataRaw);
 
-      // Print from buffer
-      this.buffer.write(_.MODEL.QSPRINTER.CODE2D_FORMAT.PRINTBUF.CMD_P1);
-      this.buffer.writeUInt16LE(dataRaw.length + _.MODEL.QSPRINTER.CODE2D_FORMAT.LEN_OFFSET);
-      this.buffer.write(_.MODEL.QSPRINTER.CODE2D_FORMAT.PRINTBUF.CMD_P2);
-    }
+    // 打印符号存储区的数据
+    this.buffer.write('\x1D\x28\x6B\x03\x00\x31\x51\x30'); // cn=49, fn=81, m=48
+
     return this;
   };
 

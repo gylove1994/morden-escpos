@@ -2,6 +2,12 @@ import antfu from '@antfu/eslint-config';
 
 export default antfu({
   typescript: true,
+  markdown: {
+    overrides: {
+      'ts/no-unused-expressions': 'off',
+      'no-undef': 'off',
+    },
+  },
   ignores: [
     'node_modules',
     'dist',
@@ -9,6 +15,7 @@ export default antfu({
     'coverage',
     'dist-test',
     'dist-test-coverage',
+    '**/*.md/**',
   ],
   rules: {
     'style/no-tabs': [
