@@ -7,7 +7,9 @@ coverage
 .next
 .vercel
 storybook-static
+*.tsbuildinfo
 *.log
 .env
 .env.*
 !.env.example
+apps/template-editor/scripts/repro-slate-path.mjs
