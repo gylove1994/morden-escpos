@@ -1,75 +1,27 @@
 {
-  "name": "morden-node-escpos",
-  "version": "1.0.1",
+  "name": "morden-node-escpos-monorepo",
+  "private": true,
   "packageManager": "pnpm@9.15.9+sha256.cf86a7ad764406395d4286a6d09d730711720acc6d93e9dce9ac7ac4dc4a28a7",
-  "description": "A modern ESC/POS printer driver for Node.js with TypeScript support",
-  "author": "",
-  "license": "MIT",
-  "homepage": "https://github.com/gylove1994/morden-node-escpos#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gylove1994/morden-node-escpos.git"
-  },
-  "bugs": {
-    "url": "https://github.com/gylove1994/morden-node-escpos/issues"
-  },
-  "keywords": [
-    "escpos",
-    "thermal printer",
-    "receipt printer",
-    "pos printer",
-    "usb printer",
-    "barcode",
-    "qrcode",
-    "printer"
-  ],
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.js"
-    }
-  },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "LICENSE",
-    "README.md",
-    "dist"
-  ],
-  "engines": {
-    "node": ">=16.0.0"
-  },
   "scripts": {
-    "build": "rimraf dist && tsc",
-    "start": "tsc && node dist/index.js",
-    "prepublishOnly": "pnpm build",
+    "build": "turbo build",
+    "commitlint": "commitlint",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "vitest run",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
-  },
-  "dependencies": {
-    "@types/qr-image": "^3.2.9",
-    "get-pixels": "^3.3.3",
-    "iconv-lite": "^0.7.0",
-    "mutable-buffer": "^4.0.2",
-    "ndarray": "^1.0.19",
-    "qr-image": "^3.2.0",
-    "tslib": "^2.8.1",
-    "usb": "^2.16.0"
+    "prepare": "lefthook install",
+    "test": "turbo test",
+    "typecheck": "turbo typecheck"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^6.0.0",
-    "@types/get-pixels": "^3.3.4",
-    "@types/ndarray": "^1.0.14",
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.2.0",
     "@types/node": "^24.9.1",
     "@vitest/ui": "^4.0.15",
     "eslint": "^9.37.0",
+    "lefthook": "^2.1.10",
     "rimraf": "^6.0.1",
     "tsx": "^4.21.0",
+    "turbo": "^2.5.8",
     "typescript": "^5.9.3",
     "vitest": "^4.0.15"
   }

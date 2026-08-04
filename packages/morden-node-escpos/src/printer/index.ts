@@ -1,5 +1,5 @@
 'use strict';
-import type { Adapter } from 'src/adapter';
+import type { Adapter } from '../adapter';
 import type {
   DeviceStatus,
   StatusClassConstructor,
@@ -196,7 +196,7 @@ export class Printer<AdapterCloseArgs extends []> extends EventEmitter {
    * @return {[Printer]} printer  [the escpos printer instance]
    */
   text(content: string, encoding = this.encoding) {
-    return this.print(iconv.encode(`${content}${_.EOL}`, encoding));
+    return this.print(iconv.encode(`${utils.normalizeCurrencySymbol(content, encoding)}${_.EOL}`, encoding));
   };
 
   /**
@@ -229,7 +229,7 @@ export class Printer<AdapterCloseArgs extends []> extends EventEmitter {
       const spaces = cellWidth - data[i]!.toString().length;
       for (let j = 0; j < spaces; j++) lineTxt += ' ';
     }
-    this.buffer.write(iconv.encode(lineTxt + _.EOL, encoding));
+    this.buffer.write(iconv.encode(utils.normalizeCurrencySymbol(lineTxt, encoding) + _.EOL, encoding));
     return this;
   };
 
@@ -332,8 +332,9 @@ export class Printer<AdapterCloseArgs extends []> extends EventEmitter {
     }
 
     // Write the line
+    const tableEncoding = options.encoding || this.encoding;
     this.buffer.write(
-      iconv.encode(lineStr + _.EOL, options.encoding || this.encoding),
+      iconv.encode(utils.normalizeCurrencySymbol(lineStr, tableEncoding) + _.EOL, tableEncoding),
     );
 
     if (secondLineEnabled) {
@@ -352,7 +353,7 @@ export class Printer<AdapterCloseArgs extends []> extends EventEmitter {
    * @return {[Printer]} printer  [the escpos printer instance]
    */
   pureText(content: string, encoding = this.encoding) {
-    return this.print(iconv.encode(content, encoding));
+    return this.print(iconv.encode(utils.normalizeCurrencySymbol(content, encoding), encoding));
   };
 
   /**
@@ -783,6 +784,19 @@ export class Printer<AdapterCloseArgs extends []> extends EventEmitter {
     this.buffer.write(_.BEEP);
     this.buffer.writeUInt8(n);
     this.buffer.writeUInt8(t);
+    return this;
+  };
+
+  /**
+   * Lower print speed to reduce mechanical noise.
+   * Sends both common Chinese (ESC s) and Epson-compatible (GS ( K) commands;
+   * unsupported commands are ignored by the printer.
+   * @param level 0 = fastest / loudest, 9 = slowest / quietest
+   */
+  printSpeed(level: number) {
+    const n = Math.max(0, Math.min(9, Math.floor(level)));
+    this.buffer.write(_.PRINT_SPEED.ESC_S(n));
+    this.buffer.write(_.PRINT_SPEED.GS_K(n));
     return this;
   };
 

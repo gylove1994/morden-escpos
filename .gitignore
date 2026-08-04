@@ -1,3 +1,10 @@
 node_modules
-
 dist
+build
+coverage
+.eslintcache
+.turbo
+*.log
+.env
+.env.*
+!.env.example

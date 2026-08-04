@@ -1,0 +1,9 @@
+pre-commit:
+  commands:
+    lint:
+      run: pnpm lint
+
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm exec commitlint --edit {1}

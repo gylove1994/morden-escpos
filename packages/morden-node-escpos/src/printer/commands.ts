@@ -299,6 +299,22 @@ export const GSV0_FORMAT = {
 };
 
 /**
+ * [PRINT_SPEED Print speed / quiet mode helpers]
+ * Many Chinese ESC/POS clones accept ESC s n (higher n = slower/quieter).
+ * Epson-compatible printers may also honor GS ( K fn=50.
+ */
+export const PRINT_SPEED = {
+  /** ESC s n — vendor common; n typically 0(fast) ~ 9(slow) */
+  ESC_S(n: number) {
+    return Buffer.from([0x1B, 0x73, n & 0xFF]);
+  },
+  /** GS ( K pL pH fn m — Epson print speed; fn=50 (0x32), m 0~9 */
+  GS_K(m: number) {
+    return Buffer.from([0x1D, 0x28, 0x4B, 0x02, 0x00, 0x32, m & 0xFF]);
+  },
+};
+
+/**
  * [BEEP description]
  * @type {string}
  */

@@ -9,6 +9,8 @@ export default antfu({
     },
   },
   ignores: [
+    '.agents',
+    '.turbo',
     'node_modules',
     'dist',
     'build',

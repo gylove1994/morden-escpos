@@ -38,6 +38,16 @@ export function textSubstring(str: string, start: number, end?: number) {
   }, '');
 }
 
+/**
+ * Chinese ESC/POS printers usually only have the fullwidth yuan glyph (￥ / A3A4).
+ * Halfwidth ¥ (U+00A5) becomes "?" or garbage under GBK/GB18030 font ROMs.
+ */
+export function normalizeCurrencySymbol(content: string, encoding: string) {
+  if (!/gbk|gb2312|gb18030|cp936/i.test(encoding))
+    return content;
+  return content.replaceAll('\u00A5', '\uFFE5');
+}
+
 export function upperCase<T extends string>(string: T): Uppercase<T> {
   return string.toUpperCase() as Uppercase<T>;
 }
