@@ -1,0 +1,188 @@
+import type { Translation } from '../translation-keys';
+
+export const de: Translation = {
+  collapse: 'Einklappen',
+  expand: 'Ausklappen',
+
+  fieldDescriptionPlaceholder: 'Zweck dieses Felds beschreiben',
+  fieldDelete: 'Feld löschen',
+  fieldDescription: 'Beschreibung',
+  fieldNameLabel: 'Feldname',
+  fieldNamePlaceholder: 'z.B. firstName, age, isActive',
+  fieldNameUseRegex: 'Regulären Ausdruck verwenden',
+  fieldNameUseExactName: 'Exakten Namen verwenden',
+  fieldNameRegexLabel: 'Regulärer Ausdruck für Eigenschaftsnamen',
+  fieldNameRegexPlaceholder: 'z.B. ^S_',
+  fieldNameRegexHelp:
+    'Erlaubt jede Eigenschaft, deren Name auf diesen regulären Ausdruck passt. Passende Eigenschaften müssen diesem Feldschema entsprechen. Verwenden Sie ^ und $, um den ganzen Namen abzugleichen.',
+  fieldNameRegexError: 'Geben Sie einen gültigen regulären Ausdruck ein.',
+  fieldRequiredLabel: 'Pflichtfeld',
+  fieldType: 'Feldart',
+  fieldTypeExample: 'Beispiel:',
+  fieldAddNewButton: 'Feld hinzufügen',
+  fieldAddNewBadge: 'Schema-Builder',
+  fieldAddNewCancel: 'Abbrechen',
+  fieldAddNewConfirm: 'Feld hinzufügen',
+  fieldAddNewDescription: 'Neues Feld für das JSON-Schema erstellen',
+  fieldAddNewLabel: 'Neues Feld hinzufügen',
+
+  fieldTypeTextLabel: 'Text',
+  fieldTypeTextDescription: 'Für Textwerte wie Namen, Beschreibungen usw.',
+  fieldTypeNumberLabel: 'Zahl',
+  fieldTypeNumberDescription: 'Für Dezimal- oder Ganzzahlen',
+  fieldTypeBooleanLabel: 'Ja/Nein',
+  fieldTypeBooleanDescription: 'Für Wahr/Falsch-Werte',
+  fieldTypeObjectLabel: 'Gruppe',
+  fieldTypeObjectDescription: 'Zum Gruppieren verwandter Felder',
+  fieldTypeArrayLabel: 'Liste',
+  fieldTypeArrayDescription: 'Für Sammlungen von Elementen',
+
+  propertyDescriptionPlaceholder: 'Beschreibung hinzufügen...',
+  propertyDescriptionButton: 'Beschreibung hinzufügen...',
+  propertyRequired: 'Erforderlich',
+  propertyNameRegexDescription:
+    'Erlaubt und validiert Eigenschaften, deren Name auf diesen regulären Ausdruck passt.',
+  propertyOptional: 'Optional',
+  propertyDelete: 'Feld löschen',
+
+  schemaEditorTitle: 'JSON-Schema-Editor',
+  schemaEditorToggleFullscreen: 'Vollbild umschalten',
+  schemaEditorEditModeVisual: 'Visuell',
+  schemaEditorEditModeJson: 'JSON',
+  schemaEditorLoading: 'Editor wird geladen...',
+
+  arrayNoConstraint: 'Keine Einschränkung',
+  arrayMinimumLabel: 'Mindestanzahl an Elementen',
+  arrayMinimumPlaceholder: 'Kein Minimum',
+  arrayMaximumLabel: 'Maximale Anzahl an Elementen',
+  arrayMaximumPlaceholder: 'Kein Maximum',
+  arrayForceUniqueItemsLabel: 'Nur eindeutige Elemente erlauben',
+  arrayItemTypeLabel: 'Elementtyp',
+  arrayValidationErrorMinMax:
+    '\'minItems\' darf nicht größer als \'maxItems\' sein.',
+  arrayValidationErrorContainsMinMax:
+    '\'minContains\' darf nicht größer als \'maxContains\' sein.',
+
+  booleanNoConstraint: 'Keine Einschränkung',
+  booleanAllowedValuesLabel: 'Erlaubte Werte',
+  booleanAllowFalseLabel: 'Falsch-Werte erlauben',
+  booleanAllowTrueLabel: 'Wahr-Werte erlauben',
+  booleanNeitherWarning:
+    'Achtung: Mindestens einer von beiden Werten muss erlaubt sein.',
+
+  numberNoConstraint: 'Keine Einschränkung',
+  numberMinimumLabel: 'Minimalwert',
+  numberMinimumPlaceholder: 'Kein Minimum',
+  numberMaximumLabel: 'Maximalwert',
+  numberMaximumPlaceholder: 'Kein Maximum',
+  numberExclusiveMinimumLabel: 'Exklusives Minimum',
+  numberExclusiveMinimumPlaceholder: 'Kein exklusives Minimum',
+  numberExclusiveMaximumLabel: 'Exklusives Maximum',
+  numberExclusiveMaximumPlaceholder: 'Kein exklusives Maximum',
+  numberMultipleOfLabel: 'Vielfaches von',
+  numberMultipleOfPlaceholder: 'Beliebig',
+  numberAllowedValuesEnumLabel: 'Erlaubte Werte (Enum)',
+  numberAllowedValuesEnumNone: 'Keine Einschränkung für Werte festgelegt',
+  numberAllowedValuesEnumAddLabel: 'Hinzufügen',
+  numberAllowedValuesEnumAddPlaceholder: 'Erlaubten Wert hinzufügen...',
+  numberValidationErrorMinMax: 'Minimum und Maximum müssen konsistent sein.',
+  numberValidationErrorBothExclusiveAndInclusiveMin:
+    'Sowohl \'exclusiveMinimum\' als auch \'minimum\' dürfen nicht gleichzeitig festgelegt werden.',
+  numberValidationErrorBothExclusiveAndInclusiveMax:
+    'Sowohl \'exclusiveMaximum\' als auch \'maximum\' dürfen nicht gleichzeitig festgelegt werden.',
+  numberValidationErrorEnumOutOfRange:
+    'Enum-Werte müssen innerhalb des definierten Bereichs liegen.',
+
+  objectPropertiesNone: 'Keine Eigenschaften definiert',
+  objectValidationErrorMinMax:
+    '\'minProperties\' darf nicht größer als \'maxProperties\' sein.',
+
+  additionalPropertiesAllow: 'Zusätzliche Eigenschaften erlauben',
+  additionalPropertiesForbid: 'Zusätzliche Eigenschaften verbieten',
+
+  stringNoConstraint: 'Keine Einschränkung',
+  stringMinimumLengthLabel: 'Minimale Länge',
+  stringMinimumLengthPlaceholder: 'Kein Minimum',
+  stringMaximumLengthLabel: 'Maximale Länge',
+  stringMaximumLengthPlaceholder: 'Kein Maximum',
+  stringPatternLabel: 'Muster (Regex)',
+  stringPatternPlaceholder: '^[a-zA-Z]+$',
+  stringFormatLabel: 'Format',
+  stringFormatNone: 'Keins',
+  stringFormatDateTime: 'Datum und Uhrzeit',
+  stringFormatDate: 'Datum',
+  stringFormatTime: 'Uhrzeit',
+  stringFormatEmail: 'E-Mail',
+  stringFormatUri: 'URI',
+  stringFormatUuid: 'UUID',
+  stringFormatHostname: 'Hostname',
+  stringFormatIpv4: 'IPv4-Adresse',
+  stringFormatIpv6: 'IPv6-Adresse',
+  stringAllowedValuesEnumLabel: 'Erlaubte Werte (Enum)',
+  stringAllowedValuesEnumNone: 'Keine Einschränkung für Werte festgelegt',
+  stringAllowedValuesEnumAddPlaceholder: 'Erlaubten Wert hinzufügen...',
+  stringAllowedValuesEnumAddLabel: 'Hinzufügen',
+  stringFormatSelectPlaceholder: 'Format auswählen',
+  stringValidationErrorLengthRange:
+    '\'Minimale Länge\' darf nicht größer als \'Maximale Länge\' sein.',
+
+  schemaTypeAnyOf: 'Eines von',
+  anyOfAddOption: 'Option hinzufügen',
+  anyOfRemoveOption: 'Option entfernen',
+  anyOfOptionLabel: 'Option',
+  anyOfDescription:
+    'Der Wert muss mindestens einem dieser Schemata entsprechen',
+  anyOfNoOptions: 'Keine Optionen definiert',
+
+  schemaTypeOneOf: 'Genau eines von',
+  oneOfAddOption: 'Option hinzufügen',
+  oneOfRemoveOption: 'Option entfernen',
+  oneOfOptionLabel: 'Option',
+  oneOfDescription: 'Der Wert muss genau einem dieser Schemata entsprechen',
+  oneOfNoOptions: 'Keine Optionen definiert',
+
+  schemaTypeAllOf: 'Alle von',
+  allOfAddSchema: 'Schema hinzufügen',
+  allOfRemoveSchema: 'Schema entfernen',
+  allOfSchemaLabel: 'Schema',
+  allOfDescription: 'Der Wert muss allen diesen Schemata entsprechen',
+  allOfNoSchemas: 'Keine Schemata definiert',
+
+  schemaTypeArray: 'Liste',
+  schemaTypeBoolean: 'Ja/Nein',
+  schemaTypeNumber: 'Zahl',
+  schemaTypeObject: 'Objekt',
+  schemaTypeString: 'Text',
+  schemaTypeNull: 'Leer',
+
+  inferrerTitle: 'JSON-Schema ableiten',
+  inferrerDescription:
+    'JSON-Dokument unten einfügen, um ein Schema daraus zu erstellen.',
+  inferrerCancel: 'Abbrechen',
+  inferrerGenerate: 'Schema erstellen',
+  inferrerErrorInvalidJson: 'Ungültiges JSON-Format. Bitte Eingabe prüfen.',
+
+  validatorTitle: 'JSON validieren',
+  validatorDescription:
+    'JSON-Dokument einfügen, um es gegen das aktuelle Schema zu prüfen. Die Validierung erfolgt automatisch beim Tippen.',
+  validatorCurrentSchema: 'Aktuelles Schema:',
+  validatorContent: 'Zu prüfendes JSON:',
+  validatorValid: 'JSON ist gemäß dem Schema gültig!',
+  validatorErrorInvalidSyntax: 'Ungültige JSON-Syntax',
+  validatorErrorSchemaValidation: 'Schema-Validierungsfehler',
+  validatorErrorCount: '{count} Validierungsfehler gefunden',
+  validatorErrorPathRoot: 'Wurzel',
+  validatorErrorLocationLineAndColumn: 'Zeile {line}, Spalte {column}',
+  validatorErrorLocationLineOnly: 'Zeile {line}',
+
+  visualizerDownloadTitle: 'Schema herunterladen',
+  visualizerDownloadFileName: 'schema.json',
+  visualizerSource: 'JSON-Schema-Quelle',
+
+  visualEditorNoFieldsHint1: 'Noch keine Felder definiert',
+  visualEditorNoFieldsHint2: 'Erstes Feld hinzufügen, um zu starten',
+
+  typeValidationErrorNegativeLength: 'Längenwerte dürfen nicht negativ sein.',
+  typeValidationErrorIntValue: 'Der Wert muss eine ganze Zahl sein.',
+  typeValidationErrorPositive: 'Der Wert muss positiv sein.',
+};

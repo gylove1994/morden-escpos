@@ -1,4 +1,5 @@
 import type { PrintCommandUnion, PrintJobJSON } from './json-schema';
+import { TemplateInputValidationError, validateTemplateInputs } from './template-inputs';
 
 /**
  * 模板引擎选项
@@ -32,8 +33,15 @@ export class TemplateEngine {
    * @returns 渲染后的打印任务
    */
   render(template: PrintJobJSON, data: Record<string, unknown>): PrintJobJSON {
+    if (template.inputs) {
+      const validation = validateTemplateInputs(template.inputs, data);
+      if (!validation.ok) {
+        throw new TemplateInputValidationError(validation.errors);
+      }
+    }
+
     const result: PrintJobJSON = {
-      commands: template.commands.map(command => this.renderCommand(command, data)),
+      commands: template.commands.flatMap(command => this.renderCommands(command, data)),
     };
 
     if (template.name) {
@@ -70,6 +78,31 @@ export class TemplateEngine {
   }
 
   /**
+   * 渲染一个命令，并在需要时将其展开为多个命令
+   */
+  private renderCommands(
+    command: PrintCommandUnion,
+    data: Record<string, unknown>,
+  ): PrintCommandUnion[] {
+    if (command.type !== 'tableCustom' || !command.each) {
+      return [this.renderCommand(command, data)];
+    }
+
+    const rows = this.getValue(command.each, data);
+    if (!Array.isArray(rows)) {
+      return [this.renderCommand(command, data)];
+    }
+
+    const { each: _each, ...rowTemplate } = command;
+    return rows.map((row) => {
+      const scope = typeof row === 'object' && row !== null && !Array.isArray(row)
+        ? { ...data, ...row as Record<string, unknown> }
+        : data;
+      return this.renderCommand(rowTemplate, scope);
+    });
+  }
+
+  /**
    * 渲染单个命令
    */
   private renderCommand(
@@ -101,6 +134,12 @@ export class TemplateEngine {
         return {
           ...command,
           content: this.renderString(command.content, data),
+        };
+      case 'image':
+      case 'raster':
+        return {
+          ...command,
+          path: this.renderString(command.path, data),
         };
       case 'table':
         return {

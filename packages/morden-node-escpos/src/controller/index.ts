@@ -7,6 +7,12 @@ import { TemplateEngine } from './template-engine';
 export interface PrinterControllerOptions {
   encoding: string
   width: number
+  device?: {
+    vendorId: number
+    productId: number
+    busNumber?: number
+    deviceAddress?: number
+  }
 }
 
 export class PrinterController {
@@ -20,7 +26,21 @@ export class PrinterController {
   }
 
   constructor(options: PrinterControllerOptions) {
-    this.usbAdapter = new USBAdapter();
+    const selectedDevice = options.device
+      ? USBAdapter.findPrinter().find((device) => {
+          const descriptor = device.deviceDescriptor;
+          return descriptor.idVendor === options.device?.vendorId
+            && descriptor.idProduct === options.device.productId
+            && (options.device.busNumber === undefined || device.busNumber === options.device.busNumber)
+            && (options.device.deviceAddress === undefined || device.deviceAddress === options.device.deviceAddress);
+        })
+      : undefined;
+
+    if (options.device && !selectedDevice) {
+      throw new Error('Selected printer is not available');
+    }
+
+    this.usbAdapter = selectedDevice ? new USBAdapter(selectedDevice) : new USBAdapter();
     this.printer = new Printer(this.usbAdapter, { encoding: options.encoding, width: options.width });
     this.executor = new JSONPrintExecutor(this.printer);
   }
@@ -30,6 +50,7 @@ export class PrinterController {
       this.usbAdapter.open((e) => {
         if (e) {
           reject(e);
+          return;
         }
         this._init = true;
         resolve(this);

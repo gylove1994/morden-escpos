@@ -1,0 +1,190 @@
+import type { Translation } from '../translation-keys';
+
+export const pl: Translation = {
+  collapse: 'Zwiń',
+  expand: 'Rozwiń',
+
+  fieldDescriptionPlaceholder: 'Opisz przeznaczenie tego pola',
+  fieldDelete: 'Usuń pole',
+  fieldDescription: 'Opis',
+  fieldNameLabel: 'Nazwa pola',
+  fieldNamePlaceholder: 'np. firstName, age, isActive',
+  fieldNameUseRegex: 'Użyj wyrażenia regularnego',
+  fieldNameUseExactName: 'Użyj dokładnej nazwy',
+  fieldNameRegexLabel: 'Wyrażenie regularne dla nazw właściwości',
+  fieldNameRegexPlaceholder: 'np. ^S_',
+  fieldNameRegexHelp:
+    'Dopuszcza każdą właściwość, której nazwa pasuje do tego wyrażenia regularnego. Pasujące właściwości muszą spełniać ten schemat pola. Użyj ^ i $, aby dopasować całą nazwę.',
+  fieldNameRegexError: 'Wpisz poprawne wyrażenie regularne.',
+  fieldRequiredLabel: 'Pole wymagane',
+  fieldType: 'Typ pola',
+  fieldTypeExample: 'Przykład:',
+  fieldAddNewButton: 'Dodaj pole',
+  fieldAddNewBadge: 'Kreator schematów',
+  fieldAddNewCancel: 'Anuluj',
+  fieldAddNewConfirm: 'Dodaj pole',
+  fieldAddNewDescription: 'Utwórz nowe pole dla swojego schematu JSON',
+  fieldAddNewLabel: 'Dodaj nowe pole',
+
+  fieldTypeTextLabel: 'Tekst',
+  fieldTypeTextDescription: 'Dla wartości tekstowych jak nazwy, opisy itp.',
+  fieldTypeNumberLabel: 'Liczba',
+  fieldTypeNumberDescription: 'Dla liczb dziesiętnych lub całkowitych',
+  fieldTypeBooleanLabel: 'Tak/Nie',
+  fieldTypeBooleanDescription: 'Dla wartości prawda/fałsz',
+  fieldTypeObjectLabel: 'Grupa',
+  fieldTypeObjectDescription: 'Do grupowania powiązanych pól',
+  fieldTypeArrayLabel: 'Lista',
+  fieldTypeArrayDescription: 'Dla kolekcji elementów',
+
+  propertyDescriptionPlaceholder: 'Dodaj opis...',
+  propertyDescriptionButton: 'Dodaj opis...',
+  propertyRequired: 'Wymagane',
+  propertyNameRegexDescription:
+    'Dopuszcza i waliduje właściwości, których nazwa pasuje do tego wyrażenia regularnego.',
+  propertyOptional: 'Opcjonalne',
+  propertyDelete: 'Usuń pole',
+
+  schemaEditorTitle: 'Edytor schematu JSON',
+  schemaEditorToggleFullscreen: 'Przełącz tryb pełnoekranowy',
+  schemaEditorEditModeVisual: 'Wizualny',
+  schemaEditorEditModeJson: 'JSON',
+  schemaEditorLoading: 'Ładowanie edytora...',
+
+  arrayNoConstraint: 'Bez ograniczeń',
+  arrayMinimumLabel: 'Minimalna liczba elementów',
+  arrayMinimumPlaceholder: 'Brak minimum',
+  arrayMaximumLabel: 'Maksymalna liczba elementów',
+  arrayMaximumPlaceholder: 'Brak maksimum',
+  arrayForceUniqueItemsLabel: 'Wymuś unikalne elementy',
+  arrayItemTypeLabel: 'Typ elementu',
+  arrayValidationErrorMinMax: '\'minItems\' nie może być większe niż \'maxItems\'.',
+  arrayValidationErrorContainsMinMax:
+    '\'minContains\' nie może być większe niż \'maxContains\'.',
+
+  booleanNoConstraint: 'Bez ograniczeń',
+  booleanAllowedValuesLabel: 'Dozwolone wartości',
+  booleanAllowFalseLabel: 'Zezwalaj na wartość fałsz',
+  booleanAllowTrueLabel: 'Zezwalaj na wartość prawda',
+  booleanNeitherWarning:
+    'Ostrzeżenie: Musisz zezwolić na przynajmniej jedną wartość.',
+
+  numberNoConstraint: 'Bez ograniczeń',
+  numberMinimumLabel: 'Minimalna wartość',
+  numberMinimumPlaceholder: 'Brak minimum',
+  numberMaximumLabel: 'Maksymalna wartość',
+  numberMaximumPlaceholder: 'Brak maksimum',
+  numberExclusiveMinimumLabel: 'Minimum wyłączne',
+  numberExclusiveMinimumPlaceholder: 'Brak minimum wyłącznego',
+  numberExclusiveMaximumLabel: 'Maksimum wyłączne',
+  numberExclusiveMaximumPlaceholder: 'Brak maksimum wyłącznego',
+  numberMultipleOfLabel: 'Wielokrotność',
+  numberMultipleOfPlaceholder: 'Dowolna',
+  numberAllowedValuesEnumLabel: 'Dozwolone wartości (enum)',
+  numberAllowedValuesEnumNone: 'Nie ustawiono ograniczonych wartości',
+  numberAllowedValuesEnumAddLabel: 'Dodaj',
+  numberAllowedValuesEnumAddPlaceholder: 'Dodaj dozwoloną wartość...',
+  numberValidationErrorMinMax:
+    'Wartości minimalna i maksymalna muszą być spójne.',
+  numberValidationErrorBothExclusiveAndInclusiveMin:
+    'Nie można jednocześnie ustawić \'exclusiveMinimum\' i \'minimum\'.',
+  numberValidationErrorBothExclusiveAndInclusiveMax:
+    'Nie można jednocześnie ustawić \'exclusiveMaximum\' i \'maximum\'.',
+  numberValidationErrorEnumOutOfRange:
+    'Wartości enum muszą być w zdefiniowanym zakresie.',
+
+  objectPropertiesNone: 'Nie zdefiniowano właściwości',
+  objectValidationErrorMinMax:
+    '\'minProperties\' nie może być większe niż \'maxProperties\'.',
+
+  additionalPropertiesAllow: 'Zezwalaj na dodatkowe właściwości',
+  additionalPropertiesForbid: 'Zabroń dodatkowych właściwości',
+
+  stringNoConstraint: 'Bez ograniczeń',
+  stringMinimumLengthLabel: 'Minimalna długość',
+  stringMinimumLengthPlaceholder: 'Brak minimum',
+  stringMaximumLengthLabel: 'Maksymalna długość',
+  stringMaximumLengthPlaceholder: 'Brak maksimum',
+  stringPatternLabel: 'Wzorzec (regex)',
+  stringPatternPlaceholder: '^[a-zA-Z]+$',
+  stringFormatLabel: 'Format',
+  stringFormatNone: 'Brak',
+  stringFormatDateTime: 'Data-czas',
+  stringFormatDate: 'Data',
+  stringFormatTime: 'Czas',
+  stringFormatEmail: 'Email',
+  stringFormatUri: 'URI',
+  stringFormatUuid: 'UUID',
+  stringFormatHostname: 'Nazwa hosta',
+  stringFormatIpv4: 'Adres IPv4',
+  stringFormatIpv6: 'Adres IPv6',
+  stringAllowedValuesEnumLabel: 'Dozwolone wartości (enum)',
+  stringAllowedValuesEnumNone: 'Nie ustawiono ograniczonych wartości',
+  stringAllowedValuesEnumAddPlaceholder: 'Dodaj dozwoloną wartość...',
+  stringAllowedValuesEnumAddLabel: 'Dodaj',
+  stringFormatSelectPlaceholder: 'Wybierz format',
+  stringValidationErrorLengthRange:
+    '\'Minimalna długość\' nie może być większa niż \'Maksymalna długość\'.',
+
+  schemaTypeAnyOf: 'Dowolny z',
+  anyOfAddOption: 'Dodaj opcję',
+  anyOfRemoveOption: 'Usuń opcję',
+  anyOfOptionLabel: 'Opcja',
+  anyOfDescription:
+    'Wartość musi pasować do co najmniej jednego z tych schematów',
+  anyOfNoOptions: 'Nie zdefiniowano opcji',
+
+  schemaTypeOneOf: 'Dokładnie jeden z',
+  oneOfAddOption: 'Dodaj opcję',
+  oneOfRemoveOption: 'Usuń opcję',
+  oneOfOptionLabel: 'Opcja',
+  oneOfDescription:
+    'Wartość musi pasować do dokładnie jednego z tych schematów',
+  oneOfNoOptions: 'Nie zdefiniowano opcji',
+
+  schemaTypeAllOf: 'Wszystkie',
+  allOfAddSchema: 'Dodaj schemat',
+  allOfRemoveSchema: 'Usuń schemat',
+  allOfSchemaLabel: 'Schemat',
+  allOfDescription: 'Wartość musi pasować do wszystkich tych schematów',
+  allOfNoSchemas: 'Nie zdefiniowano schematów',
+
+  schemaTypeArray: 'Lista',
+  schemaTypeBoolean: 'Tak/Nie',
+  schemaTypeNumber: 'Liczba',
+  schemaTypeObject: 'Obiekt',
+  schemaTypeString: 'Tekst',
+  schemaTypeNull: 'Pusty',
+
+  inferrerTitle: 'Wnioskuj schemat JSON',
+  inferrerDescription:
+    'Wklej swój dokument JSON poniżej, aby wygenerować z niego schemat.',
+  inferrerCancel: 'Anuluj',
+  inferrerGenerate: 'Generuj schemat',
+  inferrerErrorInvalidJson:
+    'Nieprawidłowy format JSON. Sprawdź swoje dane wejściowe.',
+
+  validatorTitle: 'Waliduj JSON',
+  validatorDescription:
+    'Wklej swój dokument JSON, aby zwalidować go względem bieżącego schematu. Walidacja następuje automatycznie podczas pisania.',
+  validatorCurrentSchema: 'Bieżący schemat:',
+  validatorContent: 'Twój JSON:',
+  validatorValid: 'JSON jest prawidłowy zgodnie ze schematem!',
+  validatorErrorInvalidSyntax: 'Nieprawidłowa składnia JSON',
+  validatorErrorSchemaValidation: 'Błąd walidacji schematu',
+  validatorErrorCount: 'Wykryto {count} błędów walidacji',
+  validatorErrorPathRoot: 'Korzeń',
+  validatorErrorLocationLineAndColumn: 'Linia {line}, Kolumna {column}',
+  validatorErrorLocationLineOnly: 'Linia {line}',
+
+  visualizerDownloadTitle: 'Pobierz schemat',
+  visualizerDownloadFileName: 'schema.json',
+  visualizerSource: 'Schemat JSON',
+
+  visualEditorNoFieldsHint1: 'Nie zdefiniowano jeszcze pól',
+  visualEditorNoFieldsHint2: 'Dodaj swoje pierwsze pole, aby rozpocząć',
+
+  typeValidationErrorNegativeLength: 'Wartości długości nie mogą być ujemne.',
+  typeValidationErrorIntValue: 'Wartość musi być liczbą całkowitą.',
+  typeValidationErrorPositive: 'Wartość musi być dodatnia.',
+};

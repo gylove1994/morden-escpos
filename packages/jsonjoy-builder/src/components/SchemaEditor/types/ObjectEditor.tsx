@@ -1,0 +1,221 @@
+import type { NewField, ObjectJsonSchema } from '../../../types/jsonSchema';
+import type { TypeEditorProps } from '../TypeEditor';
+import { useTranslation } from '../../../hooks/use-translation';
+import {
+  createFieldSchema,
+  getSchemaPatternProperties,
+  getSchemaProperties,
+  removeObjectPatternProperty,
+  removeObjectProperty,
+  renameObjectPatternProperty,
+  renameObjectProperty,
+  updateObjectPatternProperty,
+  updateObjectProperty,
+  updatePropertyRequired,
+} from '../../../lib/schemaEditor';
+import { useComponent } from '../../../registry/SchemaBuilderRegistryContext';
+import { asObjectSchema, isBooleanSchema } from '../../../types/jsonSchema';
+import AddFieldButton from '../AddFieldButton';
+import SchemaPropertyRows from '../SchemaPropertyRows';
+
+const ObjectEditor: React.FC<TypeEditorProps> = ({
+  schema,
+  validationNode,
+  onChange,
+  schemaKey,
+  onAddEnum,
+  onDeleteEnum,
+  depth = 0,
+  readOnly = false,
+}) => {
+  const t = useTranslation();
+  const ButtonToggle = useComponent('ButtonToggle');
+
+  // Get object properties
+  const properties = getSchemaProperties(schema);
+  const patternProperties = getSchemaPatternProperties(schema);
+
+  // Create a normalized schema object
+  const normalizedSchema: ObjectJsonSchema = isBooleanSchema(schema)
+    ? { type: 'object', properties: {} }
+    : { ...schema, type: 'object', properties: schema.properties || {} };
+
+  const { additionalProperties } = normalizedSchema;
+
+  // Handle adding a new property
+  const handleAddProperty = (newField: NewField) => {
+    const fieldSchema = createFieldSchema(newField);
+
+    // Add the property to the schema
+    let newSchema = updateObjectProperty(
+      normalizedSchema,
+      newField.name,
+      fieldSchema,
+    );
+
+    // Update required status if needed
+    if (newField.required) {
+      newSchema = updatePropertyRequired(newSchema, newField.name, true);
+    }
+
+    // Update the schema
+    onChange(newSchema);
+  };
+
+  const handleAddPatternProperty = (newField: NewField) => {
+    onChange(
+      updateObjectPatternProperty(
+        normalizedSchema,
+        newField.name,
+        createFieldSchema(newField),
+      ),
+    );
+  };
+
+  // Handle deleting a property
+  const handleDeleteProperty = (propertyName: string) => {
+    const newSchema = removeObjectProperty(normalizedSchema, propertyName);
+    onChange(newSchema);
+  };
+
+  const handleDeletePatternProperty = (propertyName: string) => {
+    const newSchema = removeObjectPatternProperty(
+      normalizedSchema,
+      propertyName,
+    );
+    onChange(newSchema);
+  };
+
+  // Handle property name change
+  const handlePropertyNameChange = (oldName: string, newName: string) => {
+    if (oldName === newName)
+      return;
+
+    const property = properties.find(p => p.name === oldName);
+    if (!property)
+      return;
+
+    onChange(renameObjectProperty(normalizedSchema, oldName, newName));
+  };
+
+  const handlePatternPropertyNameChange = (
+    oldName: string,
+    newName: string,
+  ) => {
+    if (oldName === newName)
+      return;
+
+    const property = patternProperties.find(p => p.name === oldName);
+    if (!property)
+      return;
+
+    onChange(renameObjectPatternProperty(normalizedSchema, oldName, newName));
+  };
+
+  // Handle property required status change
+  const handlePropertyRequiredChange = (
+    propertyName: string,
+    required: boolean,
+  ) => {
+    const newSchema = updatePropertyRequired(
+      normalizedSchema,
+      propertyName,
+      required,
+    );
+    onChange(newSchema);
+  };
+
+  const handlePropertySchemaChange = (
+    propertyName: string,
+    propertySchema: ObjectJsonSchema,
+  ) => {
+    const newSchema = updateObjectProperty(
+      normalizedSchema,
+      propertyName,
+      propertySchema,
+    );
+    onChange(newSchema);
+  };
+
+  const handlePatternPropertySchemaChange = (
+    propertyName: string,
+    propertySchema: ObjectJsonSchema,
+  ) => {
+    const newSchema = updateObjectPatternProperty(
+      normalizedSchema,
+      propertyName,
+      propertySchema,
+    );
+    onChange(newSchema);
+  };
+
+  const handleAdditionalPropertiesToggle = () => {
+    const { additionalProperties, ...restOfSchema } = normalizedSchema;
+
+    const updatedSchema = asObjectSchema(restOfSchema);
+
+    if (additionalProperties !== false) {
+      updatedSchema.additionalProperties = false;
+    }
+
+    onChange(updatedSchema);
+  };
+
+  return (
+    <div className="space-y-4">
+      {properties.length > 0 || patternProperties.length > 0
+        ? (
+            <div className="space-y-2">
+              <SchemaPropertyRows
+                properties={properties}
+                patternProperties={patternProperties}
+                validationChildren={validationNode?.children}
+                onAddEnum={onAddEnum}
+                onDeleteEnum={onDeleteEnum}
+                onDelete={handleDeleteProperty}
+                onDeletePattern={handleDeletePatternProperty}
+                onNameChange={handlePropertyNameChange}
+                onPatternNameChange={handlePatternPropertyNameChange}
+                onRequiredChange={handlePropertyRequiredChange}
+                onSchemaChange={handlePropertySchemaChange}
+                onPatternSchemaChange={handlePatternPropertySchemaChange}
+                schemaKeyPrefix={schemaKey}
+                readOnly={readOnly}
+                depth={depth}
+              />
+            </div>
+          )
+        : (
+            <div className="text-sm text-muted-foreground italic p-2 text-center border rounded-md">
+              {t.objectPropertiesNone}
+            </div>
+          )}
+
+      {!readOnly && (
+        <div className="mt-4 flex flex-row gap-x-4">
+          <AddFieldButton
+            onAddField={handleAddProperty}
+            onAddPatternField={handleAddPatternProperty}
+            variant="secondary"
+          />
+          {/* Additional properties */}
+          <ButtonToggle
+            onClick={handleAdditionalPropertiesToggle}
+            aria-pressed={additionalProperties === false}
+            className={
+              additionalProperties === false
+                ? 'bg-amber-50 text-amber-600'
+                : 'bg-lime-50 text-lime-600'
+            }
+          >
+            {additionalProperties === false
+              ? t.additionalPropertiesForbid
+              : t.additionalPropertiesAllow}
+          </ButtonToggle>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ObjectEditor;

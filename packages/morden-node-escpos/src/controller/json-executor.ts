@@ -254,37 +254,33 @@ export class JSONPrintExecutor {
     });
   }
 
-  private async executeImageCommand(command: ImageCommand): Promise<void> {
-    const imageBuffer = await fs.readFile(command.path);
+  private async loadImage(path: string): Promise<Image> {
+    if (/^https?:\/\//i.test(path)) {
+      return Image.load(path);
+    }
+
+    const imageBuffer = await fs.readFile(path);
     const pixels = await new Promise<NdArray<Uint8Array>>((resolve, reject) => {
-      getPixels(imageBuffer, command.path, (err, pixels) => {
+      getPixels(imageBuffer, path, (err, loadedPixels) => {
         if (err) {
           reject(err);
         }
         else {
-          resolve(pixels as NdArray<Uint8Array>);
+          resolve(loadedPixels as NdArray<Uint8Array>);
         }
       });
     });
 
-    const image = new Image(pixels);
+    return new Image(pixels);
+  }
+
+  private async executeImageCommand(command: ImageCommand): Promise<void> {
+    const image = await this.loadImage(command.path);
     await this.printer.image(image, command.density);
   }
 
   private async executeRasterCommand(command: RasterCommand): Promise<void> {
-    const imageBuffer = await fs.readFile(command.path);
-    const pixels = await new Promise<NdArray<Uint8Array>>((resolve, reject) => {
-      getPixels(imageBuffer, command.path, (err, pixels) => {
-        if (err) {
-          reject(err);
-        }
-        else {
-          resolve(pixels as NdArray<Uint8Array>);
-        }
-      });
-    });
-
-    const image = new Image(pixels);
+    const image = await this.loadImage(command.path);
     this.printer.raster(image, command.mode);
   }
 

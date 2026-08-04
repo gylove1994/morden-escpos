@@ -1,0 +1,39 @@
+@source "./**/*.{ts,tsx}";
+
+.jsonjoy {
+  color: var(--foreground);
+}
+
+.jsonjoy .monaco-editor-container,
+.jsonjoy .monaco-editor-container > div,
+.jsonjoy .monaco-editor {
+  width: 100%;
+  height: 100%;
+}
+
+.jsonjoy .json-field-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+}
+
+.jsonjoy .json-field-row:hover {
+  background: color-mix(in oklab, var(--secondary) 50%, transparent);
+}
+
+.jsonjoy .json-field-label {
+  color: color-mix(in oklab, var(--foreground) 80%, transparent);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.jsonjoy .hover-action {
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.jsonjoy .group:hover .hover-action {
+  opacity: 1;
+}

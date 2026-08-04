@@ -27,6 +27,19 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/controller/json-schema.d.ts"
+    },
+    "./template": {
+      "types": "./dist/controller/template-engine.d.ts",
+      "import": "./dist/controller/template-engine.js",
+      "require": "./dist/controller/template-engine.js"
+    },
+    "./template-inputs": {
+      "types": "./dist/controller/template-inputs.d.ts",
+      "import": "./dist/controller/template-inputs.js",
+      "require": "./dist/controller/template-inputs.js"
     }
   },
   "main": "./dist/index.js",

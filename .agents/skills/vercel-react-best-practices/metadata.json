@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0-tellus",
+  "organization": "Vercel Engineering (adapted for Tellus)",
+  "date": "July 2026",
+  "abstract": "React performance optimization guide adapted for client-side React applications (Vite/SPA). Server-side, RSC, and Next.js-specific rules have been removed. Contains 50+ rules across 7 categories, prioritized by impact from critical (eliminating waterfalls, reducing bundle size) to incremental (advanced patterns).",
+  "references": [
+    "https://react.dev",
+    "https://swr.vercel.app",
+    "https://github.com/shuding/better-all",
+    "https://vite.dev",
+    "https://vercel.com/blog/how-we-made-the-vercel-dashboard-twice-as-fast"
+  ]
+}

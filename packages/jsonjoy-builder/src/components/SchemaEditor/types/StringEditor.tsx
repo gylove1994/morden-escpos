@@ -1,0 +1,343 @@
+import type { ObjectJsonSchema } from '../../../types/jsonSchema';
+import type { TypeEditorProps } from '../TypeEditor';
+import { X } from 'lucide-react';
+import { useId, useMemo, useState } from 'react';
+import { useTranslation } from '../../../hooks/use-translation';
+import { cn } from '../../../lib/utils';
+import { useComponent } from '../../../registry/SchemaBuilderRegistryContext';
+import {
+  isBooleanSchema,
+  withObjectSchema,
+} from '../../../types/jsonSchema';
+
+type Property = 'enum' | 'minLength' | 'maxLength' | 'pattern' | 'format';
+
+const StringEditor: React.FC<TypeEditorProps> = ({
+  schema,
+  validationNode,
+  onChange,
+  schemaKey,
+  onAddEnum,
+  onDeleteEnum,
+  readOnly = false,
+}) => {
+  const t = useTranslation();
+  const Input = useComponent('Input');
+  const Label = useComponent('Label');
+  const [enumValue, setEnumValue] = useState('');
+
+  const minLengthId = useId();
+  const maxLengthId = useId();
+  const patternId = useId();
+  const formatId = useId();
+
+  // Extract string-specific validations
+  const minLength = withObjectSchema(schema, s => s.minLength, undefined);
+  const maxLength = withObjectSchema(schema, s => s.maxLength, undefined);
+  const pattern = withObjectSchema(schema, s => s.pattern, undefined);
+  const format = withObjectSchema(schema, s => s.format, undefined);
+  const enumValues = withObjectSchema(
+    schema,
+    s => (s.enum as string[]) || [],
+    [],
+  );
+
+  // Handle validation change
+  const handleValidationChange = (property: Property, value: unknown) => {
+    // Create a safe base schema
+    const baseSchema = isBooleanSchema(schema)
+      ? { type: 'string' as const }
+      : { ...schema };
+
+    // Get all validation props except type and description
+    const { type: _, description: __, ...validationProps } = baseSchema;
+
+    // Create the updated validation schema
+    const updatedValidation: ObjectJsonSchema = {
+      ...validationProps,
+      type: 'string',
+      [property]: value,
+    };
+
+    // Call onChange with the updated schema (even if there are validation errors)
+    onChange(updatedValidation);
+  };
+
+  const applyEnumValues = (values: string[]) => {
+    if (values.length > 0) {
+      const updatedSchema: ObjectJsonSchema = {
+        ...(isBooleanSchema(schema)
+          ? { type: 'string' as const }
+          : { ...schema }),
+        type: 'string',
+        enum: values,
+      };
+      onChange(updatedSchema);
+      return;
+    }
+
+    const baseSchema = isBooleanSchema(schema)
+      ? { type: 'string' as const }
+      : { ...schema };
+
+    if (!isBooleanSchema(baseSchema) && 'enum' in baseSchema) {
+      const { enum: _, ...rest } = baseSchema;
+      onChange(rest as ObjectJsonSchema);
+      return;
+    }
+
+    onChange(baseSchema as ObjectJsonSchema);
+  };
+
+  // Handle adding enum value
+  const handleAddEnumValue = () => {
+    const trimmedValue = enumValue.trim();
+    if (!trimmedValue)
+      return;
+
+    if (!enumValues.includes(trimmedValue)) {
+      const addedIndex = enumValues.length;
+      applyEnumValues([...enumValues, trimmedValue]);
+      onAddEnum?.({ value: trimmedValue, index: addedIndex, schemaKey });
+    }
+
+    setEnumValue('');
+  };
+
+  // Handle removing enum value
+  const handleRemoveEnumValue = (index: number) => {
+    const removedValue = enumValues[index];
+    if (removedValue === undefined)
+      return;
+
+    const newEnumValues = [...enumValues];
+    newEnumValues.splice(index, 1);
+    applyEnumValues(newEnumValues);
+    onDeleteEnum?.({ value: removedValue, index, schemaKey });
+  };
+
+  const minMaxError = useMemo(
+    () =>
+      validationNode?.validation.errors?.find(err => err.path[0] === 'length')
+        ?.message,
+    [validationNode],
+  );
+
+  const minLengthError = useMemo(
+    () =>
+      validationNode?.validation.errors?.find(
+        err => err.path[0] === 'minLength',
+      )?.message,
+    [validationNode],
+  );
+
+  const maxLengthError = useMemo(
+    () =>
+      validationNode?.validation.errors?.find(
+        err => err.path[0] === 'maxLength',
+      )?.message,
+    [validationNode],
+  );
+
+  const patternError = useMemo(
+    () =>
+      validationNode?.validation.errors?.find(
+        err => err.path[0] === 'pattern',
+      )?.message,
+    [validationNode],
+  );
+
+  const formatError = useMemo(
+    () =>
+      validationNode?.validation.errors?.find(err => err.path[0] === 'format')
+        ?.message,
+    [validationNode],
+  );
+
+  const minLengthValue = minLength ?? '';
+  const maxLengthValue = maxLength ?? '';
+  const patternValue = pattern ?? '';
+  const formatValue = format || 'none';
+  const needsDetail
+    = !readOnly
+      || minLengthValue !== ''
+      || maxLengthValue !== ''
+      || patternValue !== ''
+      || formatValue !== 'none'
+      || enumValues.length > 0;
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+        {readOnly && !needsDetail && (
+          <p className="text-sm text-muted-foreground italic">
+            {t.stringNoConstraint}
+          </p>
+        )}
+
+        {(!readOnly || minLengthValue !== '') && (
+          <div className="space-y-2">
+            <Input
+              id={minLengthId}
+              label={t.stringMinimumLengthLabel}
+              aria-invalid={!!minMaxError || !!minLengthError}
+              type="number"
+              min={0}
+              value={minLengthValue}
+              disabled={readOnly}
+              onChange={(e) => {
+                const value = e.target.value
+                  ? Number(e.target.value)
+                  : undefined;
+                handleValidationChange('minLength', value);
+              }}
+              placeholder={t.stringMinimumLengthPlaceholder}
+              className={cn(
+                'h-8',
+                (!!minMaxError || !!minLengthError) && 'border-destructive',
+              )}
+            />
+          </div>
+        )}
+
+        {(!readOnly || maxLengthValue !== '') && (
+          <div className="space-y-2">
+            <Input
+              id={maxLengthId}
+              label={t.stringMaximumLengthLabel}
+              aria-invalid={!!minMaxError || !!maxLengthError}
+              type="number"
+              min={0}
+              disabled={readOnly}
+              value={maxLengthValue}
+              onChange={(e) => {
+                const value = e.target.value
+                  ? Number(e.target.value)
+                  : undefined;
+                handleValidationChange('maxLength', value);
+              }}
+              placeholder={t.stringMaximumLengthPlaceholder}
+              className={cn(
+                'h-8',
+                (!!minMaxError || !!maxLengthError) && 'border-destructive',
+              )}
+            />
+          </div>
+        )}
+        {(!!minMaxError || !!minLengthError || !!maxLengthError) && (
+          <div className="text-xs text-destructive italic md:col-span-2 whitespace-pre-line">
+            {[minMaxError, minLengthError ?? maxLengthError]
+              .filter(Boolean)
+              .join('\n')}
+          </div>
+        )}
+      </div>
+
+      {(!readOnly || patternValue !== '') && (
+        <div className="space-y-2">
+          <Input
+            id={patternId}
+            label={t.stringPatternLabel}
+            aria-invalid={!!patternError}
+            type="text"
+            value={patternValue}
+            onChange={(e) => {
+              const value = e.target.value || undefined;
+              handleValidationChange('pattern', value);
+            }}
+            placeholder={t.stringPatternPlaceholder}
+            className="h-8"
+          />
+        </div>
+      )}
+
+      {(!readOnly || formatValue !== 'none') && (
+        <div className="space-y-2">
+          <Label
+            htmlFor={formatId}
+            className={formatError ? 'text-destructive' : undefined}
+          >
+            {t.stringFormatLabel}
+          </Label>
+          <select
+            id={formatId}
+            className="h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={readOnly}
+            value={formatValue}
+            onChange={(event) => {
+              const value = event.target.value;
+              handleValidationChange(
+                'format',
+                value === 'none' ? undefined : value,
+              );
+            }}
+          >
+            <option value="none">{t.stringFormatNone}</option>
+            <option value="date-time">{t.stringFormatDateTime}</option>
+            <option value="date">{t.stringFormatDate}</option>
+            <option value="time">{t.stringFormatTime}</option>
+            <option value="email">{t.stringFormatEmail}</option>
+            <option value="uri">{t.stringFormatUri}</option>
+            <option value="uuid">{t.stringFormatUuid}</option>
+            <option value="hostname">{t.stringFormatHostname}</option>
+            <option value="ipv4">{t.stringFormatIpv4}</option>
+            <option value="ipv6">{t.stringFormatIpv6}</option>
+          </select>
+        </div>
+      )}
+
+      {(!readOnly || enumValues.length > 0) && (
+        <div className="space-y-2 pt-2 border-t border-border/40">
+          <Label>{t.stringAllowedValuesEnumLabel}</Label>
+
+          <div className="flex flex-wrap gap-2 mb-4">
+            {enumValues.length > 0
+              ? (
+                  enumValues.map(value => (
+                    <div
+                      key={`enum-string-${value}`}
+                      className="flex items-center bg-muted/40 border rounded-md px-2 py-1 text-xs"
+                    >
+                      <span className="mr-1">{value}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleRemoveEnumValue(enumValues.indexOf(value))}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))
+                )
+              : (
+                  <p className="text-xs text-muted-foreground italic">
+                    {t.stringAllowedValuesEnumNone}
+                  </p>
+                )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Input
+              type="text"
+              value={enumValue}
+              onChange={e => setEnumValue(e.target.value)}
+              placeholder={t.stringAllowedValuesEnumAddPlaceholder}
+              className="h-8 text-xs flex-1"
+              onKeyDown={e => e.key === 'Enter' && handleAddEnumValue()}
+            />
+            <button
+              type="button"
+              onClick={handleAddEnumValue}
+              className="px-3 py-1 h-8 rounded-md bg-secondary text-xs font-medium hover:bg-secondary/80"
+            >
+              {t.stringAllowedValuesEnumAddLabel}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default StringEditor;

@@ -132,6 +132,84 @@ describe('templateEngine', () => {
       }
     });
 
+    it('应该按数组展开自定义表格命令', () => {
+      const template: PrintJobJSON = {
+        commands: [
+          {
+            type: 'tableCustom',
+            each: 'items',
+            data: [
+              { text: '{{name}}', align: 'left', width: 0.5 },
+              { text: '{{orderNumber}} / {{price}}', align: 'right', width: 0.5 },
+            ],
+          },
+        ],
+      };
+      const data = {
+        orderNumber: 'ORD-001',
+        items: [
+          { name: 'Apple', price: '5.00' },
+          { name: 'Banana', price: '3.00' },
+        ],
+      };
+
+      const result = engine.render(template, data);
+
+      expect(result.commands).toHaveLength(2);
+      expect(result.commands[0]).toMatchObject({
+        type: 'tableCustom',
+        data: [
+          { text: 'Apple' },
+          { text: 'ORD-001 / 5.00' },
+        ],
+      });
+      expect(result.commands[1]).toMatchObject({
+        type: 'tableCustom',
+        data: [
+          { text: 'Banana' },
+          { text: 'ORD-001 / 3.00' },
+        ],
+      });
+      expect(result.commands.every(command => !('each' in command))).toBe(true);
+    });
+
+    it('应该在循环数组为空时不输出自定义表格命令', () => {
+      const template: PrintJobJSON = {
+        commands: [
+          {
+            type: 'tableCustom',
+            each: 'items',
+            data: [{ text: '{{name}}', cols: 16 }],
+          },
+        ],
+      };
+
+      const result = engine.render(template, { items: [] });
+
+      expect(result.commands).toEqual([]);
+    });
+
+    it('应该在循环路径不是数组时回退为单行渲染', () => {
+      const template: PrintJobJSON = {
+        commands: [
+          {
+            type: 'tableCustom',
+            each: 'items',
+            data: [{ text: '{{name}}', cols: 16 }],
+          },
+        ],
+      };
+
+      const result = engine.render(template, { name: 'Fallback', items: null });
+
+      expect(result.commands).toHaveLength(1);
+      expect(result.commands[0]).toMatchObject({
+        type: 'tableCustom',
+        each: 'items',
+        data: [{ text: 'Fallback' }],
+      });
+    });
+
     it('应该渲染二维码命令', () => {
       const template: PrintJobJSON = {
         commands: [
@@ -144,6 +222,25 @@ describe('templateEngine', () => {
       if (result.commands[0]?.type === 'qrcode') {
         expect(result.commands[0].content).toBe('https://example.com');
       }
+    });
+
+    it('应该渲染图片路径中的变量', () => {
+      const result = engine.render({
+        commands: [
+          { type: 'image', path: '{{assets.logo}}', density: 'd24' },
+          { type: 'raster', path: '{{assets.banner}}', mode: 'normal' },
+        ],
+      }, {
+        assets: {
+          logo: 'https://example.com/logo.png',
+          banner: 'https://example.com/banner.png',
+        },
+      });
+
+      expect(result.commands).toEqual([
+        { type: 'image', path: 'https://example.com/logo.png', density: 'd24' },
+        { type: 'raster', path: 'https://example.com/banner.png', mode: 'normal' },
+      ]);
     });
 
     it('应该保留不需要渲染的命令', () => {
@@ -183,6 +280,22 @@ describe('templateEngine', () => {
   });
 
   describe('完整任务渲染', () => {
+    it('应该在输入数据不符合模板 Schema 时拒绝渲染', () => {
+      const template: PrintJobJSON = {
+        inputs: {
+          type: 'object',
+          required: ['name'],
+          properties: {
+            name: { type: 'string' },
+          },
+        },
+        commands: [{ type: 'text', content: '{{name}}' }],
+      };
+
+      expect(() => engine.render(template, { name: 42 })).toThrow('模板输入校验失败');
+      expect(() => engine.render(template, {})).toThrow('$.name 为必填项');
+    });
+
     it('应该渲染完整的打印任务', () => {
       const template: PrintJobJSON = {
         name: '{{orderType}}打印',

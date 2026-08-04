@@ -219,6 +219,7 @@ export interface TableCommand extends BasePrintCommand {
 export interface TableCustomCommand extends BasePrintCommand {
   type: 'tableCustom'
   data: CustomTableItem[]
+  each?: string
   options?: CustomTableOptions
 }
 
@@ -365,6 +366,24 @@ export type PrintCommandUnion
     | EmphasizeCommand
     | CancelEmphasizeCommand;
 
+export type TemplateInputType = 'array' | 'boolean' | 'integer' | 'null' | 'number' | 'object' | 'string';
+
+/**
+ * 模板输入使用的 JSON Schema 子集。
+ *
+ * 索引签名允许编辑器保留 title、description、format 等标准关键字；
+ * 核心校验器只解释其支持的关键字。
+ */
+export interface TemplateInputSchema {
+  type?: TemplateInputType | TemplateInputType[]
+  properties?: Record<string, TemplateInputSchema>
+  required?: string[]
+  items?: TemplateInputSchema | TemplateInputSchema[]
+  enum?: unknown[]
+  additionalProperties?: boolean | TemplateInputSchema
+  [keyword: string]: unknown
+}
+
 /**
  * 打印任务JSON格式
  */
@@ -385,6 +404,10 @@ export interface PrintJobJSON {
     width?: number
     model?: 'qsprinter' | null
   }
+  /**
+   * 模板渲染数据的输入定义（可选）
+   */
+  inputs?: TemplateInputSchema
   /**
    * 打印命令列表
    */

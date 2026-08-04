@@ -1,0 +1,190 @@
+import type { Translation } from '../translation-keys';
+
+export const ru: Translation = {
+  collapse: 'Свернуть',
+  expand: 'Развернуть',
+
+  fieldDescriptionPlaceholder: 'Опишите назначение этого поля',
+  fieldDelete: 'Удалить поле',
+  fieldDescription: 'Описание',
+  fieldNameLabel: 'Имя поля',
+  fieldNamePlaceholder: 'например, firstName, age, isActive',
+  fieldNameUseRegex: 'Использовать регулярное выражение',
+  fieldNameUseExactName: 'Использовать точное имя',
+  fieldNameRegexLabel: 'Регулярное выражение для имен свойств',
+  fieldNameRegexPlaceholder: 'например, ^S_',
+  fieldNameRegexHelp:
+    'Разрешает любое свойство, имя которого совпадает с этим регулярным выражением. Совпавшие свойства должны соответствовать этой схеме поля. Используйте ^ и $, чтобы проверять имя целиком.',
+  fieldNameRegexError: 'Введите допустимое регулярное выражение.',
+  fieldRequiredLabel: 'Обязательное поле',
+  fieldType: 'Тип поля',
+  fieldTypeExample: 'Пример:',
+  fieldAddNewButton: 'Добавить поле',
+  fieldAddNewBadge: 'Конструктор схем',
+  fieldAddNewCancel: 'Отмена',
+  fieldAddNewConfirm: 'Добавить поле',
+  fieldAddNewDescription: 'Создайте новое поле для вашей схемы JSON',
+  fieldAddNewLabel: 'Добавить новое поле',
+
+  fieldTypeTextLabel: 'Текст',
+  fieldTypeTextDescription:
+    'Для текстовых значений, таких как имена, описания и т.д.',
+  fieldTypeNumberLabel: 'Число',
+  fieldTypeNumberDescription: 'Для десятичных или целых чисел',
+  fieldTypeBooleanLabel: 'Да/Нет',
+  fieldTypeBooleanDescription: 'Для значений истина/ложь',
+  fieldTypeObjectLabel: 'Группа',
+  fieldTypeObjectDescription: 'Для группировки связанных полей вместе',
+  fieldTypeArrayLabel: 'Список',
+  fieldTypeArrayDescription: 'Для коллекций элементов',
+
+  propertyDescriptionPlaceholder: 'Добавить описание...',
+  propertyDescriptionButton: 'Добавить описание...',
+  propertyRequired: 'Обязательное',
+  propertyNameRegexDescription:
+    'Разрешает и проверяет свойства, имена которых совпадают с этим регулярным выражением.',
+  propertyOptional: 'Необязательное',
+  propertyDelete: 'Удалить поле',
+
+  schemaEditorTitle: 'Редактор JSON-схем',
+  schemaEditorToggleFullscreen: 'Переключить полноэкранный режим',
+  schemaEditorEditModeVisual: 'Визуальный',
+  schemaEditorEditModeJson: 'JSON',
+  schemaEditorLoading: 'Загрузка редактора...',
+
+  arrayNoConstraint: 'Без ограничений',
+  arrayMinimumLabel: 'Минимум элементов',
+  arrayMinimumPlaceholder: 'Нет минимума',
+  arrayMaximumLabel: 'Максимум элементов',
+  arrayMaximumPlaceholder: 'Нет максимума',
+  arrayForceUniqueItemsLabel: 'Требовать уникальные элементы',
+  arrayItemTypeLabel: 'Тип элемента',
+  arrayValidationErrorMinMax: '\'minItems\' не может быть больше \'maxItems\'.',
+  arrayValidationErrorContainsMinMax:
+    '\'minContains\' не может быть больше \'maxContains\'.',
+
+  booleanNoConstraint: 'Без ограничений',
+  booleanAllowedValuesLabel: 'Разрешенные значения',
+  booleanAllowFalseLabel: 'Разрешить значение ложь',
+  booleanAllowTrueLabel: 'Разрешить значение истина',
+  booleanNeitherWarning: 'Внимание: Вы должны разрешить хотя бы одно значение.',
+
+  numberNoConstraint: 'Без ограничений',
+  numberMinimumLabel: 'Минимальное значение',
+  numberMinimumPlaceholder: 'Нет минимума',
+  numberMaximumLabel: 'Максимальное значение',
+  numberMaximumPlaceholder: 'Нет максимума',
+  numberExclusiveMinimumLabel: 'Исключающее минимальное',
+  numberExclusiveMinimumPlaceholder: 'Нет исключающего минимума',
+  numberExclusiveMaximumLabel: 'Исключающее максимальное',
+  numberExclusiveMaximumPlaceholder: 'Нет исключающего максимума',
+  numberMultipleOfLabel: 'Кратно',
+  numberMultipleOfPlaceholder: 'Любое',
+  numberAllowedValuesEnumLabel: 'Разрешенные значения (enum)',
+  numberAllowedValuesEnumNone: 'Нет ограниченных значений',
+  numberAllowedValuesEnumAddLabel: 'Добавить',
+  numberAllowedValuesEnumAddPlaceholder: 'Добавить разрешенное значение...',
+  numberValidationErrorMinMax:
+    'Минимальное и максимальное значения должны быть согласованы.',
+  numberValidationErrorBothExclusiveAndInclusiveMin:
+    'Оба поля \'exclusiveMinimum\' и \'minimum\' не могут быть установлены одновременно.',
+  numberValidationErrorBothExclusiveAndInclusiveMax:
+    'Оба поля \'exclusiveMaximum\' и \'maximum\' не могут быть установлены одновременно.',
+  numberValidationErrorEnumOutOfRange:
+    'Значения перечисления должны быть в пределах определенного диапазона.',
+
+  objectPropertiesNone: 'Нет определенных свойств',
+  objectValidationErrorMinMax:
+    '\'minProperties\' не может быть больше \'maxProperties\'.',
+
+  additionalPropertiesAllow: 'Разрешить дополнительные свойства',
+  additionalPropertiesForbid: 'Запретить дополнительные свойства',
+
+  stringNoConstraint: 'Без ограничений',
+  stringMinimumLengthLabel: 'Минимальная длина',
+  stringMinimumLengthPlaceholder: 'Нет минимума',
+  stringMaximumLengthLabel: 'Максимальная длина',
+  stringMaximumLengthPlaceholder: 'Нет максимума',
+  stringPatternLabel: 'Шаблон (regex)',
+  stringPatternPlaceholder: '^[a-zA-Z]+$',
+  stringFormatLabel: 'Формат',
+  stringFormatNone: 'Нет',
+  stringFormatDateTime: 'Дата-Время',
+  stringFormatDate: 'Дата',
+  stringFormatTime: 'Время',
+  stringFormatEmail: 'Email',
+  stringFormatUri: 'URI',
+  stringFormatUuid: 'UUID',
+  stringFormatHostname: 'Имя хоста',
+  stringFormatIpv4: 'Адрес IPv4',
+  stringFormatIpv6: 'Адрес IPv6',
+  stringAllowedValuesEnumLabel: 'Разрешенные значения (enum)',
+  stringAllowedValuesEnumNone: 'Нет ограниченных значений',
+  stringAllowedValuesEnumAddPlaceholder: 'Добавить разрешенное значение...',
+  stringAllowedValuesEnumAddLabel: 'Добавить',
+  stringFormatSelectPlaceholder: 'Выберите формат',
+  stringValidationErrorLengthRange:
+    '\'Минимальная длина\' не может быть больше \'Максимальной длины\'.',
+
+  schemaTypeAnyOf: 'Одно из',
+  anyOfAddOption: 'Добавить вариант',
+  anyOfRemoveOption: 'Удалить вариант',
+  anyOfOptionLabel: 'Вариант',
+  anyOfDescription:
+    'Значение должно соответствовать хотя бы одной из этих схем',
+  anyOfNoOptions: 'Варианты не определены',
+
+  schemaTypeOneOf: 'Ровно одно из',
+  oneOfAddOption: 'Добавить вариант',
+  oneOfRemoveOption: 'Удалить вариант',
+  oneOfOptionLabel: 'Вариант',
+  oneOfDescription: 'Значение должно соответствовать ровно одной из этих схем',
+  oneOfNoOptions: 'Варианты не определены',
+
+  schemaTypeAllOf: 'Все из',
+  allOfAddSchema: 'Добавить схему',
+  allOfRemoveSchema: 'Удалить схему',
+  allOfSchemaLabel: 'Схема',
+  allOfDescription: 'Значение должно соответствовать всем этим схемам',
+  allOfNoSchemas: 'Схемы не определены',
+
+  schemaTypeArray: 'Список',
+  schemaTypeBoolean: 'Да/Нет',
+  schemaTypeNumber: 'Число',
+  schemaTypeObject: 'Объект',
+  schemaTypeString: 'Текст',
+  schemaTypeNull: 'Пусто',
+
+  inferrerTitle: 'Построить JSON-схему',
+  inferrerDescription:
+    'Вставьте ваш документ JSON ниже, чтобы сгенерировать из него схему.',
+  inferrerCancel: 'Отмена',
+  inferrerGenerate: 'Сгенерировать схему',
+  inferrerErrorInvalidJson:
+    'Неверный формат JSON. Пожалуйста, проверьте ваши данные.',
+
+  validatorTitle: 'Проверить JSON',
+  validatorDescription:
+    'Вставьте ваш документ JSON для проверки по текущей схеме. Проверка происходит автоматически по мере ввода.',
+  validatorCurrentSchema: 'Текущая схема:',
+  validatorContent: 'Ваш JSON:',
+  validatorValid: 'JSON соответствует схеме!',
+  validatorErrorInvalidSyntax: 'Неверный синтаксис JSON',
+  validatorErrorSchemaValidation: 'Ошибка проверки схемы',
+  validatorErrorCount: 'Обнаружено ошибок проверки: {count}',
+  validatorErrorPathRoot: 'Корень',
+  validatorErrorLocationLineAndColumn: 'Строка {line}, столбец {column}',
+  validatorErrorLocationLineOnly: 'Строка {line}',
+
+  visualizerDownloadTitle: 'Скачать схему',
+  visualizerDownloadFileName: 'schema.json',
+  visualizerSource: 'Источник схемы JSON',
+
+  visualEditorNoFieldsHint1: 'Пока не определено ни одного поля',
+  visualEditorNoFieldsHint2: 'Добавьте ваше первое поле, чтобы начать',
+
+  typeValidationErrorNegativeLength:
+    'Значения длины не могут быть отрицательными.',
+  typeValidationErrorIntValue: 'Значение должно быть целым числом.',
+  typeValidationErrorPositive: 'Значение должно быть положительным.',
+};

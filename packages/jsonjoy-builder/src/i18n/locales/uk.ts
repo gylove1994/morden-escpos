@@ -1,0 +1,188 @@
+import type { Translation } from '../translation-keys';
+
+export const uk: Translation = {
+  collapse: 'Згорнути',
+  expand: 'Розгорнути',
+
+  fieldDescriptionPlaceholder: 'Опишіть призначення цього поля',
+  fieldDelete: 'Видалити поле',
+  fieldDescription: 'Опис',
+  fieldNameLabel: 'Назва поля',
+  fieldNamePlaceholder: 'наприклад, firstName, age, isActive',
+  fieldNameUseRegex: 'Використати регулярний вираз',
+  fieldNameUseExactName: 'Використати точну назву',
+  fieldNameRegexLabel: 'Регулярний вираз для назв властивостей',
+  fieldNameRegexPlaceholder: 'наприклад, ^S_',
+  fieldNameRegexHelp:
+    'Дозволяє будь-яку властивість, назва якої збігається з цим регулярним виразом. Властивості, що збігаються, мають відповідати цій схемі поля. Використовуйте ^ і $, щоб перевіряти назву повністю.',
+  fieldNameRegexError: 'Введіть коректний регулярний вираз.',
+  fieldRequiredLabel: 'Обов\'язкове поле',
+  fieldType: 'Тип поля',
+  fieldTypeExample: 'Приклад:',
+  fieldAddNewButton: 'Додати поле',
+  fieldAddNewBadge: 'Конструктор схем',
+  fieldAddNewCancel: 'Скасувати',
+  fieldAddNewConfirm: 'Додати поле',
+  fieldAddNewDescription: 'Створіть нове поле для вашої JSON схеми',
+  fieldAddNewLabel: 'Додати нове поле',
+
+  fieldTypeTextLabel: 'Текст',
+  fieldTypeTextDescription: 'Для текстових значень, таких як імена, описи тощо',
+  fieldTypeNumberLabel: 'Число',
+  fieldTypeNumberDescription: 'Для дробових або цілих чисел',
+  fieldTypeBooleanLabel: 'Так/Ні',
+  fieldTypeBooleanDescription: 'Для значень істина/хиба',
+  fieldTypeObjectLabel: 'Група',
+  fieldTypeObjectDescription: 'Для групування пов\'язаних полів',
+  fieldTypeArrayLabel: 'Список',
+  fieldTypeArrayDescription: 'Для колекцій елементів',
+
+  propertyDescriptionPlaceholder: 'Додати опис...',
+  propertyDescriptionButton: 'Додати опис...',
+  propertyRequired: 'Обов\'язкове',
+  propertyNameRegexDescription:
+    'Дозволяє й перевіряє властивості, назви яких збігаються з цим регулярним виразом.',
+  propertyOptional: 'Необов\'язкове',
+  propertyDelete: 'Видалити поле',
+
+  schemaEditorTitle: 'Редактор JSON-схем',
+  schemaEditorToggleFullscreen: 'Перемкнути повноекранний режим',
+  schemaEditorEditModeVisual: 'Візуальний',
+  schemaEditorEditModeJson: 'JSON',
+  schemaEditorLoading: 'Завантаження редактора...',
+
+  arrayNoConstraint: 'Без обмежень',
+  arrayMinimumLabel: 'Мінімум елементів',
+  arrayMinimumPlaceholder: 'Немає мінімуму',
+  arrayMaximumLabel: 'Максимум елементів',
+  arrayMaximumPlaceholder: 'Немає максимуму',
+  arrayForceUniqueItemsLabel: 'Лише унікальні елементи',
+  arrayItemTypeLabel: 'Тип елемента',
+  arrayValidationErrorMinMax: '\'minItems\' не може бути більше за \'maxItems\'.',
+  arrayValidationErrorContainsMinMax:
+    '\'minContains\' не може бути більше за \'maxContains\'.',
+
+  booleanNoConstraint: 'Без обмежень',
+  booleanAllowedValuesLabel: 'Дозволені значення',
+  booleanAllowFalseLabel: 'Дозволити значення хиба',
+  booleanAllowTrueLabel: 'Дозволити значення істина',
+  booleanNeitherWarning: 'Увага: потрібно дозволити хоча б одне значення.',
+
+  numberNoConstraint: 'Без обмежень',
+  numberMinimumLabel: 'Мінімальне значення',
+  numberMinimumPlaceholder: 'Немає мінімуму',
+  numberMaximumLabel: 'Максимальне значення',
+  numberMaximumPlaceholder: 'Немає максимуму',
+  numberExclusiveMinimumLabel: 'Виключне мінімальне',
+  numberExclusiveMinimumPlaceholder: 'Немає виключного мінімуму',
+  numberExclusiveMaximumLabel: 'Виключне максимальне',
+  numberExclusiveMaximumPlaceholder: 'Немає виключного максимуму',
+  numberMultipleOfLabel: 'Кратно',
+  numberMultipleOfPlaceholder: 'Будь-яке',
+  numberAllowedValuesEnumLabel: 'Дозволені значення (enum)',
+  numberAllowedValuesEnumNone: 'Обмежених значень не задано',
+  numberAllowedValuesEnumAddLabel: 'Додати',
+  numberAllowedValuesEnumAddPlaceholder: 'Додати дозволене значення...',
+  numberValidationErrorMinMax:
+    'Мінімальне та максимальне значення повинні узгоджуватися.',
+  numberValidationErrorBothExclusiveAndInclusiveMin:
+    'Поля \'exclusiveMinimum\' і \'minimum\' не можуть бути встановлені одночасно.',
+  numberValidationErrorBothExclusiveAndInclusiveMax:
+    'Поля \'exclusiveMaximum\' і \'maximum\' не можуть бути встановлені одночасно.',
+  numberValidationErrorEnumOutOfRange:
+    'Значення enum повинні бути в межах визначеного діапазону.',
+
+  objectPropertiesNone: 'Властивості не визначені',
+  objectValidationErrorMinMax:
+    '\'minProperties\' не може бути більше за \'maxProperties\'.',
+
+  additionalPropertiesAllow: 'Дозволити додаткові властивості',
+  additionalPropertiesForbid: 'Заборонити додаткові властивості',
+
+  stringNoConstraint: 'Без обмежень',
+  stringMinimumLengthLabel: 'Мінімальна довжина',
+  stringMinimumLengthPlaceholder: 'Немає мінімуму',
+  stringMaximumLengthLabel: 'Максимальна довжина',
+  stringMaximumLengthPlaceholder: 'Немає максимуму',
+  stringPatternLabel: 'Шаблон (regex)',
+  stringPatternPlaceholder: '^[a-zA-Z]+$',
+  stringFormatLabel: 'Формат',
+  stringFormatNone: 'Не заданий',
+  stringFormatDateTime: 'Дата-Час',
+  stringFormatDate: 'Дата',
+  stringFormatTime: 'Час',
+  stringFormatEmail: 'Email',
+  stringFormatUri: 'URI',
+  stringFormatUuid: 'UUID',
+  stringFormatHostname: 'Ім\'я хоста',
+  stringFormatIpv4: 'Адреса IPv4',
+  stringFormatIpv6: 'Адреса IPv6',
+  stringAllowedValuesEnumLabel: 'Дозволені значення (enum)',
+  stringAllowedValuesEnumNone: 'Обмежених значень не задано',
+  stringAllowedValuesEnumAddPlaceholder: 'Додати дозволене значення...',
+  stringAllowedValuesEnumAddLabel: 'Додати',
+  stringFormatSelectPlaceholder: 'Виберіть формат',
+  stringValidationErrorLengthRange:
+    '\'Мінімальна довжина\' не може бути більшою за \'Максимальну довжину\'.',
+
+  schemaTypeAnyOf: 'Одне з',
+  anyOfAddOption: 'Додати варіант',
+  anyOfRemoveOption: 'Видалити варіант',
+  anyOfOptionLabel: 'Варіант',
+  anyOfDescription: 'Значення має відповідати хоча б одній з цих схем',
+  anyOfNoOptions: 'Варіанти не визначені',
+
+  schemaTypeOneOf: 'Рівно одне з',
+  oneOfAddOption: 'Додати варіант',
+  oneOfRemoveOption: 'Видалити варіант',
+  oneOfOptionLabel: 'Варіант',
+  oneOfDescription: 'Значення має відповідати рівно одній з цих схем',
+  oneOfNoOptions: 'Варіанти не визначені',
+
+  schemaTypeAllOf: 'Усі з',
+  allOfAddSchema: 'Додати схему',
+  allOfRemoveSchema: 'Видалити схему',
+  allOfSchemaLabel: 'Схема',
+  allOfDescription: 'Значення має відповідати всім цим схемам',
+  allOfNoSchemas: 'Схеми не визначені',
+
+  schemaTypeArray: 'Список',
+  schemaTypeBoolean: 'Так/Ні',
+  schemaTypeNumber: 'Число',
+  schemaTypeObject: 'Об\'єкт',
+  schemaTypeString: 'Текст',
+  schemaTypeNull: 'Пусто',
+
+  inferrerTitle: 'Згенерувати JSON-схему',
+  inferrerDescription:
+    'Вставте свій JSON-документ нижче, щоб згенерувати з нього схему.',
+  inferrerCancel: 'Скасувати',
+  inferrerGenerate: 'Згенерувати схему',
+  inferrerErrorInvalidJson:
+    'Неправильний формат JSON. Перевірте, будь ласка, введені дані.',
+
+  validatorTitle: 'Перевірити JSON',
+  validatorDescription:
+    'Вставте свій JSON-документ для перевірки проти поточної схеми. Перевірка відбувається автоматично під час введення.',
+  validatorCurrentSchema: 'Поточна схема:',
+  validatorContent: 'Ваш JSON:',
+  validatorValid: 'JSON відповідає схемі!',
+  validatorErrorInvalidSyntax: 'Неправильний синтаксис JSON',
+  validatorErrorSchemaValidation: 'Помилка валідації за схемою',
+  validatorErrorCount: 'Виявлено {count} помилок валідації',
+  validatorErrorPathRoot: 'Корінь',
+  validatorErrorLocationLineAndColumn: 'Рядок {line}, стовпець {column}',
+  validatorErrorLocationLineOnly: 'Рядок {line}',
+
+  visualizerDownloadTitle: 'Завантажити схему',
+  visualizerDownloadFileName: 'schema.json',
+  visualizerSource: 'Джерело JSON-схеми',
+
+  visualEditorNoFieldsHint1: 'Поки що не визначено жодне поле',
+  visualEditorNoFieldsHint2: 'Додайте перше поле, щоб почати',
+
+  typeValidationErrorNegativeLength:
+    'Значення довжини не можуть бути від\'ємними.',
+  typeValidationErrorIntValue: 'Значення має бути цілим числом.',
+  typeValidationErrorPositive: 'Значення має бути додатнім.',
+};

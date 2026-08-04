@@ -4,6 +4,9 @@ build
 coverage
 .eslintcache
 .turbo
+.next
+.vercel
+storybook-static
 *.log
 .env
 .env.*

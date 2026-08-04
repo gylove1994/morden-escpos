@@ -6,7 +6,17 @@
         "^build"
       ],
       "outputs": [
-        "dist/**"
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**"
+      ]
+    },
+    "build-storybook": {
+      "dependsOn": [
+        "^build-storybook"
+      ],
+      "outputs": [
+        "storybook-static/**"
       ]
     },
     "lint": {
@@ -26,6 +36,13 @@
         "^typecheck"
       ],
       "outputs": []
+    },
+    "dev": {
+      "dependsOn": [
+        "^build"
+      ],
+      "cache": false,
+      "persistent": true
     }
   }
 }

@@ -722,7 +722,7 @@ export class Printer<AdapterCloseArgs extends []> extends EventEmitter {
   async image(image: Image, density: BitmapDensity = 'd24') {
     if (!(image instanceof Image))
       throw new TypeError('Only escpos.Image supported');
-    const n = ~['D8', 'S8'].indexOf(utils.upperCase(density)) ? 1 : 3;
+    const n = ['D8', 'S8'].includes(utils.upperCase(density)) ? 1 : 3;
     const header = _.BITMAP_FORMAT[`BITMAP_${utils.upperCase(density)}` as const];
     const bitmap = image.toBitmap(n * 8);
 

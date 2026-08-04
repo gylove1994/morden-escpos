@@ -24,21 +24,16 @@ export default class USBAdapter extends Adapter<[timeout?: number]> {
   endpoint?: OutEndpoint;
   deviceToPcEndpoint?: InEndpoint;
 
-  constructor(vid?: number, pid?: number) {
+  constructor(device?: Device);
+  constructor(vid?: number, pid?: number);
+  constructor(vidOrDevice?: number | Device, pid?: number) {
     super();
-    // const self = this;
     this.device = null;
-    if (vid && pid) {
-      this.device = findByIds(vid, pid) ?? null;
+    if (typeof vidOrDevice === 'object') {
+      this.device = vidOrDevice;
     }
-    else if (vid) {
-      // Set spesific USB device from devices array as coming from USB.findPrinter() function.
-      // for example
-      // let devices = escpos.USB.findPrinter();
-      // => devices [ Device1, Device2 ];
-      // And Then
-      // const device = new escpos.USB(Device1); OR device = new escpos.USB(Device2);
-      this.device = vid as unknown as Device;
+    else if (vidOrDevice && pid) {
+      this.device = findByIds(vidOrDevice, pid) ?? null;
     }
     else {
       const devices = USBAdapter.findPrinter();

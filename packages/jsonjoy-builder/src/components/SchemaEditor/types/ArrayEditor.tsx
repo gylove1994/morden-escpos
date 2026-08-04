@@ -1,0 +1,281 @@
+import type {
+  ObjectJsonSchema,
+  SchemaEditorType,
+  SchemaType,
+} from '../../../types/jsonSchema';
+import type { TypeEditorProps } from '../TypeEditor';
+import { useId, useMemo, useState } from 'react';
+import { useTranslation } from '../../../hooks/use-translation';
+import { getArrayItemsSchema } from '../../../lib/schemaEditor';
+import { cn } from '../../../lib/utils';
+import { useComponent } from '../../../registry/SchemaBuilderRegistryContext';
+import {
+  asObjectSchema,
+  isBooleanSchema,
+  withObjectSchema,
+} from '../../../types/jsonSchema';
+import TypeDropdown from '../TypeDropdown';
+import TypeEditor from '../TypeEditor';
+
+const ArrayEditor: React.FC<TypeEditorProps> = ({
+  schema,
+  readOnly = false,
+  validationNode,
+  onChange,
+  schemaKey,
+  onAddEnum,
+  onDeleteEnum,
+  depth = 0,
+}) => {
+  const t = useTranslation();
+  const Input = useComponent('Input');
+  const Label = useComponent('Label');
+  const Switch = useComponent('Switch');
+  const [minItems, setMinItems] = useState<number | undefined>(
+    withObjectSchema(schema, s => s.minItems, undefined),
+  );
+  const [maxItems, setMaxItems] = useState<number | undefined>(
+    withObjectSchema(schema, s => s.maxItems, undefined),
+  );
+  const [uniqueItems, setUniqueItems] = useState<boolean>(
+    withObjectSchema(schema, s => s.uniqueItems || false, false),
+  );
+
+  const minItemsId = useId();
+  const maxItemsId = useId();
+  const uniqueItemsId = useId();
+
+  // Get the array's item schema
+  const itemsSchema = getArrayItemsSchema(schema) || { type: 'string' };
+  const itemSchemaKey = schemaKey ? `${schemaKey}[]` : undefined;
+
+  // Get the type of the array items
+  const itemType = withObjectSchema(
+    itemsSchema,
+    s => (s.type || 'string') as SchemaType,
+    'string' as SchemaType,
+  );
+
+  // Handle validation settings change
+  const handleValidationChange = () => {
+    const propsToKeep = buildValidationProps();
+
+    onChange(propsToKeep as ObjectJsonSchema);
+  };
+
+  /**
+   * Builds and normalizes the JSON Schema validation properties for an array schema.
+   *
+   * This helper merges base schema constraints with optional overrides,
+   * preserves the `items` schema when not explicitly provided,
+   * and removes any undefined properties to produce a clean schema object.
+   */
+  const buildValidationProps = ({
+    minItems: overrideMinItems,
+    maxItems: overrideMaxItems,
+    uniqueItems: overrideUniqueItems,
+  }: {
+    minItems?: number
+    maxItems?: number
+    uniqueItems?: boolean
+  } = {}) => {
+    const validationProps: ObjectJsonSchema = {
+      type: 'array',
+      ...(isBooleanSchema(schema) ? {} : schema),
+      minItems: overrideMinItems || minItems,
+      maxItems: overrideMaxItems || maxItems,
+      uniqueItems: overrideUniqueItems || undefined,
+    };
+
+    // Keep the items schema
+    if (validationProps.items === undefined && itemsSchema) {
+      validationProps.items = itemsSchema;
+    }
+
+    // Clean up undefined values
+    const propsToKeep: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(validationProps)) {
+      if (value !== undefined) {
+        propsToKeep[key] = value;
+      }
+    }
+
+    return propsToKeep as ObjectJsonSchema;
+  };
+
+  // Handle item schema changes
+  const handleItemSchemaChange = (updatedItemSchema: ObjectJsonSchema) => {
+    const updatedSchema: ObjectJsonSchema = {
+      type: 'array',
+      ...(isBooleanSchema(schema) ? {} : schema),
+      items: updatedItemSchema,
+    };
+
+    onChange(updatedSchema);
+  };
+
+  const minMaxError = useMemo(
+    () =>
+      validationNode?.validation.errors?.find(err => err.path[0] === 'minmax')
+        ?.message,
+    [validationNode],
+  );
+
+  const minItemsError = useMemo(
+    () =>
+      validationNode?.validation.errors?.find(
+        err => err.path[0] === 'minItems',
+      )?.message,
+    [validationNode],
+  );
+
+  const maxItemsError = useMemo(
+    () =>
+      validationNode?.validation.errors?.find(
+        err => err.path[0] === 'maxItems',
+      )?.message,
+    [validationNode],
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Array validation settings */}
+      {(!readOnly || !!maxItems || !!minItems) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {(!readOnly || !!minItems) && (
+            <div className="space-y-2">
+              <Input
+                id={minItemsId}
+                label={t.arrayMinimumLabel}
+                aria-invalid={!!minMaxError || !!minItemsError}
+                type="number"
+                min={0}
+                value={minItems ?? ''}
+                onChange={(e) => {
+                  const value = e.target.value
+                    ? Number(e.target.value)
+                    : undefined;
+                  setMinItems(value);
+                  // Don't update immediately to avoid too many rerenders
+                }}
+                onBlur={handleValidationChange}
+                placeholder={t.arrayMinimumPlaceholder}
+                className={cn('h-8', !!minMaxError && 'border-destructive')}
+              />
+            </div>
+          )}
+
+          {(!readOnly || !!maxItems) && (
+            <div className="space-y-2">
+              <Input
+                id={maxItemsId}
+                label={t.arrayMaximumLabel}
+                aria-invalid={!!minMaxError || !!maxItemsError}
+                type="number"
+                min={0}
+                value={maxItems ?? ''}
+                onChange={(e) => {
+                  const value = e.target.value
+                    ? Number(e.target.value)
+                    : undefined;
+                  setMaxItems(value);
+                  // Don't update immediately to avoid too many rerenders
+                }}
+                onBlur={handleValidationChange}
+                placeholder={t.arrayMaximumPlaceholder}
+                className={cn('h-8', !!minMaxError && 'border-destructive')}
+              />
+            </div>
+          )}
+          {(!!minMaxError || !!minItemsError || !!maxItemsError) && (
+            <div className="text-xs text-destructive italic md:col-span-2 whitespace-pre-line">
+              {[minMaxError, minItemsError ?? maxItemsError]
+                .filter(Boolean)
+                .join('\n')}
+            </div>
+          )}
+        </div>
+      )}
+
+      {(!readOnly || !!uniqueItems) && (
+        <div className="flex items-center space-x-2">
+          <Switch
+            id={uniqueItemsId}
+            checked={uniqueItems}
+            onCheckedChange={(checked) => {
+              setUniqueItems(checked);
+              onChange(buildValidationProps({ uniqueItems: checked }));
+            }}
+          />
+          <Label htmlFor={uniqueItemsId} className="cursor-pointer">
+            {t.arrayForceUniqueItemsLabel}
+          </Label>
+        </div>
+      )}
+
+      {/* Array item type editor */}
+      <div
+        className={cn(
+          'space-y-2 pt-4 border-border/40',
+          !readOnly || minItems || maxItems || uniqueItems ? 'border-t' : null,
+        )}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <Label>{t.arrayItemTypeLabel}</Label>
+          <TypeDropdown
+            readOnly={readOnly}
+            value={itemType}
+            onChange={(newType: SchemaEditorType) => {
+              if (
+                newType === 'anyOf'
+                || newType === 'oneOf'
+                || newType === 'allOf'
+              ) {
+                const {
+                  type: _type,
+                  anyOf: _a,
+                  oneOf: _o,
+                  allOf: _al,
+                  ...rest
+                } = asObjectSchema(itemsSchema);
+                const initial
+                  = newType === 'allOf'
+                    ? { allOf: [{ type: 'object' as const }] }
+                    : {
+                        [newType]: [
+                          { type: 'string' as const },
+                          { type: 'number' as const },
+                        ],
+                      };
+                handleItemSchemaChange({ ...rest, ...initial });
+              }
+              else {
+                const {
+                  anyOf: _a,
+                  oneOf: _o,
+                  allOf: _al,
+                  ...rest
+                } = asObjectSchema(itemsSchema);
+                handleItemSchemaChange({ ...rest, type: newType });
+              }
+            }}
+          />
+        </div>
+
+        {/* Item schema editor */}
+        <TypeEditor
+          readOnly={readOnly}
+          schema={itemsSchema}
+          validationNode={validationNode}
+          onChange={handleItemSchemaChange}
+          schemaKey={itemSchemaKey}
+          onAddEnum={onAddEnum}
+          onDeleteEnum={onDeleteEnum}
+          depth={depth + 1}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default ArrayEditor;

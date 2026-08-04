@@ -1,0 +1,287 @@
+import type { FC, FormEvent } from 'react';
+import type { NewField, SchemaEditorType } from '../../types/jsonSchema';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@workspace/ui/components/ui/dialog';
+import { Field, FieldLabel } from '@workspace/ui/components/ui/field';
+import { Switch } from '@workspace/ui/components/ui/switch';
+import { CirclePlus } from 'lucide-react';
+import { useId, useState } from 'react';
+import { useTranslation } from '../../hooks/use-translation';
+import { cn } from '../../lib/utils';
+import { useComponent } from '../../registry/SchemaBuilderRegistryContext';
+import SchemaTypeSelector from './SchemaTypeSelector';
+
+interface AddFieldButtonProps {
+  onAddField: (field: NewField) => void
+  onAddPatternField: (field: NewField) => void
+  variant?: 'primary' | 'secondary'
+  autoFocus?: boolean
+}
+
+const AddFieldButton: FC<AddFieldButtonProps> = ({
+  onAddField,
+  onAddPatternField,
+  variant = 'primary',
+  autoFocus = true,
+}) => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [fieldName, setFieldName] = useState('');
+  const [fieldType, setFieldType] = useState<SchemaEditorType>('string');
+  const [fieldDesc, setFieldDesc] = useState('');
+  const [fieldRequired, setFieldRequired] = useState(false);
+  const [useNameRegex, setUseNameRegex] = useState(false);
+  const [additionalProperties, setAdditionalProperties] = useState(true);
+  const fieldNameId = useId();
+  const fieldNameHelpId = useId();
+  const fieldDescId = useId();
+  const fieldRequiredId = useId();
+  const fieldTypeId = useId();
+  const additionalPropertiesId = useId();
+  const formId = useId();
+
+  const t = useTranslation();
+  const Badge = useComponent('Badge');
+  const Button = useComponent('Button');
+  const Input = useComponent('Input');
+  const regexError = (() => {
+    if (!useNameRegex || !fieldName.trim())
+      return '';
+    try {
+      new RegExp(fieldName).test('');
+      return '';
+    }
+    catch {
+      return t.fieldNameRegexError;
+    }
+  })();
+
+  const setNameRegexMode = (enabled: boolean) => {
+    setUseNameRegex(enabled);
+    if (enabled) {
+      setFieldRequired(false);
+    }
+  };
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!fieldName.trim())
+      return;
+    if (regexError)
+      return;
+
+    const field = {
+      name: fieldName,
+      type: fieldType,
+      description: fieldDesc,
+      required: useNameRegex ? false : fieldRequired,
+      additionalProperties:
+        fieldType === 'object' ? additionalProperties : undefined,
+    };
+
+    if (useNameRegex) {
+      onAddPatternField(field);
+    }
+    else {
+      onAddField(field);
+    }
+
+    setFieldName('');
+    setFieldType('string');
+    setFieldDesc('');
+    setFieldRequired(false);
+    setUseNameRegex(false);
+    setDialogOpen(false);
+    setAdditionalProperties(true);
+  };
+
+  return (
+    <>
+      <Button
+        type="button"
+        onClick={() => setDialogOpen(true)}
+        variant={variant === 'primary' ? 'default' : 'outline'}
+        size="sm"
+        className="flex items-center gap-1.5 group"
+      >
+        <CirclePlus
+          size={16}
+          className="group-hover:scale-110 transition-transform"
+        />
+        <span>{t.fieldAddNewButton}</span>
+      </Button>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="jsonjoy max-h-[min(85dvh,760px)] w-[calc(100vw-2rem)] max-w-5xl overflow-y-auto p-4 sm:p-6">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl flex flex-wrap items-center gap-2">
+              {t.fieldAddNewLabel}
+              <Badge variant="secondary" className="text-xs">
+                {t.fieldAddNewBadge}
+              </Badge>
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              {t.fieldAddNewDescription}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-6" id={formId}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-4 min-w-[280px]">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                    <label
+                      htmlFor={fieldNameId}
+                      className="text-sm font-medium"
+                    >
+                      {useNameRegex ? t.fieldNameRegexLabel : t.fieldNameLabel}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setNameRegexMode(!useNameRegex)}
+                      className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
+                    >
+                      {useNameRegex
+                        ? t.fieldNameUseExactName
+                        : t.fieldNameUseRegex}
+                    </button>
+                  </div>
+                  <Input
+                    id={fieldNameId}
+                    value={fieldName}
+                    onChange={e => setFieldName(e.target.value)}
+                    placeholder={
+                      useNameRegex
+                        ? t.fieldNameRegexPlaceholder
+                        : t.fieldNamePlaceholder
+                    }
+                    aria-describedby={
+                      useNameRegex ? fieldNameHelpId : undefined
+                    }
+                    aria-invalid={regexError ? true : undefined}
+                    className="font-mono text-sm w-full"
+                    autoFocus={autoFocus}
+                    required
+                  />
+                  {useNameRegex
+                    ? (
+                        <p
+                          id={fieldNameHelpId}
+                          className={cn(
+                            'text-xs mt-1.5',
+                            regexError
+                              ? 'text-destructive'
+                              : 'text-muted-foreground',
+                          )}
+                        >
+                          {regexError || t.fieldNameRegexHelp}
+                        </p>
+                      )
+                    : null}
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={fieldDescId}
+                    className="block text-sm font-medium mb-1.5"
+                  >
+                    {t.fieldDescription}
+                  </label>
+                  <Input
+                    id={fieldDescId}
+                    value={fieldDesc}
+                    onChange={e => setFieldDesc(e.target.value)}
+                    placeholder={t.fieldDescriptionPlaceholder}
+                    className="text-sm w-full"
+                  />
+                </div>
+
+                {useNameRegex
+                  ? null
+                  : (
+                      <Field orientation="horizontal" className="rounded-lg border bg-muted/50 p-3">
+                        <Switch
+                          id={fieldRequiredId}
+                          checked={fieldRequired}
+                          onCheckedChange={setFieldRequired}
+                        />
+                        <FieldLabel htmlFor={fieldRequiredId}>
+                          {t.fieldRequiredLabel}
+                        </FieldLabel>
+                      </Field>
+                    )}
+                {fieldType === 'object'
+                  ? (
+                      <Field orientation="horizontal" className="rounded-lg border bg-muted/50 p-3">
+                        <Switch
+                          id={additionalPropertiesId}
+                          checked={additionalProperties}
+                          onCheckedChange={setAdditionalProperties}
+                        />
+                        <FieldLabel htmlFor={additionalPropertiesId}>
+                          {t.additionalPropertiesAllow}
+                        </FieldLabel>
+                      </Field>
+                    )
+                  : null}
+              </div>
+
+              <div className="space-y-4 min-w-[280px]">
+                <div>
+                  <label
+                    htmlFor={fieldTypeId}
+                    className="block text-sm font-medium mb-1.5"
+                  >
+                    {t.fieldType}
+                  </label>
+                  <SchemaTypeSelector
+                    id={fieldTypeId}
+                    value={fieldType}
+                    onChange={setFieldType}
+                  />
+                </div>
+
+                <div className="rounded-lg border bg-muted/50 p-3 hidden md:block">
+                  <p className="text-xs font-medium mb-2">
+                    {t.fieldTypeExample}
+                  </p>
+                  <code className="text-sm bg-background/80 p-2 rounded block overflow-x-auto">
+                    {fieldType === 'string' && '"example"'}
+                    {fieldType === 'number' && '42'}
+                    {fieldType === 'boolean' && 'true'}
+                    {fieldType === 'object' && '{ "key": "value" }'}
+                    {fieldType === 'array' && '["item1", "item2"]'}
+                    {fieldType === 'anyOf' && '{ "anyOf": [...] }'}
+                    {fieldType === 'oneOf' && '{ "oneOf": [...] }'}
+                    {fieldType === 'allOf' && '{ "allOf": [...] }'}
+                  </code>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="mt-6 gap-2 flex-wrap">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setDialogOpen(false)}
+              >
+                {t.fieldAddNewCancel}
+              </Button>
+              <Button type="submit" size="sm" form={formId}>
+                {t.fieldAddNewConfirm}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+export default AddFieldButton;

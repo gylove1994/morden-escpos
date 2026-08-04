@@ -45,10 +45,20 @@ export type {
   StyleCommand,
   TableCommand,
   TableCustomCommand,
+  TemplateInputSchema,
+  TemplateInputType,
   TextCommand,
 } from './controller/json-schema';
 export { TemplateEngine } from './controller/template-engine';
 export type { TemplateEngineOptions } from './controller/template-engine';
+export {
+  extractDefinedPaths,
+  getSchemaAtPath,
+  isPathDefined,
+  TemplateInputValidationError,
+  validateTemplateInputs,
+} from './controller/template-inputs';
+export type { TemplateInputValidationResult } from './controller/template-inputs';
 // 导出打印机核心
 export { command, Image, Printer } from './printer';
 
