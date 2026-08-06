@@ -23,9 +23,10 @@ These labels are **orthogonal** to triage state roles. They mark stages on the i
 | Label in our tracker | Meaning                                                                 |
 | -------------------- | ----------------------------------------------------------------------- |
 | `ready-for-split`    | Spec/PRD is finalized; ready for `/to-tickets` (split into tracer-bullet tickets with blocking edges) |
+| `blocked`            | Ticket has open blockers/dependencies; *MUST NOT* receive `ready-for-agent` until blockers are closed |
 | `ready-for-agent`    | Also used here for a single ticket that is unblocked and ready to `/implement` (same string as the triage state role) |
 
-Apply `ready-for-split` on the **spec/PRD issue** (or the issue that carries the finalized spec). After split, remove or replace it; frontier tickets then receive `ready-for-agent` when they have no open blockers.
+Apply `ready-for-split` on the **spec/PRD issue** (or the issue that carries the finalized spec). After split, remove or replace it. Child tickets with open blockers *SHOULD* carry `blocked` (alongside native `Blocked by` / issue dependencies). When every blocker is closed, remove `blocked` and apply `ready-for-agent` to the frontier ticket.
 
 ## Area labels
 
