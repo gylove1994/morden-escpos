@@ -4,13 +4,13 @@
   "description": "A modern ESC/POS printer driver for Node.js with TypeScript support",
   "author": "",
   "license": "MIT",
-  "homepage": "https://github.com/gylove1994/morden-node-escpos#readme",
+  "homepage": "https://github.com/gylove1994/morden-escpos#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gylove1994/morden-node-escpos.git"
+    "url": "git+https://github.com/gylove1994/morden-escpos.git"
   },
   "bugs": {
-    "url": "https://github.com/gylove1994/morden-node-escpos/issues"
+    "url": "https://github.com/gylove1994/morden-escpos/issues"
   },
   "keywords": [
     "escpos",

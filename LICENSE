@@ -55,7 +55,7 @@ Business Source License 1.1 (bsl-saas paths)
 Parameters
 
 Licensor:             GYlove1994 <gylove1994@acgsteps.com>
-Licensed Work:        The bsl-saas components of the morden-node-escpos
+Licensed Work:        The bsl-saas components of the morden-escpos
                       monorepo (paths listed under bsl-saas in
                       CONTEXT-MAP.md), including apps/server,
                       apps/client-node, apps/client-go, apps/landing, and

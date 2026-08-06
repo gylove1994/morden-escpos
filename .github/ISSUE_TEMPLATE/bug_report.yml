@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for the report. Search existing issues first.
-        Security issues: use [private reporting](https://github.com/gylove1994/morden-node-escpos/security/advisories/new) or see SECURITY.md — do not file them here.
+        Security issues: use [private reporting](https://github.com/gylove1994/morden-escpos/security/advisories/new) or see SECURITY.md — do not file them here.
   - type: dropdown
     id: area
     attributes:

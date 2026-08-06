@@ -59,7 +59,7 @@ Git hooks (via Lefthook) run `pnpm lint` on pre-commit and Commitlint on `commit
 
 ## Issues
 
-- Search [existing issues](https://github.com/gylove1994/morden-node-escpos/issues) before opening a new one.
+- Search [existing issues](https://github.com/gylove1994/morden-escpos/issues) before opening a new one.
 - Use the issue templates when they fit (bug / feature).
 - Maintainers triage with state labels such as `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`, plus `area:*` labels for the affected package or app (see `docs/agents/triage-labels.md`).
 

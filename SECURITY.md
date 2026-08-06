@@ -13,8 +13,8 @@ Older major versions may receive fixes at maintainer discretion.
 
 Prefer one of these private channels:
 
-1. [GitHub private vulnerability reporting](https://github.com/gylove1994/morden-node-escpos/security/advisories/new) (recommended when enabled)
-2. Email **gylove1994@acgsteps.com** with subject `[SECURITY] morden-node-escpos`
+1. [GitHub private vulnerability reporting](https://github.com/gylove1994/morden-escpos/security/advisories/new) (recommended when enabled)
+2. Email **gylove1994@acgsteps.com** with subject `[SECURITY] morden-escpos`
 
 Please include:
 
