@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/gylove1994/morden-node-escpos/security/advisories/new
+    about: Please report security issues privately — do not file a public issue.
+  - name: Contributing guide
+    url: https://github.com/gylove1994/morden-node-escpos/blob/main/CONTRIBUTING.md
+    about: Setup, PR workflow, and license boundaries for this monorepo.

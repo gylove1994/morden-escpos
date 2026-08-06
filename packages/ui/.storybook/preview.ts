@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { Preview } from '@storybook/react-vite';
 
 import '../src/styles/globals.css';

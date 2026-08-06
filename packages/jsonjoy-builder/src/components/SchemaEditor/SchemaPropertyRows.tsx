@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Ophir LOJKINE
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { FC } from 'react';
 import type { Property } from '../../lib/schemaEditor';
 import type { ObjectJsonSchema } from '../../types/jsonSchema';

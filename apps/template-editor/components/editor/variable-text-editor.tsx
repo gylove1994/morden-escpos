@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 'use client';
 
 import { extractDefinedPaths, getSchemaAtPath } from 'morden-node-escpos/template-inputs';

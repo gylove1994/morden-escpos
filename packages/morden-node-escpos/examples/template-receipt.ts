@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import { PrinterController } from '../src';

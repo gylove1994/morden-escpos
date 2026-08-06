@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { createDefaultDocument } from './default-template';

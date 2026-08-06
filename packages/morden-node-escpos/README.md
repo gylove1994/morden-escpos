@@ -1,6 +1,7 @@
 # Modern Node ESC/POS
 
-一个现代化的 ESC/POS 打印机驱动程序，专为 Node.js 设计，完整的 TypeScript 支持。
+一个现代化的 ESC/POS 打印机驱动程序，支持 Node.js 与 Chrome/Edge 浏览器，
+提供完整的 TypeScript 类型。
 
 ## 特性
 
@@ -8,6 +9,7 @@
 - 📝 支持文本、表格、条形码、二维码打印
 - 🖼️ 支持图片打印（Raster/Bitmap 模式）
 - 🔌 USB 打印机支持
+- 🌐 WebUSB、Web Serial 与 Direct Sockets 浏览器传输层
 - 💪 现代化的 API 设计
 - 🌍 多编码支持（GB18030、UTF-8 等）
 - 🔧 丰富的文本格式化选项
@@ -22,6 +24,35 @@ pnpm install morden-node-escpos
 # 或
 yarn add morden-node-escpos
 ```
+
+## 浏览器使用
+
+浏览器代码必须从独立入口导入，避免把 Node.js 的 `usb` 驱动打入前端：
+
+```typescript
+import {
+  BrowserPrinterController,
+  loadBrowserImage,
+  WebUSBAdapter,
+} from 'morden-node-escpos/browser';
+
+const device = await WebUSBAdapter.requestDevice();
+const controller = new BrowserPrinterController({
+  adapter: new WebUSBAdapter(device),
+  encoding: 'GB18030',
+  width: 32,
+  imageLoader: loadBrowserImage,
+});
+
+await controller.init();
+await controller.executeJob(printJob);
+await controller.flush();
+await controller.close();
+```
+
+WebUSB / Web Serial 需要 Chrome 或 Edge、安全上下文（HTTPS 或 localhost），
+并且首次选择设备必须由用户手势触发。`TcpSocketAdapter` 仅适用于启用了
+Direct Sockets 的隔离式 Web 应用，普通浏览器标签页无法直接连接 TCP 9100。
 
 ## 快速开始
 

@@ -1,4 +1,9 @@
-import { Buffer } from 'node:buffer';
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
+// eslint-disable-next-line unicorn/prefer-node-protocol -- browser entry bundles the Buffer polyfill
+import { Buffer } from 'buffer';
 
 /**
  * Utility function that converts numbers into hex values

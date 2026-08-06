@@ -1,26 +1,35 @@
-import type { PrintJobJSON } from 'morden-node-escpos/schema';
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
+import type { WebSerialPort, WebUSBDevice } from 'morden-node-escpos/browser';
 
-export interface PrinterDescriptor {
+interface BasePrinterDescriptor {
   id: string
   label: string
+}
+
+export interface WebUSBPrinterDescriptor extends BasePrinterDescriptor {
+  transport: 'webusb'
   vendorId: number
   productId: number
-  busNumber: number
-  deviceAddress: number
+  serialNumber?: string
+  device: WebUSBDevice
 }
 
-export interface PrintersResponse {
-  printers: PrinterDescriptor[]
-  error?: string
+export interface WebSerialPrinterDescriptor extends BasePrinterDescriptor {
+  transport: 'webserial'
+  baudRate: number
+  port: WebSerialPort
 }
 
-export interface PrintRequest {
-  printer: Pick<PrinterDescriptor, 'vendorId' | 'productId' | 'busNumber' | 'deviceAddress'>
-  template: PrintJobJSON
-  data: Record<string, unknown>
+export interface TcpPrinterDescriptor extends BasePrinterDescriptor {
+  transport: 'tcp'
+  host: string
+  port: number
 }
 
-export interface PrintResponse {
-  ok: boolean
-  message: string
-}
+export type PrinterDescriptor
+  = | WebUSBPrinterDescriptor
+    | WebSerialPrinterDescriptor
+    | TcpPrinterDescriptor;

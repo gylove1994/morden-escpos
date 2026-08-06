@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { PrintCommandUnion, PrintJobJSON } from './json-schema';
 import { TemplateInputValidationError, validateTemplateInputs } from './template-inputs';
 

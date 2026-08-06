@@ -1,6 +1,11 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { Buffer } from 'node:buffer';
 
-import EventEmitter from 'node:events';
+// eslint-disable-next-line unicorn/prefer-node-protocol -- browser entry bundles the events polyfill
+import EventEmitter from 'events';
 
 export class NotImplementedException extends Error {}
 

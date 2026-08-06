@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Ophir LOJKINE
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import { en } from '../i18n/locales/en';
 import { useSchemaBuilderConfig } from '../i18n/schema-builder-config';
 

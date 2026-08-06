@@ -1,0 +1,74 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly
+title: '[Bug]: '
+labels: [needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Search existing issues first.
+        Security issues: use [private reporting](https://github.com/gylove1994/morden-node-escpos/security/advisories/new) or see SECURITY.md — do not file them here.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the monorepo is affected?
+      options:
+        - packages/morden-node-escpos
+        - packages/ui
+        - packages/jsonjoy-builder
+        - apps/template-editor
+        - bsl-saas / other
+        - docs / tooling
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What went wrong?
+      placeholder: Clear summary of the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. …
+        2. …
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: npm package version, or git SHA
+      placeholder: e.g. morden-node-escpos@1.0.1 or abc1234
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node.js version, printer model / connection (USB, network, WebUSB, …)
+      placeholder: |
+        - OS:
+        - Node.js:
+        - Printer / adapter:
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Logs, stack traces, minimal reproduction, related PRs.

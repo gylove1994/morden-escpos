@@ -1,4 +1,7 @@
-import type { NdArray } from 'ndarray';
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { Printer } from '../printer';
 import type {
   AlignCommand,
@@ -40,9 +43,9 @@ import type {
   TableCustomCommand,
   TextCommand,
 } from './json-schema';
-import { promises as fs } from 'node:fs';
-import getPixels from 'get-pixels';
 import Image from '../printer/image';
+
+export type ImageLoader = (path: string) => Promise<Image>;
 
 /**
  * JSON打印命令执行器
@@ -50,9 +53,11 @@ import Image from '../printer/image';
  */
 export class JSONPrintExecutor {
   private printer: Printer<[]>;
+  private loadImage: ImageLoader;
 
-  constructor(printer: Printer<[]>) {
+  constructor(printer: Printer<[]>, loadImage: ImageLoader = path => Image.load(path)) {
     this.printer = printer;
+    this.loadImage = loadImage;
   }
 
   /**
@@ -252,26 +257,6 @@ export class JSONPrintExecutor {
       type: command.imageType ?? 'png',
       mode: command.mode ?? 'dhdw',
     });
-  }
-
-  private async loadImage(path: string): Promise<Image> {
-    if (/^https?:\/\//i.test(path)) {
-      return Image.load(path);
-    }
-
-    const imageBuffer = await fs.readFile(path);
-    const pixels = await new Promise<NdArray<Uint8Array>>((resolve, reject) => {
-      getPixels(imageBuffer, path, (err, loadedPixels) => {
-        if (err) {
-          reject(err);
-        }
-        else {
-          resolve(loadedPixels as NdArray<Uint8Array>);
-        }
-      });
-    });
-
-    return new Image(pixels);
   }
 
   private async executeImageCommand(command: ImageCommand): Promise<void> {

@@ -40,6 +40,11 @@
       "types": "./dist/controller/template-inputs.d.ts",
       "import": "./dist/controller/template-inputs.js",
       "require": "./dist/controller/template-inputs.js"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.js",
+      "require": "./dist/browser.js"
     }
   },
   "main": "./dist/index.js",
@@ -66,6 +71,8 @@
   },
   "dependencies": {
     "@types/qr-image": "^3.2.9",
+    "buffer": "^6.0.3",
+    "events": "^3.3.0",
     "get-pixels": "^3.3.3",
     "iconv-lite": "^0.7.0",
     "mutable-buffer": "^4.0.2",

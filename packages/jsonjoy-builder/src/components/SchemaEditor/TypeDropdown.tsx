@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Ophir LOJKINE
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { SchemaEditorType } from '../../types/jsonSchema';
 import { Check, ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';

@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import { describe, expect, it } from 'vitest';
 import { isRemoteImagePath } from './image-path';
 

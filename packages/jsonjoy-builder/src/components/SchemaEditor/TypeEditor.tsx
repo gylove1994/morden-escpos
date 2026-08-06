@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Ophir LOJKINE
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { JsonSchema, ObjectJsonSchema } from '../../types/jsonSchema';
 import type { ValidationTreeNode } from '../../types/validation';
 import { lazy, Suspense } from 'react';

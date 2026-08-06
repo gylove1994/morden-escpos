@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 'use client';
 
 /* eslint-disable react/no-array-index-key -- Plate text nodes do not expose stable ids. */

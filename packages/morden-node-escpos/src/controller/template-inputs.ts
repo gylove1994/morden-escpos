@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { TemplateInputSchema, TemplateInputType } from './json-schema';
 
 export interface TemplateInputValidationResult {

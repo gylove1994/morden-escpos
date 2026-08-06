@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { Printer } from '../printer';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Image from '../printer/image';

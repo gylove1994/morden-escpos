@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { PrintCommandUnion, PrintJobJSON, TemplateInputSchema } from 'morden-node-escpos/schema';
 
 import type { CutMode, EditorDocument, ImportResult, PaperWidth, ValidationResult } from './editor-types';

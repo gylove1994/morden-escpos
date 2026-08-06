@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { ReceiptRaster, TextRasterOperation } from './rasterize';
 
 import { FONT_HEIGHT } from './metrics';

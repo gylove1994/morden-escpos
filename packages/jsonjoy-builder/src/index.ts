@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Ophir LOJKINE
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 // exports for public API
 
 import type { InferSchemaDialogProps } from './components/features/InferSchemaDialog';

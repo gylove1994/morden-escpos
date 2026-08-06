@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import { cn } from "#lib/utils";
 import { NodeToolbar, Position } from "@xyflow/react";
 import type { ComponentProps } from "react";

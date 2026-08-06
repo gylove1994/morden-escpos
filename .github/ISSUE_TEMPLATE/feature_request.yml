@@ -1,0 +1,47 @@
+name: Feature request
+description: Propose a change or new capability
+title: '[Feature]: '
+labels: [needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check CONTRIBUTING.md and CONTEXT-MAP.md. Contributions are welcome everywhere; BSL-path code contributions mean you relinquish rights in that code (see CONTRIBUTING.md).
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - packages/morden-node-escpos
+        - packages/ui
+        - packages/jsonjoy-builder
+        - apps/template-editor
+        - bsl-saas / other
+        - docs / tooling
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this solve? Who is affected?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What should change? Include API sketches if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: willing
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to open a PR for this
+          required: false

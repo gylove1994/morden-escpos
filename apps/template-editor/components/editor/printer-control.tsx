@@ -1,6 +1,10 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 'use client';
 
-import type { PrintersResponse, PrintResponse } from '../../lib/printer-api';
+import type { PrinterDescriptor } from '../../lib/printer-api';
 
 import { Button } from '@workspace/ui/components/ui/button';
 import {
@@ -12,79 +16,141 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@workspace/ui/components/ui/dialog';
+import { Input } from '@workspace/ui/components/ui/input';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@workspace/ui/components/ui/select';
-import { LoaderCircle, Printer, RefreshCw, Usb } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Cable, LoaderCircle, Network, Printer, RefreshCw, Usb } from 'lucide-react';
+import { useState } from 'react';
 
 import { useEditorStore } from '../../lib/editor-store';
 import { parseSampleData, toPrintJob } from '../../lib/print-job';
+import {
+  createTcpPrinter,
+  getAuthorizedWebSerialPrinters,
+  getAuthorizedWebUSBPrinters,
+  isTcpPrintingSupported,
+  printerErrorMessage,
+  printTemplate,
+  requestWebSerialPrinter,
+  requestWebUSBPrinter,
+} from '../../lib/printer-client';
+
+type Transport = PrinterDescriptor['transport'];
 
 export function PrinterControl() {
   const document = useEditorStore(state => state.document);
   const [open, setOpen] = useState(false);
-  const [printers, setPrinters] = useState<PrintersResponse['printers']>([]);
+  const [transport, setTransport] = useState<Transport>('webusb');
+  const [printers, setPrinters] = useState<PrinterDescriptor[]>([]);
   const [selectedId, setSelectedId] = useState('');
+  const [baudRate, setBaudRate] = useState('9600');
+  const [host, setHost] = useState('');
+  const [tcpPort, setTcpPort] = useState('9100');
   const [loading, setLoading] = useState(false);
   const [printing, setPrinting] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
 
-  async function loadPrinters(signal?: AbortSignal) {
+  async function loadAuthorizedPrinters(nextTransport = transport) {
+    if (nextTransport === 'tcp') {
+      setPrinters([]);
+      setSelectedId('');
+      setMessage(isTcpPrintingSupported()
+        ? '请输入打印机的局域网地址。'
+        : '当前页面没有 Direct Sockets 能力，普通浏览器标签页无法直连 TCP 打印机。');
+      setIsError(!isTcpPrintingSupported());
+      return;
+    }
+
     setLoading(true);
     setMessage('');
     setIsError(false);
 
     try {
-      const requestInit: RequestInit = { cache: 'no-store' };
-      if (signal) {
-        requestInit.signal = signal;
-      }
-      const response = await fetch('/api/printers', requestInit);
-      const result = await response.json() as PrintersResponse;
-      if (!response.ok) {
-        throw new Error(result.error ?? '无法识别打印机。');
-      }
-      setPrinters(result.printers);
+      const result = nextTransport === 'webusb'
+        ? await getAuthorizedWebUSBPrinters()
+        : await getAuthorizedWebSerialPrinters(Number(baudRate));
+      setPrinters(result);
       setSelectedId(current =>
-        result.printers.some(printer => printer.id === current)
+        result.some(printer => printer.id === current)
           ? current
-          : result.printers[0]?.id ?? '',
+          : result[0]?.id ?? '',
       );
-      if (result.printers.length === 0) {
-        setMessage('没有发现 USB ESC/POS 打印机，请检查连接和系统权限。');
+      if (result.length === 0) {
+        setMessage('尚未授权打印机，请点击“选择设备”。');
       }
     }
     catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        return;
-      }
       setPrinters([]);
       setSelectedId('');
       setIsError(true);
-      setMessage(error instanceof Error ? error.message : '无法识别打印机。');
+      setMessage(printerErrorMessage(error));
     }
     finally {
-      if (!signal?.aborted) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   }
 
-  useEffect(() => {
-    if (!open) {
-      return;
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+    if (nextOpen) {
+      void loadAuthorizedPrinters();
     }
-    const controller = new AbortController();
-    void loadPrinters(controller.signal);
-    return () => controller.abort();
-  }, [open]);
+  }
+
+  function handleTransportChange(value: string) {
+    const nextTransport = value as Transport;
+    setTransport(nextTransport);
+    setMessage('');
+    setIsError(false);
+    void loadAuthorizedPrinters(nextTransport);
+  }
+
+  function handleBaudRateChange(value: string) {
+    setBaudRate(value);
+    setPrinters(current => current.map(printer =>
+      printer.transport === 'webserial'
+        ? { ...printer, baudRate: Number(value) }
+        : printer,
+    ));
+  }
+
+  async function handleRequestDevice() {
+    setLoading(true);
+    setMessage('');
+    setIsError(false);
+    try {
+      const printer = transport === 'webusb'
+        ? await requestWebUSBPrinter()
+        : await requestWebSerialPrinter(Number(baudRate));
+      setPrinters(current => [
+        ...current.filter(item => item.id !== printer.id),
+        printer,
+      ]);
+      setSelectedId(printer.id);
+      setMessage('打印机已授权，可以发送打印任务。');
+    }
+    catch (error) {
+      setIsError(true);
+      setMessage(printerErrorMessage(error));
+    }
+    finally {
+      setLoading(false);
+    }
+  }
 
   async function handlePrint() {
-    const printer = printers.find(item => item.id === selectedId);
+    const port = Number(tcpPort);
+    const printer = transport === 'tcp'
+      ? (host.trim() && Number.isInteger(port) && port > 0
+          ? createTcpPrinter(host.trim(), port)
+          : undefined)
+      : printers.find(item => item.id === selectedId);
     if (!printer) {
       setIsError(true);
-      setMessage('请先选择一台可用打印机。');
+      setMessage(transport === 'tcp'
+        ? '请输入有效的打印机地址和端口。'
+        : '请先选择一台可用打印机。');
       return;
     }
 
@@ -100,22 +166,12 @@ export function PrinterControl() {
     setIsError(false);
 
     try {
-      const response = await fetch('/api/print', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          printer,
-          template: toPrintJob(document),
-          data: sample.data,
-        }),
-      });
-      const result = await response.json() as PrintResponse;
-      setIsError(!response.ok || !result.ok);
-      setMessage(result.message);
+      await printTemplate(printer, toPrintJob(document), sample.data);
+      setMessage('打印任务已发送。');
     }
-    catch {
+    catch (error) {
       setIsError(true);
-      setMessage('无法连接本机打印服务，请确认 Next.js 服务仍在运行。');
+      setMessage(printerErrorMessage(error));
     }
     finally {
       setPrinting(false);
@@ -123,7 +179,7 @@ export function PrinterControl() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button type="button" variant="outline" size="sm">
           <Printer aria-hidden="true" />
@@ -134,44 +190,111 @@ export function PrinterControl() {
         <DialogHeader>
           <DialogTitle>打印小票</DialogTitle>
           <DialogDescription>
-            识别连接到当前 Next.js 主机的 USB ESC/POS 打印机。
+            由当前浏览器直接连接本机或局域网 ESC/POS 打印机。
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="flex items-end gap-2">
-            <div className="min-w-0 flex-1">
-              <label htmlFor="printer-select" className="mb-1.5 block text-xs font-medium">打印机</label>
-              <Select value={selectedId} onValueChange={setSelectedId} disabled={loading || printers.length === 0}>
-                <SelectTrigger id="printer-select" className="w-full">
-                  <SelectValue placeholder={loading ? '正在识别…' : '选择打印机'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {printers.map(printer => (
-                    <SelectItem key={printer.id} value={printer.id}>
-                      <Usb aria-hidden="true" />
-                      {printer.label}
-                      {' · '}
-                      总线
-                      {printer.busNumber}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              disabled={loading}
-              aria-label="重新识别打印机"
-              onClick={() => void loadPrinters()}
-            >
-              <span className={loading ? 'animate-spin' : ''}>
-                <RefreshCw aria-hidden="true" />
-              </span>
-            </Button>
+          <div>
+            <label htmlFor="transport-select" className="mb-1.5 block text-xs font-medium">连接方式</label>
+            <Select value={transport} onValueChange={handleTransportChange} disabled={printing}>
+              <SelectTrigger id="transport-select" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="webusb">
+                  <Usb aria-hidden="true" />
+                  USB
+                </SelectItem>
+                <SelectItem value="webserial">
+                  <Cable aria-hidden="true" />
+                  串口
+                </SelectItem>
+                <SelectItem value="tcp">
+                  <Network aria-hidden="true" />
+                  网络（TCP）
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+
+          {transport === 'webserial'
+            ? (
+                <div>
+                  <label htmlFor="baud-rate" className="mb-1.5 block text-xs font-medium">波特率</label>
+                  <Select value={baudRate} onValueChange={handleBaudRateChange} disabled={loading || printing}>
+                    <SelectTrigger id="baud-rate" className="w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="9600">9600</SelectItem>
+                      <SelectItem value="19200">19200</SelectItem>
+                      <SelectItem value="38400">38400</SelectItem>
+                      <SelectItem value="115200">115200</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )
+            : null}
+
+          {transport === 'tcp'
+            ? (
+                <div className="grid grid-cols-[1fr_7rem] gap-2">
+                  <div>
+                    <label htmlFor="printer-host" className="mb-1.5 block text-xs font-medium">打印机地址</label>
+                    <Input
+                      id="printer-host"
+                      value={host}
+                      placeholder="192.168.1.100"
+                      onChange={event => setHost(event.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="printer-port" className="mb-1.5 block text-xs font-medium">端口</label>
+                    <Input
+                      id="printer-port"
+                      inputMode="numeric"
+                      value={tcpPort}
+                      onChange={event => setTcpPort(event.target.value)}
+                    />
+                  </div>
+                </div>
+              )
+            : (
+                <div className="flex items-end gap-2">
+                  <div className="min-w-0 flex-1">
+                    <label htmlFor="printer-select" className="mb-1.5 block text-xs font-medium">打印机</label>
+                    <Select value={selectedId} onValueChange={setSelectedId} disabled={loading || printers.length === 0}>
+                      <SelectTrigger id="printer-select" className="w-full">
+                        <SelectValue placeholder={loading ? '正在识别…' : '选择打印机'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {printers.map(printer => (
+                          <SelectItem key={printer.id} value={printer.id}>
+                            {printer.transport === 'webusb'
+                              ? <Usb aria-hidden="true" />
+                              : <Cable aria-hidden="true" />}
+                            {printer.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    disabled={loading}
+                    aria-label="刷新已授权打印机"
+                    onClick={() => void loadAuthorizedPrinters()}
+                  >
+                    <span className={loading ? 'animate-spin' : ''}>
+                      <RefreshCw aria-hidden="true" />
+                    </span>
+                  </Button>
+                  <Button type="button" variant="outline" disabled={loading} onClick={() => void handleRequestDevice()}>
+                    选择设备
+                  </Button>
+                </div>
+              )}
 
           {message
             ? (
@@ -190,13 +313,17 @@ export function PrinterControl() {
             : null}
 
           <p className="text-[11px] leading-5 text-muted-foreground">
-            打印发生在运行 Next.js 的这台电脑上。云端部署无法直接访问门店 USB 设备。
+            USB/串口需要 Chrome 或 Edge，并通过 HTTPS 或 localhost 打开。网络 TCP 仅在启用 Direct Sockets 的隔离式 Web 应用中可用。
           </p>
         </div>
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => setOpen(false)}>取消</Button>
-          <Button type="button" disabled={!selectedId || loading || printing} onClick={() => void handlePrint()}>
+          <Button
+            type="button"
+            disabled={(transport !== 'tcp' && !selectedId) || loading || printing}
+            onClick={() => void handlePrint()}
+          >
             {printing
               ? (
                   <span className="animate-spin">

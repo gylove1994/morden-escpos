@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Ophir LOJKINE
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { BeforeMount, OnMount } from '@monaco-editor/react';
 import type { JsonSchema } from '../../types/jsonSchema';
 import Editor from '@monaco-editor/react';

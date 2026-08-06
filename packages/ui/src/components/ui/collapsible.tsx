@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 "use client"
 
 import { Collapsible as CollapsiblePrimitive } from "radix-ui"

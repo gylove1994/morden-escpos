@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 'use client';
 
 import type { DragEndEvent } from '@dnd-kit/core';

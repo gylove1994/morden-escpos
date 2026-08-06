@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 /* eslint-disable ts/no-this-alias */
 import type { Device, InEndpoint, OutEndpoint } from 'usb';
 import { Buffer } from 'node:buffer';

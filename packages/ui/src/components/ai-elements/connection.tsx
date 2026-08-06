@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { ConnectionLineComponent } from "@xyflow/react";
 
 const HALF = 0.5;

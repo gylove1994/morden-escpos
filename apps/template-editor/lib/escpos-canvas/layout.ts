@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { TableCustomCommand } from 'morden-node-escpos/schema';
 
 export function charLength(character: string): number {

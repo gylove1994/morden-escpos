@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Ophir LOJKINE
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { SchemaBuilderRegistry } from '../../src/registry/types';
 import assert from 'node:assert/strict';
 import { render } from '@testing-library/react';

@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import { cn } from "#lib/utils";
 import { Panel as PanelPrimitive } from "@xyflow/react";
 import type { ComponentProps } from "react";

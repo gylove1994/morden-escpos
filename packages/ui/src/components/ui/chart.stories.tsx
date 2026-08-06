@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import { useMemo } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {

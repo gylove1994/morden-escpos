@@ -18,3 +18,11 @@ pnpm typecheck
 
 库的安装方式、API 与示例请参阅
 [`packages/morden-node-escpos/README.md`](packages/morden-node-escpos/README.md)。
+
+## 贡献
+
+- [Contributing guide](./CONTRIBUTING.md)
+- [Code of Conduct](./CODE_OF_CONDUCT.md)
+- [Security policy](./SECURITY.md)
+- License map: [CONTEXT-MAP.md](./CONTEXT-MAP.md)
+- Licenses: [LICENSE](./LICENSE) (MIT + BSL 1.1 by path)

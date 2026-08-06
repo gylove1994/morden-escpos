@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 'use strict';
 import type { Adapter } from '../adapter';
 import type {
@@ -5,8 +9,10 @@ import type {
   StatusClassConstructor,
 } from './statuses';
 import type { AnyCase } from './utils';
-import { Buffer } from 'node:buffer';
-import EventEmitter from 'node:events';
+// eslint-disable-next-line unicorn/prefer-node-protocol -- browser entry bundles the Buffer polyfill
+import { Buffer } from 'buffer';
+// eslint-disable-next-line unicorn/prefer-node-protocol -- browser entry bundles the events polyfill
+import EventEmitter from 'events';
 import getPixels from 'get-pixels';
 import iconv from 'iconv-lite';
 import { MutableBuffer } from 'mutable-buffer';

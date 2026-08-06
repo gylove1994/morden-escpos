@@ -1,7 +1,11 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['morden-node-escpos', 'usb'],
+  output: 'export',
   transpilePackages: ['@workspace/jsonjoy-builder', '@workspace/ui'],
 };
 

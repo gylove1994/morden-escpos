@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { PrintJobJSON } from 'morden-node-escpos/schema';
 
 import type { EditorDocument } from './editor-types';

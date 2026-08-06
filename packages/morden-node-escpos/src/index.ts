@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 export type { Adapter } from './adapter';
 // 导出控制器
 export { PrinterController } from './controller';

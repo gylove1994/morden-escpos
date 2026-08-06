@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { StorybookConfig } from '@storybook/react-vite';
 
 import tailwindcss from '@tailwindcss/vite';

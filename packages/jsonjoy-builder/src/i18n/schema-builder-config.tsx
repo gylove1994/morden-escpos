@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2025 Ophir LOJKINE
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import type { ReactNode } from 'react';
 import type { Translation } from './translation-keys';
 import { createContext, useContext, useMemo } from 'react';

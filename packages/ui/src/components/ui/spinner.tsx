@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ */
 import { cn } from "#lib/utils"
 import { Loader2Icon } from "lucide-react"
 

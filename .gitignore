@@ -5,6 +5,7 @@ coverage
 .eslintcache
 .turbo
 .next
+out
 .vercel
 storybook-static
 *.tsbuildinfo
