@@ -16,6 +16,17 @@ When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the 
 
 Every triaged issue *SHOULD* carry exactly one state role (and, per `/triage`, one category role such as `bug` or `enhancement`).
 
+## Main-flow labels
+
+These labels are **orthogonal** to triage state roles. They mark stages on the idea → ship path (spec → tickets → implement), not incoming triage.
+
+| Label in our tracker | Meaning                                                                 |
+| -------------------- | ----------------------------------------------------------------------- |
+| `ready-for-split`    | Spec/PRD is finalized; ready for `/to-tickets` (split into tracer-bullet tickets with blocking edges) |
+| `ready-for-agent`    | Also used here for a single ticket that is unblocked and ready to `/implement` (same string as the triage state role) |
+
+Apply `ready-for-split` on the **spec/PRD issue** (or the issue that carries the finalized spec). After split, remove or replace it; frontier tickets then receive `ready-for-agent` when they have no open blockers.
+
 ## Area labels
 
 Area labels are **orthogonal** to state and category. They mark which package or app the issue primarily touches so agents and humans can filter work. Apply **zero or more** when the scope is clear; prefer the most specific area(s). Cross-cutting tooling or docs-only work may omit an area label.
