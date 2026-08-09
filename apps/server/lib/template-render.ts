@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import type { PrintJobJSON } from 'morden-node-escpos/schema';
-import { TemplateInputValidationError } from 'morden-node-escpos/template-inputs';
+import type { Buffer } from 'node:buffer';
 import { renderTemplateToBytes } from 'morden-node-escpos/render';
+import { TemplateInputValidationError } from 'morden-node-escpos/template-inputs';
 
 export class TemplateRenderError extends Error {
   readonly errors: string[];

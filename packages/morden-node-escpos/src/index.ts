@@ -74,7 +74,6 @@ export { default as NetworkAdapter } from './network';
 
 // 导出打印机核心
 export { command, Image, Printer } from './printer';
-
 export type {
   Alignment,
   BarcodeFont,

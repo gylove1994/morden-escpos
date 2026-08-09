@@ -2,18 +2,19 @@
  * Copyright (c) 2026 morden-escpos-contributors
  * SPDX-License-Identifier: MIT
  */
+import type { Buffer } from 'node:buffer';
 import type { PrintJobJSON } from './controller/json-schema';
 import { JSONPrintExecutor } from './controller/json-executor';
 import { TemplateEngine } from './controller/template-engine';
 import { MemoryAdapter } from './memory-adapter';
 import { Printer } from './printer';
 
-export type RenderBytesOptions = {
+export interface RenderBytesOptions {
   /** Default encoding when the job does not set config.encoding. */
   encoding?: string
   /** Default print width when the job does not set config.width. */
   width?: number
-};
+}
 
 /**
  * Render a fully resolved PrintJobJSON to raw ESC/POS bytes.

@@ -3,19 +3,20 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import type { PrintJobJSON } from 'morden-node-escpos/schema';
-import { and, desc, eq } from 'drizzle-orm';
+import type { PrintTemplateRow } from './db/schema';
 import { randomUUID } from 'node:crypto';
+import { and, desc, eq } from 'drizzle-orm';
 import { db } from './db';
-import { printTemplate, type PrintTemplateRow } from './db/schema';
+import { printTemplate } from './db/schema';
 
-export type PrintTemplatePublic = {
+export interface PrintTemplatePublic {
   id: string
   organizationId: string
   name: string
   definition: PrintJobJSON
   createdAt: string
   updatedAt: string
-};
+}
 
 export class InvalidTemplateDefinitionError extends Error {
   constructor(message: string) {
