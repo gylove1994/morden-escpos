@@ -7,6 +7,7 @@ import {
   canManagePrinterAgents,
   getConsoleSession,
 } from '../../../lib/console-auth';
+import { getConsoleMessages } from '../../../lib/i18n/server';
 import { listPrinterAgents } from '../../../lib/printer-agents';
 import { PrinterAgentsPanel } from '../../components/printer-agents-panel';
 
@@ -20,16 +21,15 @@ export default async function PrinterAgentsPage() {
     redirect('/console/create-organization');
   }
 
-  const printerAgents = await listPrinterAgents(session.organization.id);
+  const [{ messages }, printerAgents] = await Promise.all([
+    getConsoleMessages(),
+    listPrinterAgents(session.organization.id),
+  ]);
 
   return (
     <section className="stack">
-      <h1>Printer Agents</h1>
-      <p className="muted">
-        Register on-site Printer Agents and manage device tokens. Tokens are shown
-        once on create or rotate and stored hashed at rest. This is separate from
-        human session cookies.
-      </p>
+      <h1>{messages.printerAgents.title}</h1>
+      <p className="muted">{messages.printerAgents.blurb}</p>
       <PrinterAgentsPanel
         initialPrinterAgents={printerAgents}
         canManage={canManagePrinterAgents(session.role)}

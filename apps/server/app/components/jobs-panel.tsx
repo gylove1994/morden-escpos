@@ -7,15 +7,18 @@
 import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useConsoleI18n } from '../../lib/i18n/client';
+import { formatMessage } from '../../lib/i18n/messages';
 
 export interface JobListItem {
   id: string
-  printerId: string | null
-  printerGroupId: string | null
-  parentJobId: string | null
-  kind: string
+  printerId: string
   printerAgentId: string
   status: string
+  kind: 'raw' | 'template_confirmation'
+  parentJobId: string | null
+  childCount: number
+  relation: 'standalone' | 'parent' | 'child'
   payloadByteLength: number
   idempotencyKey: string | null
   errorMessage: string | null
@@ -29,29 +32,54 @@ export interface PrinterOption {
   status: string
 }
 
-export interface PrinterGroupOption {
-  id: string
-  name: string
-  printerIds: string[]
-}
-
 interface Props {
   initialJobs: JobListItem[]
   printers: PrinterOption[]
-  printerGroups: PrinterGroupOption[]
 }
 
-export function JobsPanel({ initialJobs, printers, printerGroups }: Props) {
+function statusLabel(
+  status: string,
+  messages: ReturnType<typeof useConsoleI18n>['messages'],
+): string {
+  switch (status) {
+    case 'queued':
+      return messages.jobs.statusQueued;
+    case 'leased':
+      return messages.jobs.statusLeased;
+    case 'printing':
+      return messages.jobs.statusPrinting;
+    case 'succeeded':
+      return messages.jobs.statusSucceeded;
+    case 'failed':
+      return messages.jobs.statusFailed;
+    default:
+      return status;
+  }
+}
+
+function relationLabel(
+  job: JobListItem,
+  messages: ReturnType<typeof useConsoleI18n>['messages'],
+): string {
+  if (job.relation === 'child' && job.parentJobId) {
+    return formatMessage(messages.jobs.relationChild, {
+      parentId: job.parentJobId,
+    });
+  }
+  if (job.relation === 'parent') {
+    return formatMessage(messages.jobs.relationParent, {
+      count: job.childCount,
+    });
+  }
+  return messages.jobs.relationStandalone;
+}
+
+export function JobsPanel({ initialJobs, printers }: Props) {
   const router = useRouter();
+  const { messages, locale } = useConsoleI18n();
   const [jobs, setJobs] = useState(initialJobs);
-  const [targetKind, setTargetKind] = useState<'printer' | 'group'>(
-    printers.some(p => p.status === 'active') ? 'printer' : 'group',
-  );
   const [printerId, setPrinterId] = useState(
     printers.find(p => p.status === 'active')?.id ?? '',
-  );
-  const [printerGroupId, setPrinterGroupId] = useState(
-    printerGroups[0]?.id ?? '',
   );
   const [payloadText, setPayloadText] = useState('Hello from morden-escpos');
   const [idempotencyKey, setIdempotencyKey] = useState('');
@@ -81,9 +109,7 @@ export function JobsPanel({ initialJobs, printers, printerGroups }: Props) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...(targetKind === 'printer'
-          ? { printerId }
-          : { printerGroupId }),
+        printerId,
         payloadBase64,
         ...(idempotencyKey.trim()
           ? { idempotencyKey: idempotencyKey.trim() }
@@ -94,103 +120,47 @@ export function JobsPanel({ initialJobs, printers, printerGroups }: Props) {
     setPending(false);
     if (!response.ok) {
       const body = await response.json().catch(() => ({})) as { message?: string };
-      setError(body.message ?? 'Could not enqueue job');
+      setError(body.message ?? messages.jobs.enqueueFailed);
       return;
     }
 
     const body = await response.json() as {
       job: JobListItem
-      children?: JobListItem[]
       deduped: boolean
     };
-    const childCount = body.children?.length ?? 0;
     setLastMessage(
       body.deduped
-        ? `Idempotent replay — existing job ${body.job.id} (${body.job.status})`
-        : childCount > 0
-          ? `Enqueued parent ${body.job.id} with ${childCount} child jobs`
-          : `Enqueued job ${body.job.id}`,
+        ? formatMessage(messages.jobs.idempotentReplay, {
+            id: body.job.id,
+            status: statusLabel(body.job.status, messages),
+          })
+        : formatMessage(messages.jobs.enqueued, { id: body.job.id }),
     );
     await refreshList();
   }
-
-  async function onRetry(jobId: string) {
-    setError(null);
-    const response = await fetch(`/api/console/jobs/${jobId}/retry`, {
-      method: 'POST',
-    });
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({})) as { message?: string };
-      setError(body.message ?? 'Could not retry job');
-      return;
-    }
-    setLastMessage(`Retried child job ${jobId}`);
-    await refreshList();
-  }
-
-  const canSubmit = targetKind === 'printer'
-    ? activePrinters.length > 0 && printerId.length > 0
-    : printerGroups.length > 0 && printerGroupId.length > 0;
 
   return (
     <div className="stack">
       <form className="org-form" onSubmit={onEnqueue}>
         <label>
-          Target
+          {messages.jobs.targetPrinter}
           <select
-            value={targetKind}
-            onChange={event => setTargetKind(event.target.value as 'printer' | 'group')}
+            value={printerId}
+            onChange={event => setPrinterId(event.target.value)}
+            required
+            disabled={activePrinters.length === 0}
           >
-            <option value="printer">Printer</option>
-            <option value="group">Printer Group</option>
+            {activePrinters.length === 0
+              ? <option value="">{messages.jobs.noActivePrinters}</option>
+              : activePrinters.map(item => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
           </select>
         </label>
-        {targetKind === 'printer'
-          ? (
-              <label>
-                Target Printer
-                <select
-                  value={printerId}
-                  onChange={event => setPrinterId(event.target.value)}
-                  required
-                  disabled={activePrinters.length === 0}
-                >
-                  {activePrinters.length === 0
-                    ? <option value="">No active Printers</option>
-                    : activePrinters.map(item => (
-                        <option key={item.id} value={item.id}>
-                          {item.name}
-                        </option>
-                      ))}
-                </select>
-              </label>
-            )
-          : (
-              <label>
-                Target Printer Group
-                <select
-                  value={printerGroupId}
-                  onChange={event => setPrinterGroupId(event.target.value)}
-                  required
-                  disabled={printerGroups.length === 0}
-                >
-                  {printerGroups.length === 0
-                    ? <option value="">No Printer Groups</option>
-                    : printerGroups.map(item => (
-                        <option key={item.id} value={item.id}>
-                          {item.name}
-                          {' '}
-                          (
-                          {item.printerIds.length}
-                          {' '}
-                          members)
-                        </option>
-                      ))}
-                </select>
-              </label>
-            )}
         <label>
-          Raw text (encoded to ESC/POS-ish base64 for demo)
+          {messages.jobs.rawTextLabel}
           <textarea
             value={payloadText}
             onChange={event => setPayloadText(event.target.value)}
@@ -199,93 +169,129 @@ export function JobsPanel({ initialJobs, printers, printerGroups }: Props) {
           />
         </label>
         <label>
-          Idempotency key (optional)
+          {messages.jobs.idempotencyLabel}
           <input
             value={idempotencyKey}
             onChange={event => setIdempotencyKey(event.target.value)}
             maxLength={200}
-            placeholder="order-42-retry"
+            placeholder={messages.jobs.idempotencyPlaceholder}
           />
         </label>
         {error ? <p className="error" role="alert">{error}</p> : null}
         {lastMessage ? <p className="muted" role="status">{lastMessage}</p> : null}
         <button
           type="submit"
-          disabled={pending || !canSubmit || payloadText.length === 0}
+          disabled={pending || activePrinters.length === 0 || payloadText.length === 0}
         >
-          {pending ? 'Enqueueing…' : 'Enqueue raw job'}
+          {pending ? messages.jobs.enqueueing : messages.jobs.enqueue}
         </button>
       </form>
 
       <div className="stack">
         <div className="agent-actions">
-          <h2>Job history</h2>
+          <h2>{messages.jobs.historyTitle}</h2>
           <button type="button" className="secondary" onClick={() => void refreshList()}>
-            Refresh
+            {messages.jobs.refresh}
           </button>
         </div>
         {jobs.length === 0
-          ? <p className="muted">No jobs yet.</p>
+          ? <p className="muted">{messages.jobs.empty}</p>
           : (
               <ul className="agent-list">
                 {jobs.map(job => (
                   <li key={job.id} className="agent-row">
                     <div>
                       <div className="agent-name">
-                        {job.kind}
-                        {' '}
-                        ·
-                        {' '}
-                        {job.status}
+                        <span
+                          className={
+                            job.status === 'failed'
+                              ? 'job-status job-status-failed'
+                              : 'job-status'
+                          }
+                        >
+                          {statusLabel(job.status, messages)}
+                        </span>
                         {' '}
                         ·
                         {' '}
                         {job.payloadByteLength}
                         {' '}
-                        bytes
+                        {messages.jobs.bytes}
+                      </div>
+                      <div className="job-labels" aria-label="job labels">
+                        <span
+                          className={
+                            job.kind === 'template_confirmation'
+                              ? 'job-label job-label-confirmation'
+                              : 'job-label'
+                          }
+                          data-job-kind={job.kind}
+                        >
+                          {job.kind === 'template_confirmation'
+                            ? messages.jobs.kindConfirmation
+                            : messages.jobs.kindRaw}
+                        </span>
+                        <span
+                          className="job-label job-label-relation"
+                          data-job-relation={job.relation}
+                        >
+                          {relationLabel(job, messages)}
+                        </span>
                       </div>
                       <div className="muted agent-meta">
                         <span className="agent-id">
-                          jobId:
+                          {messages.jobs.jobId}
+                          :
                           {' '}
                           {job.id}
                         </span>
-                        {job.printerId
-                          ? (
-                              <span className="agent-id">
-                                printerId:
-                                {' '}
-                                {job.printerId}
-                              </span>
-                            )
-                          : null}
-                        {job.printerGroupId
-                          ? (
-                              <span className="agent-id">
-                                printerGroupId:
-                                {' '}
-                                {job.printerGroupId}
-                              </span>
-                            )
-                          : null}
+                        <span className="agent-id">
+                          {messages.jobs.printerId}
+                          :
+                          {' '}
+                          {job.printerId}
+                        </span>
                         {job.parentJobId
                           ? (
                               <span className="agent-id">
-                                parentJobId:
+                                {messages.jobs.parentJob}
+                                :
                                 {' '}
                                 {job.parentJobId}
                               </span>
                             )
                           : null}
+                        {job.childCount > 0
+                          ? (
+                              <span>
+                                {messages.jobs.childCount}
+                                :
+                                {' '}
+                                {job.childCount}
+                              </span>
+                            )
+                          : null}
                         <span>
-                          Created:
+                          {messages.jobs.created}
+                          :
                           {' '}
-                          {new Date(job.createdAt).toLocaleString()}
+                          {new Date(job.createdAt).toLocaleString(locale)}
                         </span>
+                        {job.completedAt
+                          ? (
+                              <span>
+                                {messages.jobs.completed}
+                                :
+                                {' '}
+                                {new Date(job.completedAt).toLocaleString(locale)}
+                              </span>
+                            )
+                          : null}
                         {job.idempotencyKey
                           ? (
                               <span>
-                                Idempotency:
+                                {messages.jobs.idempotency}
+                                :
                                 {' '}
                                 {job.idempotencyKey}
                               </span>
@@ -293,8 +299,9 @@ export function JobsPanel({ initialJobs, printers, printerGroups }: Props) {
                           : null}
                         {job.errorMessage
                           ? (
-                              <span className="error">
-                                Error:
+                              <span className="error" data-job-error>
+                                {messages.jobs.error}
+                                :
                                 {' '}
                                 {job.errorMessage}
                               </span>
@@ -302,17 +309,6 @@ export function JobsPanel({ initialJobs, printers, printerGroups }: Props) {
                           : null}
                       </div>
                     </div>
-                    {job.kind === 'child' && job.status === 'failed'
-                      ? (
-                          <button
-                            type="button"
-                            className="secondary"
-                            onClick={() => void onRetry(job.id)}
-                          >
-                            Retry child
-                          </button>
-                        )
-                      : null}
                   </li>
                 ))}
               </ul>

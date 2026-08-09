@@ -4,6 +4,8 @@
  */
 import type { ReactNode } from 'react';
 import { IBM_Plex_Sans, Source_Serif_4 } from 'next/font/google';
+import { ConsoleI18nProvider } from '../lib/i18n/client';
+import { getConsoleMessages } from '../lib/i18n/server';
 import './globals.css';
 
 const sans = IBM_Plex_Sans({
@@ -23,10 +25,16 @@ export const metadata = {
   description: 'BSL SaaS print-queue control plane',
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const { locale, messages } = await getConsoleMessages();
+
   return (
-    <html lang="en" className={`${sans.variable} ${display.variable}`}>
-      <body>{children}</body>
+    <html lang={locale} className={`${sans.variable} ${display.variable}`}>
+      <body>
+        <ConsoleI18nProvider locale={locale} messages={messages}>
+          {children}
+        </ConsoleI18nProvider>
+      </body>
     </html>
   );
 }

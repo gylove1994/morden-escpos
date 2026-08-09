@@ -7,6 +7,7 @@ import {
   canManagePrinters,
   getConsoleSession,
 } from '../../../lib/console-auth';
+import { getConsoleMessages } from '../../../lib/i18n/server';
 import { listPrinterAgents } from '../../../lib/printer-agents';
 import { listPrinters } from '../../../lib/printers';
 import { PrintersPanel } from '../../components/printers-panel';
@@ -21,19 +22,16 @@ export default async function PrintersPage() {
     redirect('/console/create-organization');
   }
 
-  const [printers, printerAgents] = await Promise.all([
+  const [{ messages }, printers, printerAgents] = await Promise.all([
+    getConsoleMessages(),
     listPrinters(session.organization.id),
     listPrinterAgents(session.organization.id),
   ]);
 
   return (
     <section className="stack">
-      <h1>Printers</h1>
-      <p className="muted">
-        Confirm Printers under a Printer Agent and attach connection hints.
-        Leased jobs carry those hints so the on-site Printer Agent can open the
-        correct local device.
-      </p>
+      <h1>{messages.printers.title}</h1>
+      <p className="muted">{messages.printers.blurb}</p>
       <PrintersPanel
         initialPrinters={printers}
         printerAgents={printerAgents}

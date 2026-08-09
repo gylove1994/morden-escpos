@@ -5,6 +5,8 @@
 import { redirect } from 'next/navigation';
 import { getConsoleSession } from '../lib/console-auth';
 import { EDITION } from '../lib/edition';
+import { getConsoleMessages } from '../lib/i18n/server';
+import { LocaleSwitcher } from './components/locale-switcher';
 
 export default async function HomePage() {
   const session = await getConsoleSession();
@@ -12,19 +14,23 @@ export default async function HomePage() {
     redirect('/console');
   }
 
+  const { messages } = await getConsoleMessages();
+
   return (
     <main className="auth-panel">
-      <h1>morden-escpos</h1>
+      <div className="auth-toolbar">
+        <LocaleSwitcher />
+      </div>
+      <h1>{messages.brand}</h1>
       <p className="muted">
-        Print-queue control plane (
         {EDITION}
-        {' '}
-        edition). Sign in to open your Organization console.
+        {' · '}
+        {messages.auth.needAccount}
       </p>
       <p>
-        <a className="button" href="/signup">Sign up</a>
+        <a className="button" href="/signup">{messages.auth.signUp}</a>
         {' '}
-        <a className="button secondary" href="/login">Sign in</a>
+        <a className="button secondary" href="/login">{messages.auth.signIn}</a>
       </p>
     </main>
   );

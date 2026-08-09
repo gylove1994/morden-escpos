@@ -81,30 +81,31 @@ Optional lease duration:
 - Directional Business quotas: 25 printers / 5 Printer Agents / 5000 monthly jobs
 - Over-quota create/enqueue returns `403` with `error: "plan_limit_exceeded"`
 
-## Printers + Printer Groups + raw queue
+## Printers + raw queue
 
 - Console: `/console/printers` (create under a Printer Agent with connection hints)
-- Console: `/console/printer-groups` (fan-out target under exactly one Printer Agent)
-- Console: `/console/jobs` (enqueue raw base64 ESC/POS + job history + child retry)
-- APIs:
-  - `GET|POST /api/console/printers`
-  - `GET|POST /api/console/printer-groups`,
-    `PATCH /api/console/printer-groups/:printerGroupId`
-  - `GET|POST /api/console/jobs` (exactly one of `printerId` or `printerGroupId`)
-  - `POST /api/console/jobs/:jobId/retry` (failed child only)
+- Console: `/console/jobs` (enqueue raw base64 ESC/POS + auditable job history)
+- APIs: `GET|POST /api/console/printers`, `GET|POST /api/console/jobs`
 - Enqueue accepts optional `idempotencyKey` (dedupes per Organization)
-- Group enqueue creates one parent + N child jobs sharing `parentJobId`
-- Parent succeeds only when every child succeeds; mixed results → `partial_failed`
-- Empty / unknown Printer Group enqueue returns a clear error
+- Enqueue also accepts optional history hooks:
+  - `kind`: `raw` (default) or `template_confirmation`
+  - `parentJobId`: links a child job for group fan-out display
+- History list returns truthful `status` / `errorMessage`, plus `kind`,
+  `parentJobId`, `childCount`, and `relation` (`standalone` | `parent` | `child`)
 - Protocol:
   - `POST /api/protocol/v1/jobs/lease` → `200 { job }` or `204`
   - `POST /api/protocol/v1/jobs/{jobId}/report` with
     `printing` → `succeeded` | `failed` (`errorMessage` required on failure)
-- Job states (single/child): `queued` → `leased` → `printing` → `succeeded` | `failed`
-- Parent states: `queued` while children run → `succeeded` | `partial_failed` | `failed`
+- Job states: `queued` → `leased` → `printing` → `succeeded` | `failed`
 - Expired leases return to `queued`
 - Leased payloads include `payloadBase64`, `payloadByteLength`, and
   `connectionHints`
+
+## Console i18n (zh / en)
+
+- Cookie: `console_locale=en|zh` (default `en`; no other locales in MVP)
+- Locale switcher in auth pages and the console shell
+- Message catalogs live under `lib/i18n/`
 
 ## Edition stub
 

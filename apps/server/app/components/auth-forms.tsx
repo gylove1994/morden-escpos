@@ -8,9 +8,11 @@ import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { authClient } from '../../lib/auth-client';
+import { useConsoleI18n } from '../../lib/i18n/client';
 
 export function SignUpForm() {
   const router = useRouter();
+  const { messages } = useConsoleI18n();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -32,7 +34,7 @@ export function SignUpForm() {
 
     setPending(false);
     if (signUpError) {
-      setError(signUpError.message ?? 'Sign up failed');
+      setError(signUpError.message ?? messages.auth.signUpFailed);
       return;
     }
 
@@ -43,15 +45,15 @@ export function SignUpForm() {
   return (
     <form onSubmit={onSubmit}>
       <label>
-        Name
+        {messages.auth.name}
         <input name="name" autoComplete="name" required minLength={1} />
       </label>
       <label>
-        Email
+        {messages.auth.email}
         <input name="email" type="email" autoComplete="email" required />
       </label>
       <label>
-        Password
+        {messages.auth.password}
         <input
           name="password"
           type="password"
@@ -62,7 +64,7 @@ export function SignUpForm() {
       </label>
       {error ? <p className="error" role="alert">{error}</p> : null}
       <button type="submit" disabled={pending}>
-        {pending ? 'Creating account…' : 'Sign up'}
+        {pending ? messages.auth.creatingAccount : messages.auth.signUp}
       </button>
     </form>
   );
@@ -70,6 +72,7 @@ export function SignUpForm() {
 
 export function SignInForm() {
   const router = useRouter();
+  const { messages } = useConsoleI18n();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -89,7 +92,7 @@ export function SignInForm() {
 
     setPending(false);
     if (signInError) {
-      setError(signInError.message ?? 'Sign in failed');
+      setError(signInError.message ?? messages.auth.signInFailed);
       return;
     }
 
@@ -100,11 +103,11 @@ export function SignInForm() {
   return (
     <form onSubmit={onSubmit}>
       <label>
-        Email
+        {messages.auth.email}
         <input name="email" type="email" autoComplete="email" required />
       </label>
       <label>
-        Password
+        {messages.auth.password}
         <input
           name="password"
           type="password"
@@ -115,7 +118,7 @@ export function SignInForm() {
       </label>
       {error ? <p className="error" role="alert">{error}</p> : null}
       <button type="submit" disabled={pending}>
-        {pending ? 'Signing in…' : 'Sign in'}
+        {pending ? messages.auth.signingIn : messages.auth.signIn}
       </button>
     </form>
   );
@@ -123,6 +126,7 @@ export function SignInForm() {
 
 export function CreateOrganizationForm() {
   const router = useRouter();
+  const { messages } = useConsoleI18n();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -146,7 +150,7 @@ export function CreateOrganizationForm() {
 
     setPending(false);
     if (createError) {
-      setError(createError.message ?? 'Could not create Organization');
+      setError(createError.message ?? messages.createOrg.failed);
       return;
     }
 
@@ -157,16 +161,27 @@ export function CreateOrganizationForm() {
   return (
     <form className="org-form" onSubmit={onSubmit}>
       <label>
-        Organization name
-        <input name="name" required minLength={2} placeholder="Acme Prints" />
+        {messages.createOrg.nameLabel}
+        <input
+          name="name"
+          required
+          minLength={2}
+          placeholder={messages.createOrg.namePlaceholder}
+        />
       </label>
       <label>
-        Slug
-        <input name="slug" required minLength={2} placeholder="acme-prints" pattern="[a-z0-9-]+" />
+        {messages.createOrg.slugLabel}
+        <input
+          name="slug"
+          required
+          minLength={2}
+          placeholder={messages.createOrg.slugPlaceholder}
+          pattern="[a-z0-9-]+"
+        />
       </label>
       {error ? <p className="error" role="alert">{error}</p> : null}
       <button type="submit" disabled={pending}>
-        {pending ? 'Creating…' : 'Create Organization'}
+        {pending ? messages.createOrg.creating : messages.createOrg.submit}
       </button>
     </form>
   );
@@ -174,6 +189,7 @@ export function CreateOrganizationForm() {
 
 export function SignOutButton() {
   const router = useRouter();
+  const { messages } = useConsoleI18n();
   const [pending, setPending] = useState(false);
 
   async function onClick() {
@@ -185,7 +201,7 @@ export function SignOutButton() {
 
   return (
     <button type="button" className="secondary" disabled={pending} onClick={onClick}>
-      {pending ? 'Signing out…' : 'Sign out'}
+      {pending ? messages.shell.signingOut : messages.shell.signOut}
     </button>
   );
 }

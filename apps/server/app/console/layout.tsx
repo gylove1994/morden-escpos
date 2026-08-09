@@ -5,7 +5,9 @@
 import type { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { getConsoleSession } from '../../lib/console-auth';
+import { getConsoleMessages } from '../../lib/i18n/server';
 import { SignOutButton } from '../components/auth-forms';
+import { LocaleSwitcher } from '../components/locale-switcher';
 
 export default async function ConsoleLayout({ children }: { children: ReactNode }) {
   const session = await getConsoleSession();
@@ -13,47 +15,52 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
     redirect('/login');
   }
 
+  const { messages } = await getConsoleMessages();
+
   return (
     <div className="shell">
       <header className="shell-header">
         <div>
-          <div className="shell-brand">morden-escpos</div>
+          <div className="shell-brand">{messages.brand}</div>
           <div className="shell-meta">
             <span>{session.user.email}</span>
             {session.organization
               ? (
                   <>
                     <span>
-                      Organization:
+                      {messages.shell.organization}
+                      :
                       {' '}
                       {session.organization.name}
                     </span>
                     <span>
-                      Role:
+                      {messages.shell.role}
+                      :
                       {' '}
                       {session.role ?? 'unknown'}
                     </span>
                   </>
                 )
-              : <span>No active Organization</span>}
+              : <span>{messages.shell.noOrganization}</span>}
           </div>
         </div>
-        <SignOutButton />
+        <div className="shell-header-actions">
+          <LocaleSwitcher />
+          <SignOutButton />
+        </div>
       </header>
-      <nav className="shell-nav" aria-label="Console">
-        <a href="/console">Overview</a>
+      <nav className="shell-nav" aria-label={messages.nav.ariaLabel}>
+        <a href="/console">{messages.nav.overview}</a>
         {session.organization
           ? (
               <>
-                <a href="/console/printer-agents">Printer Agents</a>
-                <a href="/console/billing">Billing</a>
-                <a href="/console/printers">Printers</a>
-                <a href="/console/printer-groups">Printer Groups</a>
-                <a href="/console/jobs">Jobs</a>
-                <a href="/console/integrator-auth">Integrator auth</a>
+                <a href="/console/printer-agents">{messages.nav.printerAgents}</a>
+                <a href="/console/billing">{messages.nav.billing}</a>
+                <a href="/console/printers">{messages.nav.printers}</a>
+                <a href="/console/jobs">{messages.nav.jobs}</a>
               </>
             )
-          : <a href="/console/create-organization">Create Organization</a>}
+          : <a href="/console/create-organization">{messages.nav.createOrganization}</a>}
       </nav>
       <div className="shell-body">{children}</div>
     </div>
