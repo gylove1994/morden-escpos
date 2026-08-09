@@ -43,6 +43,8 @@ export default async function ConsoleHomePage() {
         {' · '}
         <a href="/console/printers">Manage Printers</a>
         {' · '}
+        <a href="/console/printer-groups">Manage Printer Groups</a>
+        {' · '}
         <a href="/console/jobs">Job history</a>
       </p>
     </section>

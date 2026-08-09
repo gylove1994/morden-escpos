@@ -1,9 +1,11 @@
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 /**
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { relations } from 'drizzle-orm';
 import {
+
   boolean,
   integer,
   pgTable,
@@ -186,48 +188,6 @@ export const printer = pgTable('printer', {
 });
 
 /**
- * Raw print job targeting a single Printer.
- * State machine: queued → leased → printing → succeeded | failed.
- * Expired leases return to queued.
- */
-export const printJob = pgTable(
-  'print_job',
-  {
-    id: text('id').primaryKey(),
-    organizationId: text('organization_id')
-      .notNull()
-      .references(() => organization.id, { onDelete: 'cascade' }),
-    printerId: text('printer_id')
-      .notNull()
-      .references(() => printer.id, { onDelete: 'restrict' }),
-    /** Denormalized for Printer Agent lease queries. */
-    printerAgentId: text('printer_agent_id')
-      .notNull()
-      .references(() => printerAgent.id, { onDelete: 'cascade' }),
-    /** `queued` | `leased` | `printing` | `succeeded` | `failed` */
-    status: text('status').notNull().default('queued'),
-    /** Raw ESC/POS bytes encoded as standard base64. */
-    payloadBase64: text('payload_base64').notNull(),
-    payloadByteLength: integer('payload_byte_length').notNull(),
-    /** Optional integrator idempotency key; unique per Organization when set. */
-    idempotencyKey: text('idempotency_key'),
-    leaseExpiresAt: timestamp('lease_expires_at', { withTimezone: true }),
-    errorMessage: text('error_message'),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-    leasedAt: timestamp('leased_at', { withTimezone: true }),
-    printingAt: timestamp('printing_at', { withTimezone: true }),
-    completedAt: timestamp('completed_at', { withTimezone: true }),
-  },
-  table => [
-    uniqueIndex('print_job_org_idempotency_uidx').on(
-      table.organizationId,
-      table.idempotencyKey,
-    ),
-  ],
-);
-
-/**
  * Integrator API key for REST enqueue (`Authorization: Bearer ik_…`).
  * Stored hashed; plaintext shown once on create. MUST stay distinct from
  * Printer Agent device tokens (`pa_…`) and human sessions.
@@ -297,6 +257,111 @@ export const printTemplate = pgTable('print_template', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+/**
+ * Fan-out target under exactly one Printer Agent.
+ * Enqueue expands into N child jobs sharing a parent id.
+ */
+export const printerGroup = pgTable('printer_group', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  printerAgentId: text('printer_agent_id')
+    .notNull()
+    .references(() => printerAgent.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const printerGroupMember = pgTable(
+  'printer_group_member',
+  {
+    id: text('id').primaryKey(),
+    printerGroupId: text('printer_group_id')
+      .notNull()
+      .references(() => printerGroup.id, { onDelete: 'cascade' }),
+    printerId: text('printer_id')
+      .notNull()
+      .references(() => printer.id, { onDelete: 'restrict' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  table => [
+    uniqueIndex('printer_group_member_uidx').on(
+      table.printerGroupId,
+      table.printerId,
+    ),
+  ],
+);
+
+/**
+ * Raw print job targeting a single Printer, or a parent/child fan-out pair.
+ */
+export const printJob = pgTable(
+  'print_job',
+  {
+    id: text('id').primaryKey(),
+    organizationId: text('organization_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    printerId: text('printer_id').references(() => printer.id, { onDelete: 'restrict' }),
+    printerAgentId: text('printer_agent_id')
+      .notNull()
+      .references(() => printerAgent.id, { onDelete: 'cascade' }),
+    printerGroupId: text('printer_group_id').references(() => printerGroup.id, {
+      onDelete: 'set null',
+    }),
+    parentJobId: text('parent_job_id').references((): AnyPgColumn => printJob.id, {
+      onDelete: 'cascade',
+    }),
+    kind: text('kind').notNull().default('single'),
+    status: text('status').notNull().default('queued'),
+    payloadBase64: text('payload_base64').notNull(),
+    payloadByteLength: integer('payload_byte_length').notNull(),
+    idempotencyKey: text('idempotency_key'),
+    leaseExpiresAt: timestamp('lease_expires_at', { withTimezone: true }),
+    errorMessage: text('error_message'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    leasedAt: timestamp('leased_at', { withTimezone: true }),
+    printingAt: timestamp('printing_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+  },
+  table => [
+    uniqueIndex('print_job_org_idempotency_uidx').on(
+      table.organizationId,
+      table.idempotencyKey,
+    ),
+  ],
+);
+
+export const printerGroupRelations = relations(printerGroup, ({ one, many }) => ({
+  organization: one(organization, {
+    fields: [printerGroup.organizationId],
+    references: [organization.id],
+  }),
+  printerAgent: one(printerAgent, {
+    fields: [printerGroup.printerAgentId],
+    references: [printerAgent.id],
+  }),
+  members: many(printerGroupMember),
+  printJobs: many(printJob),
+}));
+
+export const printerGroupMemberRelations = relations(printerGroupMember, ({ one }) => ({
+  printerGroup: one(printerGroup, {
+    fields: [printerGroupMember.printerGroupId],
+    references: [printerGroup.id],
+  }),
+  printer: one(printer, {
+    fields: [printerGroupMember.printerId],
+    references: [printer.id],
+  }),
+}));
+
+export type PrinterGroupRow = typeof printerGroup.$inferSelect;
+export type PrinterGroupMemberRow = typeof printerGroupMember.$inferSelect;
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
@@ -324,6 +389,7 @@ export const organizationRelations = relations(organization, ({ many }) => ({
   printerAgents: many(printerAgent),
   printers: many(printer),
   printJobs: many(printJob),
+  printerGroups: many(printerGroup),
   integratorApiKeys: many(integratorApiKey),
   webhookSigningSecrets: many(webhookSigningSecret),
   printTemplates: many(printTemplate),
@@ -357,6 +423,7 @@ export const printerAgentRelations = relations(printerAgent, ({ one, many }) => 
     references: [organization.id],
   }),
   printers: many(printer),
+  printerGroups: many(printerGroup),
   printJobs: many(printJob),
 }));
 
@@ -382,13 +449,14 @@ export const printerRelations = relations(printer, ({ one, many }) => ({
     fields: [printer.printerAgentId],
     references: [printerAgent.id],
   }),
+  groupMemberships: many(printerGroupMember),
   printJobs: many(printJob),
 }));
 
 export type PrinterRow = typeof printer.$inferSelect;
 export type PrinterStatus = 'active' | 'disabled';
 
-export const printJobRelations = relations(printJob, ({ one }) => ({
+export const printJobRelations = relations(printJob, ({ one, many }) => ({
   organization: one(organization, {
     fields: [printJob.organizationId],
     references: [organization.id],
@@ -401,10 +469,29 @@ export const printJobRelations = relations(printJob, ({ one }) => ({
     fields: [printJob.printerAgentId],
     references: [printerAgent.id],
   }),
+  printerGroup: one(printerGroup, {
+    fields: [printJob.printerGroupId],
+    references: [printerGroup.id],
+  }),
+  parentJob: one(printJob, {
+    fields: [printJob.parentJobId],
+    references: [printJob.id],
+    relationName: 'print_job_parent_child',
+  }),
+  childJobs: many(printJob, {
+    relationName: 'print_job_parent_child',
+  }),
 }));
 
 export type PrintJobRow = typeof printJob.$inferSelect;
-export type PrintJobStatus = 'queued' | 'leased' | 'printing' | 'succeeded' | 'failed';
+export type PrintJobKind = 'single' | 'parent' | 'child';
+export type PrintJobStatus
+  = | 'queued'
+    | 'leased'
+    | 'printing'
+    | 'succeeded'
+    | 'failed'
+    | 'partial_failed';
 
 export const integratorApiKeyRelations = relations(integratorApiKey, ({ one }) => ({
   organization: one(organization, {

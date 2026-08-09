@@ -8,10 +8,12 @@ import { assertPlanAllows } from '../../../../lib/billing/plan-limits';
 import { incrementMonthlyJobCount } from '../../../../lib/billing/subscription';
 import { getConsoleSession } from '../../../../lib/console-auth';
 import {
+  enqueueGroupJob,
   enqueueRawJob,
   enqueueTemplateJob,
   InvalidPayloadError,
   listPrintJobs,
+  PrinterGroupNotEnqueueableError,
   PrinterNotEnqueueableError,
   TemplateNotFoundError,
   TemplateRenderError,
@@ -21,10 +23,14 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const RawEnqueueBodySchema = z.object({
-  printerId: z.string().trim().min(1),
+  printerId: z.string().trim().min(1).optional(),
+  printerGroupId: z.string().trim().min(1).optional(),
   payloadBase64: z.string().min(1),
   idempotencyKey: z.string().trim().min(1).max(200).optional(),
-});
+}).refine(
+  value => Boolean(value.printerId) !== Boolean(value.printerGroupId),
+  { message: 'Provide exactly one of printerId or printerGroupId' },
+);
 
 const TemplateEnqueueBodySchema = z.object({
   printerId: z.string().trim().min(1),
@@ -64,10 +70,8 @@ export async function GET(request: Request) {
 }
 
 /**
- * Enqueue a print job targeting a Printer.
- * Accepts either raw `payloadBase64` or `templateId + inputs` (server-rendered).
- * Any signed-in org member MAY enqueue. Idempotency keys dedupe retries.
- * Cloud plan limits apply on new enqueue (deduped retries do not consume quota).
+ * Enqueue a print job targeting a Printer or Printer Group.
+ * Accepts raw `payloadBase64` or `templateId + inputs` (Printer only).
  */
 export async function POST(request: Request) {
   const consoleSession = await getConsoleSession(request.headers);
@@ -147,6 +151,7 @@ export async function POST(request: Request) {
       return Response.json(
         {
           job: result.job,
+          children: result.children,
           deduped: result.deduped,
           ...(monthlyJobs !== undefined ? { usage: { monthlyJobs } } : {}),
         },
@@ -162,12 +167,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await enqueueRawJob({
-      organizationId: consoleSession.organization.id,
-      printerId: parsed.data.printerId,
-      payloadBase64: parsed.data.payloadBase64,
-      idempotencyKey: parsed.data.idempotencyKey,
-    });
+    const result = parsed.data.printerGroupId
+      ? await enqueueGroupJob({
+          organizationId: consoleSession.organization.id,
+          printerGroupId: parsed.data.printerGroupId,
+          payloadBase64: parsed.data.payloadBase64,
+          idempotencyKey: parsed.data.idempotencyKey,
+        })
+      : await enqueueRawJob({
+          organizationId: consoleSession.organization.id,
+          printerId: parsed.data.printerId!,
+          payloadBase64: parsed.data.payloadBase64,
+          idempotencyKey: parsed.data.idempotencyKey,
+        });
 
     let monthlyJobs: number | undefined;
     if (!result.deduped) {
@@ -179,6 +191,7 @@ export async function POST(request: Request) {
     return Response.json(
       {
         job: result.job,
+        children: result.children,
         deduped: result.deduped,
         ...(monthlyJobs !== undefined ? { usage: { monthlyJobs } } : {}),
       },
@@ -215,6 +228,16 @@ export async function POST(request: Request) {
       return Response.json(
         { error: 'printer_not_enqueueable', message: error.message },
         { status: 404 },
+      );
+    }
+    if (error instanceof PrinterGroupNotEnqueueableError) {
+      const notFound = error.message.includes('not found');
+      return Response.json(
+        {
+          error: notFound ? 'printer_group_not_found' : 'empty_printer_group',
+          message: error.message,
+        },
+        { status: notFound ? 404 : 400 },
       );
     }
     throw error;
