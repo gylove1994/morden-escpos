@@ -31,6 +31,7 @@ export default antfu({
     '**/components/ui/**',
     '**/src/hooks/use-mobile.ts',
     '**/*.md/**',
+    '**/drizzle/meta/**',
   ],
   rules: {
     'style/no-tabs': [

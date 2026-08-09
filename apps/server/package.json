@@ -1,0 +1,34 @@
+{
+  "name": "@workspace/server",
+  "version": "0.1.0",
+  "private": true,
+  "license": "BUSL-1.1",
+  "scripts": {
+    "build": "dotenvx run -f ./env.example.server -- next build",
+    "dev": "dotenvx run -f ./env.example.dev -- next dev --port 43128",
+    "start": "dotenvx run -f ./env.example.server -- next start --port 43128",
+    "db:generate": "dotenvx run -f ./env.example.dev -- drizzle-kit generate",
+    "db:migrate": "dotenvx run -f ./env.example.dev -- drizzle-kit migrate",
+    "db:studio": "dotenvx run -f ./env.example.dev -- drizzle-kit studio",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.5",
+    "next": "^16.1.6",
+    "postgres": "^3.4.7",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@dotenvx/dotenvx": "^1.49.0",
+    "@types/node": "^24.9.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "drizzle-kit": "^0.31.4",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
+  }
+}

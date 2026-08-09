@@ -33,6 +33,7 @@
 | --- | --- | --- |
 | [`packages/morden-node-escpos`](./packages/morden-node-escpos/README.zh-CN.md) | [`morden-node-escpos`](https://www.npmjs.com/package/morden-node-escpos) | 可发布的 Node.js 与浏览器 ESC/POS 驱动 |
 | [`apps/template-editor`](./apps/template-editor/README.zh-CN.md) | Receipt Studio | 静态导出的浏览器模板编辑器 |
+| [`apps/server`](./apps/server/README.md) | `@workspace/server` | BSL SaaS 打印队列控制面（脚手架） |
 | `packages/ui` | `@workspace/ui` | 共享应用 UI 组件 |
 | [`packages/jsonjoy-builder`](./packages/jsonjoy-builder/README.md) | `jsonjoy-builder` | 基于上游项目修改的可视化 JSON Schema 编辑器 |
 

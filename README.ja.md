@@ -34,6 +34,7 @@ Node.js とブラウザー向けの、モダンで型安全な ESC/POS ツール
 | --- | --- | --- |
 | [`packages/morden-node-escpos`](./packages/morden-node-escpos/README.ja.md) | [`morden-node-escpos`](https://www.npmjs.com/package/morden-node-escpos) | 公開可能な Node.js / ブラウザー向け ESC/POS ドライバー |
 | [`apps/template-editor`](./apps/template-editor/README.ja.md) | Receipt Studio | 静的エクスポート対応のブラウザーテンプレートエディター |
+| [`apps/server`](./apps/server/README.md) | `@workspace/server` | BSL SaaS プリントキュー制御プレーン（スキャフォールド） |
 | `packages/ui` | `@workspace/ui` | 共有アプリケーション UI コンポーネント |
 | [`packages/jsonjoy-builder`](./packages/jsonjoy-builder/README.md) | `jsonjoy-builder` | 上流プロジェクトを基に変更したビジュアル JSON Schema エディター |
 
