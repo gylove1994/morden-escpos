@@ -41,7 +41,7 @@ Area labels are **orthogonal** to state and category. They mark which package or
 | `area:server`                  | `apps/server`                                      | Planned BSL SaaS API / print-queue backend |
 | `area:client-node`             | `apps/client-node`                                 | Planned BSL Node client                    |
 | `area:client-go`               | `apps/client-go`                                   | Planned BSL Go client                      |
-| `area:landing`                 | `apps/landing`                                     | Planned BSL landing site                   |
+| `area:landing`                 | `apps/landing`                                     | BSL marketing landing site                 |
 
 License context for these paths is in root `CONTEXT-MAP.md`. Area labels do **not** replace license context; they only route issues.
 
