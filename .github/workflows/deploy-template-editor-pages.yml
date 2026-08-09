@@ -46,7 +46,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
+      - name: Build printer package
+        run: pnpm --filter morden-node-escpos build
+
+      - name: Build template editor
         run: pnpm --filter @workspace/template-editor build
         env:
           GITHUB_PAGES: 'true'
