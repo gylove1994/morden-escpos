@@ -2,21 +2,21 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { OrganizationStatus } from './tenant-status';
 import { eq, ilike, or } from 'drizzle-orm';
 import { db } from '../db';
 import { organization } from '../db/schema';
 import {
   isOrganizationStatus,
-  type OrganizationStatus,
 } from './tenant-status';
 
-export type PlatformOrganization = {
+export interface PlatformOrganization {
   id: string
   name: string
   slug: string
   status: OrganizationStatus
   createdAt: Date
-};
+}
 
 function toPlatformOrganization(
   row: typeof organization.$inferSelect,

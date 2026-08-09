@@ -2,13 +2,13 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { OrganizationStatus } from './tenant-status';
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
 import { organization } from '../db/schema';
 import {
   isOrganizationOperable,
   isOrganizationStatus,
-  type OrganizationStatus,
 } from './tenant-status';
 
 export async function getOrganizationStatus(

@@ -2,8 +2,8 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import { isCloudEdition } from '../edition';
 import type { PlanResource } from './errors';
+import { isCloudEdition } from '../edition';
 import { PlanLimitError } from './errors';
 import { isPlanId, resolveEffectiveLimits } from './plans';
 import {

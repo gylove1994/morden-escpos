@@ -2,8 +2,8 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import { SERVER_CONFIG } from './config';
 import type { Edition } from './edition-build';
+import { SERVER_CONFIG } from './config';
 
 export type { Edition } from './edition-build';
 export {

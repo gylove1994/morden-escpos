@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import type { NextConfig } from 'next';
-import { pageExtensionsForEdition, type Edition } from './lib/edition-build';
+import type { Edition } from './lib/edition-build';
+import { pageExtensionsForEdition } from './lib/edition-build';
 
 /**
  * Edition compile/build flag (`cloud` | `self-hosted`).

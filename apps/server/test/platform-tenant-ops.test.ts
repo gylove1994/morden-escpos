@@ -2,6 +2,7 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { BootedServer } from './harness';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { setOrganizationPlanForTests } from '../lib/billing/subscription';
 import { SERVER_CONFIG } from '../lib/config';
@@ -10,7 +11,6 @@ import {
   createOrganization,
   signUp,
 } from './auth-helpers';
-import type { BootedServer } from './harness';
 import { bootServer } from './harness';
 
 describe('cloud platform tenant ops', () => {
@@ -76,7 +76,7 @@ describe('cloud platform tenant ops', () => {
       {
         method: 'PATCH',
         headers: {
-          Authorization: `Bearer ${adminSecret}`,
+          'Authorization': `Bearer ${adminSecret}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ status: 'suspended' }),
@@ -103,7 +103,7 @@ describe('cloud platform tenant ops', () => {
       {
         method: 'PATCH',
         headers: {
-          Authorization: `Bearer ${adminSecret}`,
+          'Authorization': `Bearer ${adminSecret}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ status: 'banned' }),
@@ -118,7 +118,7 @@ describe('cloud platform tenant ops', () => {
       {
         method: 'PATCH',
         headers: {
-          Authorization: `Bearer ${adminSecret}`,
+          'Authorization': `Bearer ${adminSecret}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ status: 'active' }),

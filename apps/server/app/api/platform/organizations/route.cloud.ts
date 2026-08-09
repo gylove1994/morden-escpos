@@ -4,9 +4,9 @@
  */
 import {
   assertPlatformAdmin,
+  platformCloudOnlyJsonResponse,
   PlatformEditionError,
   PlatformUnauthorizedError,
-  platformCloudOnlyJsonResponse,
   platformUnauthorizedJsonResponse,
 } from '../../../../lib/platform/auth';
 import { lookupOrganizations } from '../../../../lib/platform/organizations';

@@ -62,7 +62,7 @@ export function matchesPageExtension(
  * `route.cloud.ts`, …).
  */
 export function isCloudOnlyAppEntry(filename: string): boolean {
-  return /^(page|route|layout|loading|error|not-found|template|default)\.cloud\.(ts|tsx|js|jsx)$/.test(
+  return /^(?:page|route|layout|loading|error|not-found|template|default)\.cloud\.(?:ts|tsx|js|jsx)$/.test(
     filename,
   );
 }

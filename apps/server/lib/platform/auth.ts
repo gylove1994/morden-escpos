@@ -2,6 +2,7 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import { Buffer } from 'node:buffer';
 import { timingSafeEqual } from 'node:crypto';
 import { SERVER_CONFIG } from '../config';
 import { isCloudEdition } from '../edition';

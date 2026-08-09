@@ -2,21 +2,21 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { Edition } from './edition-build';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
   matchesAppRouterPageOrRoute,
   pageExtensionsForEdition,
-  type Edition,
 } from './edition-build';
 
-export type DiscoveredAppRoute = {
+export interface DiscoveredAppRoute {
   /** Posix-style path under `app/`, e.g. `api/billing/checkout/route.cloud.ts`. */
   relativePath: string
   /** URL path inferred from folders, e.g. `/api/billing/checkout`. */
   urlPath: string
   kind: 'page' | 'route'
-};
+}
 
 function toUrlPath(relativePath: string): string {
   const segments = relativePath.split('/');

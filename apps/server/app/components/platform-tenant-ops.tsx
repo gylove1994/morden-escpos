@@ -4,16 +4,16 @@
  */
 'use client';
 
-import { useState } from 'react';
 import type { OrganizationStatus } from '../../lib/platform/tenant-status';
+import { useState } from 'react';
 
-type PlatformOrganization = {
+interface PlatformOrganization {
   id: string
   name: string
   slug: string
   status: OrganizationStatus
   createdAt: string
-};
+}
 
 async function platformFetch<T>(
   url: string,
