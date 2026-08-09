@@ -38,6 +38,7 @@ language directly:
 | --- | --- | --- |
 | [`packages/morden-node-escpos`](./packages/morden-node-escpos/README.md) | [`morden-node-escpos`](https://www.npmjs.com/package/morden-node-escpos) | Publishable Node.js and browser ESC/POS driver |
 | [`apps/template-editor`](./apps/template-editor/README.md) | Receipt Studio | Statically exported browser template editor |
+| [`apps/server`](./apps/server/README.md) | `@workspace/server` | BSL SaaS print-queue control plane (scaffold) |
 | `packages/ui` | `@workspace/ui` | Shared application UI components |
 | [`packages/jsonjoy-builder`](./packages/jsonjoy-builder/README.md) | `jsonjoy-builder` | Upstream-derived visual JSON Schema editor |
 

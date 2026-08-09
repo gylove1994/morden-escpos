@@ -1,0 +1,90 @@
+openapi: 3.1.0
+info:
+  title: Print Queue Agent Protocol
+  description: |
+    HTTP contract between the morden-escpos SaaS control plane and on-site
+    Printer Agents. This skeleton is the primary architectural seam for the MVP;
+    concrete request/response schemas land with the registration, lease, and
+    report tickets.
+  version: 0.0.0-scaffold
+  license:
+    name: BUSL-1.1
+servers:
+  - url: /api/protocol/v1
+    description: Server-mounted Print Queue Agent Protocol prefix (scaffold)
+tags:
+  - name: PrinterAgent
+    description: On-site Printer Agent device authentication and presence
+  - name: Jobs
+    description: Job lease and outcome reporting for Printer Agents
+paths:
+  /health:
+    get:
+      tags: [PrinterAgent]
+      operationId: getProtocolHealth
+      summary: Protocol surface health (scaffold)
+      description: |
+        Scaffold-only probe confirming the Print Queue Agent Protocol mount is
+        reachable. Domain operations (register, lease, report) are intentionally
+        omitted until their tickets land.
+      responses:
+        '200':
+          description: Protocol surface is up
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolHealthResponse'
+  /printer-agents/heartbeat:
+    post:
+      tags: [PrinterAgent]
+      operationId: postPrinterAgentHeartbeat
+      summary: Printer Agent heartbeat (stub)
+      description: Not implemented in the scaffold. See registration / presence tickets.
+      responses:
+        '501':
+          description: Not implemented
+  /jobs/lease:
+    post:
+      tags: [Jobs]
+      operationId: postJobLease
+      summary: Lease the next printable job (stub)
+      description: Not implemented in the scaffold. See job enqueue/lease/report tickets.
+      responses:
+        '501':
+          description: Not implemented
+  /jobs/{jobId}/report:
+    post:
+      tags: [Jobs]
+      operationId: postJobReport
+      summary: Report job printing / succeeded / failed (stub)
+      description: Not implemented in the scaffold. See job enqueue/lease/report tickets.
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '501':
+          description: Not implemented
+components:
+  schemas:
+    ProtocolHealthResponse:
+      type: object
+      required: [status, protocol, edition]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        protocol:
+          type: string
+          const: print-queue-agent-protocol
+        edition:
+          type: string
+          enum: [cloud, self-hosted]
+  securitySchemes:
+    printerAgentDeviceToken:
+      type: http
+      scheme: bearer
+      bearerFormat: device-token
+      description: Device token issued when a Printer Agent is registered (future ticket).
