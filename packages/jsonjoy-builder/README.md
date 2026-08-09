@@ -260,6 +260,22 @@ const customTranslation: Translation = {
 };
 ```
 
+All public components that render copy accept a `messages` prop. This includes
+`SchemaBuilder`, `SchemaFieldsEditor`, `SchemaJsonEditor`,
+`InferSchemaDialog`, and `ValidateJsonDialog`. Applications SHOULD resolve
+their active messages in their own i18n layer and pass them through:
+
+```tsx
+const messages = useApplicationMessages();
+
+<SchemaBuilder messages={messages.schemaBuilder} />
+<InferSchemaDialog messages={messages.schemaBuilder} {...dialogProps} />
+```
+
+The `messages` prop is merged over the nearest provider and the English
+defaults, so applications MAY provide either a complete `Translation` or
+focused overrides.
+
 Use [`src/i18n/locales/en.ts`](https://github.com/lovasoa/jsonjoy-builder/blob/main/src/i18n/locales/en.ts) as the reference for all available keys.
 
 ## Plugin Registry

@@ -4,7 +4,7 @@
  */
 import type { PrintCommandUnion, PrintJobJSON, TemplateInputSchema } from 'morden-node-escpos/schema';
 
-import type { CutMode, EditorDocument, ImportResult, PaperWidth, ValidationResult } from './editor-types';
+import type { CutMode, EditorDocument, ImportResult, PaperWidth, UserMessage, ValidationResult } from './editor-types';
 
 import { z } from 'zod';
 import { decodePrintCommands, encodePrintCommands } from './content-format';
@@ -60,20 +60,24 @@ const jobEnvelopeSchema = z.object({
   commands: z.array(z.record(z.string(), z.unknown())),
 });
 
-function validateCommand(command: Record<string, unknown>, index: number): string[] {
+function message(key: string, path?: string): UserMessage {
+  return path ? { key, values: { path } } : { key };
+}
+
+function validateCommand(command: Record<string, unknown>, index: number): UserMessage[] {
   const prefix = `commands[${index}]`;
-  const errors: string[] = [];
+  const errors: UserMessage[] = [];
 
   if (typeof command.type !== 'string' || !commandTypes.has(command.type)) {
-    return [`${prefix}.type 不是受支持的 ESC/POS 命令`];
+    return [message('unsupportedCommand', `${prefix}.type`)];
   }
 
   if (['text', 'pureText', 'print'].includes(command.type) && typeof command.content !== 'string') {
-    errors.push(`${prefix}.content 必须是字符串`);
+    errors.push(message('mustBeString', `${prefix}.content`));
   }
 
   if (command.type === 'align' && !['LT', 'CT', 'RT', 'lt', 'ct', 'rt'].includes(String(command.value))) {
-    errors.push(`${prefix}.value 必须为 LT、CT 或 RT`);
+    errors.push(message('invalidAlignment', `${prefix}.value`));
   }
 
   if (command.type === 'size' && (
@@ -82,22 +86,22 @@ function validateCommand(command: Record<string, unknown>, index: number): strin
     || command.width < 1
     || command.height < 1
   )) {
-    errors.push(`${prefix} 的 width 和 height 必须是大于 0 的数字`);
+    errors.push(message('invalidSize', prefix));
   }
 
   if (command.type === 'qrcode' && typeof command.content !== 'string') {
-    errors.push(`${prefix}.content 必须是字符串`);
+    errors.push(message('mustBeString', `${prefix}.content`));
   }
 
   if (
     (command.type === 'image' || command.type === 'raster')
     && (typeof command.path !== 'string' || command.path.trim().length === 0)
   ) {
-    errors.push(`${prefix}.path 必须是非空字符串`);
+    errors.push(message('nonEmptyString', `${prefix}.path`));
   }
 
   if (command.type === 'table' && !Array.isArray(command.data)) {
-    errors.push(`${prefix}.data 必须是数组`);
+    errors.push(message('mustBeArray', `${prefix}.data`));
   }
 
   if (command.type === 'tableCustom') {
@@ -106,15 +110,15 @@ function validateCommand(command: Record<string, unknown>, index: number): strin
       || item === null
       || typeof (item as Record<string, unknown>).text !== 'string',
     )) {
-      errors.push(`${prefix}.data 必须是包含 text 的列数组`);
+      errors.push(message('invalidColumns', `${prefix}.data`));
     }
     if (command.each !== undefined && typeof command.each !== 'string') {
-      errors.push(`${prefix}.each 必须是数组路径字符串`);
+      errors.push(message('invalidArrayPath', `${prefix}.each`));
     }
   }
 
   if (command.type === 'feed' && command.lines !== undefined && typeof command.lines !== 'number') {
-    errors.push(`${prefix}.lines 必须是数字`);
+    errors.push(message('mustBeNumber', `${prefix}.lines`));
   }
 
   return errors;
@@ -125,9 +129,13 @@ export function validatePrintJob(value: unknown): ValidationResult {
 
   if (!result.success) {
     return {
-      errors: result.error.issues.map(issue =>
-        `${issue.path.join('.') || '模板'}：${issue.message}`,
-      ),
+      errors: result.error.issues.map(issue => ({
+        key: 'schemaIssue',
+        values: {
+          path: issue.path.join('.') || 'template',
+          detail: issue.message,
+        },
+      })),
     };
   }
 
@@ -162,13 +170,14 @@ export function fromPrintJob(
   job: PrintJobJSON,
   sampleDataText = '{}',
   idFactory: (index: number) => string = () => createNodeId(),
+  fallbackName = '未命名模板',
 ): EditorDocument {
   const paperWidth: PaperWidth = (job.config?.width ?? 32) > 32 ? 80 : 58;
   const cutMode = inferCutMode(job.commands);
   const commands = job.commands.filter(command => !isCutCommand(command));
 
   return {
-    name: job.name ?? '未命名模板',
+    name: job.name ?? fallbackName,
     description: job.description ?? '',
     paperWidth,
     encoding: job.config?.encoding ?? 'GB18030',
@@ -212,14 +221,14 @@ export function toPrintJob(document: EditorDocument): PrintJobJSON {
   return job;
 }
 
-export function importPrintJob(jsonText: string, sampleDataText = '{}'): ImportResult {
+export function importPrintJob(jsonText: string, sampleDataText = '{}', fallbackName?: string): ImportResult {
   let parsed: unknown;
 
   try {
     parsed = JSON.parse(jsonText);
   }
   catch {
-    return { errors: ['文件不是有效的 JSON，请检查逗号、引号或括号。'] };
+    return { errors: [{ key: 'invalidJsonFile' }] };
   }
 
   const result = validatePrintJob(parsed);
@@ -228,21 +237,21 @@ export function importPrintJob(jsonText: string, sampleDataText = '{}'): ImportR
   }
 
   return {
-    document: fromPrintJob(result.job, sampleDataText),
+    document: fromPrintJob(result.job, sampleDataText, undefined, fallbackName),
     errors: [],
   };
 }
 
-export function parseSampleData(text: string): { data?: Record<string, unknown>, error?: string } {
+export function parseSampleData(text: string): { data?: Record<string, unknown>, errorKey?: 'sampleMustBeObject' | 'invalidSampleJson' } {
   try {
     const parsed: unknown = JSON.parse(text);
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-      return { error: '示例数据必须是 JSON 对象。' };
+      return { errorKey: 'sampleMustBeObject' };
     }
     return { data: parsed as Record<string, unknown> };
   }
   catch {
-    return { error: '示例数据不是有效的 JSON。' };
+    return { errorKey: 'invalidSampleJson' };
   }
 }
 
@@ -250,18 +259,31 @@ export function isTemplateInputSchema(value: unknown): value is TemplateInputSch
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-export function createCommand(type: string): PrintCommandUnion {
+export interface CommandDefaults {
+  text: string
+  inlineText: string
+  product: string
+  quantity: string
+  amount: string
+}
+
+export function createCommand(type: string, labels: Partial<CommandDefaults> = {}): PrintCommandUnion {
+  const text = labels.text ?? '双击或在右侧编辑文本';
+  const inlineText = labels.inlineText ?? '行内文本';
+  const product = labels.product ?? '商品';
+  const quantity = labels.quantity ?? '数量';
+  const amount = labels.amount ?? '金额';
   const presets: Record<string, PrintCommandUnion> = {
-    text: { type: 'text', content: '双击或在右侧编辑文本' },
-    pureText: { type: 'pureText', content: '行内文本' },
+    text: { type: 'text', content: text },
+    pureText: { type: 'pureText', content: inlineText },
     drawLine: { type: 'drawLine', character: '-' },
-    table: { type: 'table', data: ['商品', '数量', '金额'] },
+    table: { type: 'table', data: [product, quantity, amount] },
     tableCustom: {
       type: 'tableCustom',
       data: [
-        { text: '商品', cols: 16, align: 'LEFT' },
-        { text: '数量', cols: 6, align: 'CENTER' },
-        { text: '金额', cols: 10, align: 'RIGHT' },
+        { text: product, cols: 16, align: 'LEFT' },
+        { text: quantity, cols: 6, align: 'CENTER' },
+        { text: amount, cols: 10, align: 'RIGHT' },
       ],
       options: { size: [1, 1], encoding: 'GB18030' },
     },

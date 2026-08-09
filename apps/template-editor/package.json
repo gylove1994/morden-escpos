@@ -25,6 +25,7 @@
     "monaco-editor": "^0.56.0",
     "morden-node-escpos": "workspace:*",
     "next": "^16.1.6",
+    "next-intl": "^4.13.5",
     "platejs": "^53.2.4",
     "qrcode": "^1.5.4",
     "react": "^19.2.8",

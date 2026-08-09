@@ -54,6 +54,7 @@ export const zh: Translation = {
   schemaEditorEditModeVisual: '可视化',
   schemaEditorEditModeJson: 'JSON',
   schemaEditorLoading: '正在加载编辑器...',
+  schemaEditorResizePanels: '调整面板大小',
 
   arrayNoConstraint: '无约束',
   arrayMinimumLabel: '最少子项数',

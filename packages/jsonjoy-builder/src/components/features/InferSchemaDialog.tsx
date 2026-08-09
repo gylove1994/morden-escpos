@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 import type { BeforeMount, OnMount } from '@monaco-editor/react';
+import type { Translation } from '../../i18n/translation-keys';
 import type { JsonSchema } from '../../types/jsonSchema';
 import Editor from '@monaco-editor/react';
 import {
@@ -18,6 +19,7 @@ import { Loader2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useMonacoTheme } from '../../hooks/use-monaco-theme';
 import { useTranslation } from '../../hooks/use-translation';
+import { SchemaBuilderProvider } from '../../i18n/schema-builder-config';
 import { createSchemaFromJson } from '../../lib/schema-inference';
 import { useComponent } from '../../registry/SchemaBuilderRegistryContext';
 
@@ -27,15 +29,27 @@ export interface InferSchemaDialogProps {
   onOpenChange: (open: boolean) => void
   onInfer: (schema: JsonSchema) => void
   autoFocus?: boolean
+  messages?: Partial<Translation>
 }
 
 /** @public */
 export function InferSchemaDialog({
+  messages,
+  ...props
+}: InferSchemaDialogProps) {
+  return (
+    <SchemaBuilderProvider messages={messages}>
+      <InferSchemaDialogContent {...props} />
+    </SchemaBuilderProvider>
+  );
+}
+
+function InferSchemaDialogContent({
   open,
   onOpenChange,
   onInfer,
   autoFocus = true,
-}: InferSchemaDialogProps) {
+}: Omit<InferSchemaDialogProps, 'messages'>) {
   const Button = useComponent('Button');
   const t = useTranslation();
   const [jsonInput, setJsonInput] = useState('');

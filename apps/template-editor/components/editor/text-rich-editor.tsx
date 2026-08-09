@@ -12,6 +12,7 @@ import { Button } from '@workspace/ui/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@workspace/ui/components/ui/select';
 import { Bold, Italic, Underline } from 'lucide-react';
 import { extractDefinedPaths } from 'morden-node-escpos/template-inputs';
+import { useTranslations } from 'next-intl';
 
 import {
   createPlatePlugin,
@@ -67,6 +68,7 @@ const HeightPlugin = createPlatePlugin({
 }).withComponent(HeightLeaf);
 
 export function TextRichEditor({ contentKey, value, onChange }: TextRichEditorProps) {
+  const t = useTranslations('Properties');
   const inputSchema = useEditorStore(state => state.document.inputSchema);
   const definedPaths = useMemo(() => extractDefinedPaths(inputSchema), [inputSchema]);
   const definedPathsRef = useRef(definedPaths);
@@ -108,30 +110,30 @@ export function TextRichEditor({ contentKey, value, onChange }: TextRichEditorPr
   return (
     <div className="overflow-hidden rounded-lg border bg-background">
       <div className="flex flex-wrap items-center gap-1 border-b bg-muted/40 p-1.5">
-        <Button type="button" variant="ghost" size="icon-sm" aria-label="粗体" onMouseDown={event => event.preventDefault()} onClick={() => toggleMark('bold')}>
+        <Button type="button" variant="ghost" size="icon-sm" aria-label={t('bold')} onMouseDown={event => event.preventDefault()} onClick={() => toggleMark('bold')}>
           <Bold aria-hidden="true" />
         </Button>
-        <Button type="button" variant="ghost" size="icon-sm" aria-label="斜体" onMouseDown={event => event.preventDefault()} onClick={() => toggleMark('italic')}>
+        <Button type="button" variant="ghost" size="icon-sm" aria-label={t('italic')} onMouseDown={event => event.preventDefault()} onClick={() => toggleMark('italic')}>
           <Italic aria-hidden="true" />
         </Button>
-        <Button type="button" variant="ghost" size="icon-sm" aria-label="下划线" onMouseDown={event => event.preventDefault()} onClick={() => toggleMark('underline')}>
+        <Button type="button" variant="ghost" size="icon-sm" aria-label={t('underline')} onMouseDown={event => event.preventDefault()} onClick={() => toggleMark('underline')}>
           <Underline aria-hidden="true" />
         </Button>
         <div className="mx-1 h-5 w-px bg-border" />
         <Select defaultValue="1" onValueChange={next => setSize('width', next)}>
-          <SelectTrigger className="h-7 w-21 text-xs" aria-label="宽度倍数">
-            <SelectValue placeholder="宽度" />
+          <SelectTrigger className="h-7 w-21 text-xs" aria-label={t('widthScale')}>
+            <SelectValue placeholder={t('widthScale')} />
           </SelectTrigger>
           <SelectContent>
-            {SIZE_OPTIONS.map(size => <SelectItem key={size} value={String(size)}>{`${size}× 宽`}</SelectItem>)}
+            {SIZE_OPTIONS.map(size => <SelectItem key={size} value={String(size)}>{`${size}× ${t('widthScale')}`}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select defaultValue="1" onValueChange={next => setSize('height', next)}>
-          <SelectTrigger className="h-7 w-21 text-xs" aria-label="高度倍数">
-            <SelectValue placeholder="高度" />
+          <SelectTrigger className="h-7 w-21 text-xs" aria-label={t('heightScale')}>
+            <SelectValue placeholder={t('heightScale')} />
           </SelectTrigger>
           <SelectContent>
-            {SIZE_OPTIONS.map(size => <SelectItem key={size} value={String(size)}>{`${size}× 高`}</SelectItem>)}
+            {SIZE_OPTIONS.map(size => <SelectItem key={size} value={String(size)}>{`${size}× ${t('heightScale')}`}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -141,8 +143,8 @@ export function TextRichEditor({ contentKey, value, onChange }: TextRichEditorPr
       >
         <PlateContent
           className="min-h-32 px-3 py-2 text-sm leading-6 outline-none [&_p]:min-h-6"
-          aria-label="富文本内容"
-          placeholder="输入文本，支持 {{key}} 模板变量"
+          aria-label={t('textContent')}
+          placeholder={t('simpleVariableHint')}
         />
       </Plate>
     </div>

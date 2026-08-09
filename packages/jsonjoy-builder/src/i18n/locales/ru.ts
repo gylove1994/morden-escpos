@@ -56,6 +56,7 @@ export const ru: Translation = {
   schemaEditorEditModeVisual: 'Визуальный',
   schemaEditorEditModeJson: 'JSON',
   schemaEditorLoading: 'Загрузка редактора...',
+  schemaEditorResizePanels: 'Изменить размер панелей',
 
   arrayNoConstraint: 'Без ограничений',
   arrayMinimumLabel: 'Минимум элементов',

@@ -55,6 +55,7 @@ export const uk: Translation = {
   schemaEditorEditModeVisual: 'Візуальний',
   schemaEditorEditModeJson: 'JSON',
   schemaEditorLoading: 'Завантаження редактора...',
+  schemaEditorResizePanels: 'Змінити розмір панелей',
 
   arrayNoConstraint: 'Без обмежень',
   arrayMinimumLabel: 'Мінімум елементів',

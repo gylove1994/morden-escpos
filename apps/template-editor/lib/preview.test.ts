@@ -14,7 +14,7 @@ describe('jira card preview', () => {
 
     expect(text).toContain('BUG PROJ-123');
     expect(preview.items.some(item => item.columns?.some(column => column.text === '张三'))).toBe(true);
-    expect(preview.dataError).toBeUndefined();
+    expect(preview.dataErrorKey).toBeUndefined();
   });
 
   it('applies state commands to following text', () => {
@@ -111,7 +111,7 @@ describe('jira card preview', () => {
       ?.flatMap(paragraph => paragraph.children)
       .find(leaf => leaf.text.includes('{{key}}'));
 
-    expect(preview.dataError).toBeTruthy();
+    expect(preview.dataErrorKey).toBe('invalidSampleJson');
     expect(issueKey?.style.align).toBe('center');
     expect(issueKeyLeaf).toMatchObject({
       bold: true,

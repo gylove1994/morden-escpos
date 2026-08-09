@@ -210,7 +210,7 @@ const SchemaBuilderContent: FC<SchemaBuilderContentProps> = ({
               autoFocus={autoFocus}
             />
           </ResizablePanel>
-          <ResizableHandle withHandle aria-label="Resize panels" />
+          <ResizableHandle withHandle aria-label={t.schemaEditorResizePanels} />
           <ResizablePanel defaultSize={100 - initialLeftPanelWidth} minSize={20}>
             <Suspense fallback={<JsonEditorFallback label={t.schemaEditorLoading} />}>
               <SchemaJsonEditor

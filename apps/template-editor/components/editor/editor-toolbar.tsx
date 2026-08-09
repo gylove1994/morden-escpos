@@ -6,7 +6,7 @@
 
 import type { ChangeEvent } from 'react';
 
-import type { EditorDocument } from '../../lib/editor-types';
+import type { EditorDocument, UserMessage } from '../../lib/editor-types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,11 +33,13 @@ import { Input } from '@workspace/ui/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@workspace/ui/components/ui/select';
 import { Textarea } from '@workspace/ui/components/ui/textarea';
 import { Braces, Download, FileJson, Redo2, RotateCcw, Undo2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { useRef, useState } from 'react';
 
 import { useEditorStore } from '../../lib/editor-store';
 import { importPrintJob, toPrintJob } from '../../lib/print-job';
+import { LocaleSwitcher } from '../i18n/locale-switcher';
 import { InputSchemaBuilder } from './input-schema-builder';
 import { PrinterControl } from './printer-control';
 
@@ -58,6 +60,9 @@ function downloadTemplate(name: string, content: string) {
 }
 
 export function EditorToolbar() {
+  const t = useTranslations('Toolbar');
+  const common = useTranslations('Common');
+  const errors = useTranslations('Errors');
   const document = useEditorStore(state => state.document);
   const isReadOnly = useEditorStore(state => state.viewMode === 'printPreview');
   const pastLength = useEditorStore(state => state.past.length);
@@ -69,16 +74,16 @@ export function EditorToolbar() {
   const undo = useEditorStore(state => state.undo);
   const redo = useEditorStore(state => state.redo);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [importErrors, setImportErrors] = useState<UserMessage[]>([]);
   const [pendingImport, setPendingImport] = useState<{ document: EditorDocument, fileName: string } | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [schemaOpen, setSchemaOpen] = useState(false);
   const [exportDescription, setExportDescription] = useState('');
-  const [status, setStatus] = useState('所有修改均保存在本机');
+  const [status, setStatus] = useState('');
 
   function announce(message: string) {
     setStatus(message);
-    globalThis.setTimeout(setStatus, 2500, '所有修改均保存在本机');
+    globalThis.setTimeout(setStatus, 2500, '');
   }
 
   async function handleImport(event: ChangeEvent<HTMLInputElement>) {
@@ -88,7 +93,7 @@ export function EditorToolbar() {
       return;
     }
 
-    const result = importPrintJob(await file.text(), document.sampleDataText);
+    const result = importPrintJob(await file.text(), document.sampleDataText, t('untitled'));
     if (!result.document) {
       setImportErrors(result.errors);
       return;
@@ -105,7 +110,7 @@ export function EditorToolbar() {
         </div>
         <div className="min-w-0">
           <Input
-            aria-label="模板名称"
+            aria-label={t('templateName')}
             className="h-7 truncate border-transparent bg-transparent px-1 text-sm font-semibold shadow-none hover:border-border focus-visible:border-ring"
             value={document.name}
             onChange={event => updateMetadata({ name: event.target.value })}
@@ -117,18 +122,19 @@ export function EditorToolbar() {
       <div className="hidden h-6 w-px bg-border sm:block" />
 
       <div className="flex items-center gap-1">
-        <Button type="button" variant="ghost" size="icon" disabled={isReadOnly || pastLength === 0} aria-label="撤销" title="撤销 Ctrl/⌘ Z" onClick={undo}>
+        <Button type="button" variant="ghost" size="icon" disabled={isReadOnly || pastLength === 0} aria-label={t('undo')} title={t('undoTitle')} onClick={undo}>
           <Undo2 aria-hidden="true" />
         </Button>
-        <Button type="button" variant="ghost" size="icon" disabled={isReadOnly || futureLength === 0} aria-label="重做" title="重做 Ctrl/⌘ Shift Z" onClick={redo}>
+        <Button type="button" variant="ghost" size="icon" disabled={isReadOnly || futureLength === 0} aria-label={t('redo')} title={t('redoTitle')} onClick={redo}>
           <Redo2 aria-hidden="true" />
         </Button>
       </div>
 
       <div className="ml-auto flex items-center gap-1.5">
-        <span className="hidden text-[11px] text-muted-foreground xl:block" aria-live="polite">{status}</span>
+        <span className="hidden text-[11px] text-muted-foreground xl:block" aria-live="polite">{status || t('savedLocally')}</span>
+        <LocaleSwitcher />
         <Select value={String(document.paperWidth)} onValueChange={value => updateDocument({ paperWidth: Number(value) as 58 | 80 })}>
-          <SelectTrigger size="sm" className="w-24" aria-label="纸张宽度" disabled={isReadOnly}>
+          <SelectTrigger size="sm" className="w-24" aria-label={t('paperWidth')} disabled={isReadOnly}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -137,8 +143,8 @@ export function EditorToolbar() {
           </SelectContent>
         </Select>
         <Select value={document.encoding} onValueChange={encoding => updateDocument({ encoding })}>
-          <SelectTrigger size="sm" className="w-28 font-mono text-xs" aria-label="字符编码" disabled={isReadOnly}>
-            <SelectValue placeholder="字符编码" />
+          <SelectTrigger size="sm" className="w-28 font-mono text-xs" aria-label={t('encoding')} disabled={isReadOnly}>
+            <SelectValue placeholder={t('encoding')} />
           </SelectTrigger>
           <SelectContent>
             {encodingOptions.map(encoding => (
@@ -152,12 +158,12 @@ export function EditorToolbar() {
 
         <Button type="button" variant="outline" size="sm" disabled={isReadOnly} onClick={() => setSchemaOpen(true)}>
           <Braces aria-hidden="true" />
-          <span className="hidden lg:inline">输入 Schema</span>
+          <span className="hidden lg:inline">{t('inputSchema')}</span>
         </Button>
         <input ref={fileInputRef} type="file" className="hidden" accept="application/json,.json" disabled={isReadOnly} onChange={handleImport} />
         <Button type="button" variant="outline" size="sm" disabled={isReadOnly} onClick={() => fileInputRef.current?.click()}>
           <FileJson aria-hidden="true" />
-          <span className="hidden sm:inline">导入</span>
+          <span className="hidden sm:inline">{t('import')}</span>
         </Button>
         <Button
           type="button"
@@ -169,31 +175,31 @@ export function EditorToolbar() {
           }}
         >
           <Download aria-hidden="true" />
-          <span className="hidden sm:inline">导出 JSON</span>
+          <span className="hidden sm:inline">{t('exportJson')}</span>
         </Button>
         <PrinterControl />
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button type="button" variant="ghost" size="icon" disabled={isReadOnly} aria-label="恢复默认模板" title="恢复默认模板">
+            <Button type="button" variant="ghost" size="icon" disabled={isReadOnly} aria-label={t('reset')} title={t('reset')}>
               <RotateCcw aria-hidden="true" />
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>恢复默认模板？</AlertDialogTitle>
+              <AlertDialogTitle>{t('resetTitle')}</AlertDialogTitle>
               <AlertDialogDescription>
-                当前模板会被替换。你仍可在操作后使用撤销恢复。
+                {t('resetDescription')}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>取消</AlertDialogCancel>
+              <AlertDialogCancel>{common('cancel')}</AlertDialogCancel>
               <AlertDialogAction onClick={() => {
                 resetDocument();
-                announce('已恢复默认模板');
+                announce(t('resetDone'));
               }}
               >
-                恢复默认
+                {t('resetAction')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -205,10 +211,10 @@ export function EditorToolbar() {
           <DialogHeader className="shrink-0 border-b px-5 py-4 pr-14">
             <DialogTitle className="flex items-center gap-2 text-lg">
               <Braces className="size-5 text-primary" aria-hidden="true" />
-              输入 Schema
+              {t('inputSchema')}
             </DialogTitle>
             <DialogDescription>
-              定义模板可使用的字段、数据类型与必填规则。保存会实时更新变量蓝/红状态。
+              {t('schemaDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className="min-h-0 flex-1 bg-muted/20 p-4 md:p-6">
@@ -226,11 +232,13 @@ export function EditorToolbar() {
       <Dialog open={importErrors.length > 0} onOpenChange={open => !open && setImportErrors([])}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>无法导入模板</DialogTitle>
-            <DialogDescription>请修正以下问题后重新选择文件。</DialogDescription>
+            <DialogTitle>{t('importErrorTitle')}</DialogTitle>
+            <DialogDescription>{t('importErrorDescription')}</DialogDescription>
           </DialogHeader>
           <ul className="max-h-64 list-disc space-y-1 overflow-auto rounded-lg bg-destructive/8 p-4 pl-8 text-xs text-destructive">
-            {importErrors.map(error => <li key={error}>{error}</li>)}
+            {importErrors.map(error => (
+              <li key={`${error.key}-${JSON.stringify(error.values)}`}>{errors(error.key, error.values)}</li>
+            ))}
           </ul>
         </DialogContent>
       </Dialog>
@@ -238,21 +246,21 @@ export function EditorToolbar() {
       <Dialog open={exportOpen} onOpenChange={setExportOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>导出模板</DialogTitle>
-            <DialogDescription>可在导出前补充模板描述，留空也可以继续。</DialogDescription>
+            <DialogTitle>{t('exportTitle')}</DialogTitle>
+            <DialogDescription>{t('exportDescription')}</DialogDescription>
           </DialogHeader>
           <Field>
-            <FieldLabel htmlFor="export-description">描述（可选）</FieldLabel>
+            <FieldLabel htmlFor="export-description">{t('descriptionOptional')}</FieldLabel>
             <Textarea
               id="export-description"
               rows={4}
               value={exportDescription}
-              placeholder="说明模板适用的场景或版本"
+              placeholder={t('descriptionPlaceholder')}
               onChange={event => setExportDescription(event.target.value)}
             />
           </Field>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setExportOpen(false)}>取消</Button>
+            <Button type="button" variant="outline" onClick={() => setExportOpen(false)}>{common('cancel')}</Button>
             <Button
               type="button"
               onClick={() => {
@@ -260,11 +268,11 @@ export function EditorToolbar() {
                 updateMetadata({ description: exportDescription });
                 downloadTemplate(exportDocument.name, JSON.stringify(toPrintJob(exportDocument), null, 2));
                 setExportOpen(false);
-                announce('模板已导出');
+                announce(t('exportDone'));
               }}
             >
               <Download aria-hidden="true" />
-              导出 JSON
+              {t('exportJson')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -273,27 +281,24 @@ export function EditorToolbar() {
       <AlertDialog open={pendingImport !== null} onOpenChange={open => !open && setPendingImport(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>导入并覆盖当前模板？</AlertDialogTitle>
+            <AlertDialogTitle>{t('confirmImportTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              将导入
-              {' '}
-              {pendingImport?.fileName}
-              ，当前内容会被替换。导入后仍可使用撤销恢复。
+              {t('confirmImportDescription', { fileName: pendingImport?.fileName ?? '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{common('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (!pendingImport) {
                   return;
                 }
                 replaceDocument(pendingImport.document);
-                announce(`已导入 ${pendingImport.fileName}`);
+                announce(t('importDone', { fileName: pendingImport.fileName }));
                 setPendingImport(null);
               }}
             >
-              确认导入
+              {t('confirmImport')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

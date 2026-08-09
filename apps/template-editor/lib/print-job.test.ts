@@ -200,7 +200,7 @@ describe('print job validation', () => {
 
   it('reports malformed JSON', () => {
     expect(importPrintJob('{"commands":')).toEqual({
-      errors: ['文件不是有效的 JSON，请检查逗号、引号或括号。'],
+      errors: [{ key: 'invalidJsonFile' }],
     });
   });
 
@@ -209,7 +209,10 @@ describe('print job validation', () => {
       commands: [{ type: 'qrcode', content: 42 }],
     });
 
-    expect(result.errors).toContain('commands[0].content 必须是字符串');
+    expect(result.errors).toContainEqual({
+      key: 'mustBeString',
+      values: { path: 'commands[0].content' },
+    });
   });
 
   it('requires image commands to contain a non-empty path', () => {
@@ -217,7 +220,10 @@ describe('print job validation', () => {
       commands: [{ type: 'raster', path: '   ' }],
     });
 
-    expect(result.errors).toContain('commands[0].path 必须是非空字符串');
+    expect(result.errors).toContainEqual({
+      key: 'nonEmptyString',
+      values: { path: 'commands[0].path' },
+    });
   });
 
   it('validates custom table array paths', () => {
@@ -237,7 +243,10 @@ describe('print job validation', () => {
     });
 
     expect(valid.errors).toEqual([]);
-    expect(invalid.errors).toContain('commands[0].each 必须是数组路径字符串');
+    expect(invalid.errors).toContainEqual({
+      key: 'invalidArrayPath',
+      values: { path: 'commands[0].each' },
+    });
   });
 
   it('preserves recognized advanced commands on import', () => {
@@ -249,6 +258,6 @@ describe('print job validation', () => {
   });
 
   it('requires sample data to be an object', () => {
-    expect(parseSampleData('[]').error).toBe('示例数据必须是 JSON 对象。');
+    expect(parseSampleData('[]').errorKey).toBe('sampleMustBeObject');
   });
 });

@@ -38,7 +38,7 @@ export interface PreviewItem {
 
 export interface PreviewResult {
   items: PreviewItem[]
-  dataError?: string
+  dataErrorKey?: 'sampleMustBeObject' | 'invalidSampleJson'
 }
 
 export interface PreviewGroup {
@@ -161,7 +161,7 @@ function renderCommand(
       return { ...base, kind: 'space', content: String(command.lines ?? 1) };
     case 'cut':
     case 'starFullCut':
-      return { ...base, kind: 'cut', content: command.type === 'cut' && command.partial ? '半切' : '全切' };
+      return { ...base, kind: 'cut', content: command.type === 'cut' && command.partial ? 'partial' : 'full' };
     case 'align':
     case 'style':
     case 'size':
@@ -198,7 +198,7 @@ export function buildPreview(document: EditorDocument): PreviewResult {
         }
         return renderCommand(item, item.command, previewStyle(item, item.command));
       }),
-      dataError: sample.error ?? '示例数据无法解析。',
+      dataErrorKey: sample.errorKey ?? 'invalidSampleJson',
     };
   }
 

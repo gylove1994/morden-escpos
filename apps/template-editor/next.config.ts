@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: MIT
  */
 import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
 
 const isGitHubPages = process.env.GITHUB_PAGES === 'true';
 const githubPagesBasePath = '/morden-escpos';
+const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   ...(isGitHubPages
@@ -19,4 +21,4 @@ const nextConfig: NextConfig = {
   transpilePackages: ['@workspace/jsonjoy-builder', '@workspace/ui'],
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

@@ -5,6 +5,7 @@
  */
 import type { BeforeMount, OnMount } from '@monaco-editor/react';
 import type * as Monaco from 'monaco-editor';
+import type { Translation } from '../../i18n/translation-keys';
 import type { JsonSchema } from '../../types/jsonSchema';
 import type { ValidationResult } from '../../utils/jsonValidator';
 import Editor from '@monaco-editor/react';
@@ -22,6 +23,7 @@ import {
   formatTranslation,
   useTranslation,
 } from '../../hooks/use-translation';
+import { SchemaBuilderProvider } from '../../i18n/schema-builder-config';
 import {
   validateJson,
 
@@ -33,15 +35,27 @@ export interface ValidateJsonDialogProps {
   onOpenChange: (open: boolean) => void
   schema: JsonSchema
   autoFocus?: boolean
+  messages?: Partial<Translation>
 }
 
 /** @public */
 export function ValidateJsonDialog({
+  messages,
+  ...props
+}: ValidateJsonDialogProps) {
+  return (
+    <SchemaBuilderProvider messages={messages}>
+      <ValidateJsonDialogContent {...props} />
+    </SchemaBuilderProvider>
+  );
+}
+
+function ValidateJsonDialogContent({
   open,
   onOpenChange,
   schema,
   autoFocus = true,
-}: ValidateJsonDialogProps) {
+}: Omit<ValidateJsonDialogProps, 'messages'>) {
   const t = useTranslation();
   const [jsonInput, setJsonInput] = useState('');
   const [validationResult, setValidationResult]

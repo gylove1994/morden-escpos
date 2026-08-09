@@ -16,6 +16,7 @@ import {
   Table2,
   TextCursorInput,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { useEditorStore } from '../../lib/editor-store';
 import { createCommand } from '../../lib/print-job';
@@ -27,27 +28,8 @@ interface PaletteItem {
   icon: LucideIcon
 }
 
-const paletteGroups: Array<{ title: string, items: PaletteItem[] }> = [
-  {
-    title: '内容',
-    items: [
-      { type: 'text', label: '文本', description: '支持行内字形与宽高', icon: TextCursorInput },
-      { type: 'raster', label: '图片', description: '通过网络地址打印图片', icon: ImageIcon },
-      { type: 'qrcode', label: '二维码', description: 'ESC/POS 二维码', icon: QrCode },
-      { type: 'table', label: '等宽表格', description: '自动分配列宽', icon: Rows3 },
-      { type: 'tableCustom', label: '自定义表格', description: '设置列宽与对齐', icon: Table2 },
-    ],
-  },
-  {
-    title: '结构',
-    items: [
-      { type: 'drawLine', label: '分隔线', description: '横向字符线', icon: Minus },
-      { type: 'feed', label: '空行', description: '插入一行或多行空白', icon: MoveDown },
-    ],
-  },
-];
-
 function DraggablePaletteItem({ item, disabled }: { item: PaletteItem, disabled: boolean }) {
+  const defaults = useTranslations('CommandDefaults');
   const addCommand = useEditorStore(state => state.addCommand);
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `palette:${item.type}`,
@@ -66,7 +48,13 @@ function DraggablePaletteItem({ item, disabled }: { item: PaletteItem, disabled:
         opacity: isDragging ? 0.5 : 1,
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
       }}
-      onClick={() => addCommand(createCommand(item.type))}
+      onClick={() => addCommand(createCommand(item.type, {
+        text: defaults('text'),
+        inlineText: defaults('inlineText'),
+        product: defaults('product'),
+        quantity: defaults('quantity'),
+        amount: defaults('amount'),
+      }))}
       {...listeners}
       {...attributes}
     >
@@ -82,19 +70,39 @@ function DraggablePaletteItem({ item, disabled }: { item: PaletteItem, disabled:
 }
 
 export function CommandPalette() {
+  const t = useTranslations('Palette');
   const isReadOnly = useEditorStore(state => state.viewMode === 'printPreview');
+  const paletteGroups: Array<{ title: string, items: PaletteItem[] }> = [
+    {
+      title: t('content'),
+      items: [
+        { type: 'text', label: t('text'), description: t('textDescription'), icon: TextCursorInput },
+        { type: 'raster', label: t('image'), description: t('imageDescription'), icon: ImageIcon },
+        { type: 'qrcode', label: t('qrcode'), description: t('qrcodeDescription'), icon: QrCode },
+        { type: 'table', label: t('table'), description: t('tableDescription'), icon: Rows3 },
+        { type: 'tableCustom', label: t('customTable'), description: t('customTableDescription'), icon: Table2 },
+      ],
+    },
+    {
+      title: t('structure'),
+      items: [
+        { type: 'drawLine', label: t('divider'), description: t('dividerDescription'), icon: Minus },
+        { type: 'feed', label: t('feed'), description: t('feedDescription'), icon: MoveDown },
+      ],
+    },
+  ];
 
   return (
-    <aside className="flex h-full flex-col bg-background" aria-label="打印组件库">
+    <aside className="flex h-full flex-col bg-background" aria-label={t('ariaLabel')}>
       <div className="border-b px-4 py-3">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold">组件库</h2>
+          <h2 className="text-sm font-semibold">{t('title')}</h2>
           {isReadOnly
-            ? <span className="text-[10px] font-medium text-muted-foreground">预览只读</span>
+            ? <span className="text-[10px] font-medium text-muted-foreground">{t('previewReadOnly')}</span>
             : null}
         </div>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          {isReadOnly ? '切换回模版编辑后可添加组件。' : '点击添加，或拖到小票画布'}
+          {isReadOnly ? t('readOnlyHint') : t('hint')}
         </p>
       </div>
       <div className="flex-1 space-y-5 overflow-y-auto p-3">

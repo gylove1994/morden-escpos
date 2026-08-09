@@ -53,7 +53,7 @@ function serialDescriptor(
     : `${hexadecimal(info.usbVendorId)}:${hexadecimal(info.usbProductId ?? 0)}`;
   return {
     id: `webserial:${usbId}:${index}`,
-    label: `串口 ESC/POS ${usbId}`,
+    label: `Serial ESC/POS ${usbId}`,
     transport: 'webserial',
     baudRate,
     port,
@@ -85,7 +85,7 @@ export async function getAuthorizedWebSerialPrinters(
 export function createTcpPrinter(host: string, port: number): TcpPrinterDescriptor {
   return {
     id: `tcp:${host}:${port}`,
-    label: `网络 ESC/POS ${host}:${port}`,
+    label: `Network ESC/POS ${host}:${port}`,
     transport: 'tcp',
     host,
     port,
@@ -141,16 +141,21 @@ export function printTemplate(
   });
 }
 
-export function printerErrorMessage(error: unknown): string {
+export interface PrinterError {
+  code: 'notSelected' | 'permission' | 'disconnected' | 'failed'
+  detail?: string
+}
+
+export function classifyPrinterError(error: unknown): PrinterError {
   const message = error instanceof Error ? error.message : String(error);
   if (/NotFoundError|No device selected|No port selected/i.test(message)) {
-    return '未选择打印机。';
+    return { code: 'notSelected' };
   }
   if (/SecurityError|secure context|permission|denied|access/i.test(message)) {
-    return '浏览器没有打印机权限，请通过 HTTPS 或 localhost 打开页面并重新授权。';
+    return { code: 'permission' };
   }
   if (/NetworkError|disconnected|device unavailable|not available/i.test(message)) {
-    return '打印机已断开，请重新连接后再试。';
+    return { code: 'disconnected' };
   }
-  return `打印失败：${message}`;
+  return { code: 'failed', detail: message };
 }

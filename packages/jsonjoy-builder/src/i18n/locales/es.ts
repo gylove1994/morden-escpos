@@ -56,6 +56,7 @@ export const es: Translation = {
   schemaEditorEditModeVisual: 'Visual',
   schemaEditorEditModeJson: 'JSON',
   schemaEditorLoading: 'Cargando editor...',
+  schemaEditorResizePanels: 'Cambiar tamaño de los paneles',
 
   arrayNoConstraint: 'Sin restricción',
   arrayMinimumLabel: 'Mínimo de elementos',

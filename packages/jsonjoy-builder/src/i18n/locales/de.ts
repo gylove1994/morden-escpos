@@ -55,6 +55,7 @@ export const de: Translation = {
   schemaEditorEditModeVisual: 'Visuell',
   schemaEditorEditModeJson: 'JSON',
   schemaEditorLoading: 'Editor wird geladen...',
+  schemaEditorResizePanels: 'Bereiche skalieren',
 
   arrayNoConstraint: 'Keine Einschränkung',
   arrayMinimumLabel: 'Mindestanzahl an Elementen',

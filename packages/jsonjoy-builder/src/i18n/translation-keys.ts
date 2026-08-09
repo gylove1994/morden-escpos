@@ -787,6 +787,10 @@ export interface Translation {
    * > Loading editor...
    */
   readonly schemaEditorLoading: string
+  /**
+   * Accessible label for the panel resize handle.
+   */
+  readonly schemaEditorResizePanels: string
 
   /**
    * The translation for the key `inferrerTitle`. English default is:

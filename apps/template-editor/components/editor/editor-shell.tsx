@@ -21,6 +21,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@workspace
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/ui/tabs';
 import { TooltipProvider } from '@workspace/ui/components/ui/tooltip';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useEditorStore } from '../../lib/editor-store';
 import { createCommand, toPrintJob, validatePrintJob } from '../../lib/print-job';
@@ -194,6 +195,7 @@ function DesktopEditor() {
 }
 
 function MobileEditor() {
+  const t = useTranslations('Shell');
   const [activeTab, setActiveTab] = useState('canvas');
 
   useEffect(() => useEditorStore.subscribe((state, previousState) => {
@@ -205,9 +207,9 @@ function MobileEditor() {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="min-h-0 flex-1 flex-col gap-0 lg:hidden">
       <TabsList className="m-2 grid w-[calc(100%-1rem)] grid-cols-3">
-        <TabsTrigger value="library">组件</TabsTrigger>
-        <TabsTrigger value="canvas">画布</TabsTrigger>
-        <TabsTrigger value="properties">属性</TabsTrigger>
+        <TabsTrigger value="library">{t('library')}</TabsTrigger>
+        <TabsTrigger value="canvas">{t('canvas')}</TabsTrigger>
+        <TabsTrigger value="properties">{t('properties')}</TabsTrigger>
       </TabsList>
       <TabsContent value="library" className="min-h-0 overflow-hidden"><CommandPalette /></TabsContent>
       <TabsContent value="canvas" className="min-h-0 overflow-hidden"><CanvasPanel /></TabsContent>
@@ -217,6 +219,7 @@ function MobileEditor() {
 }
 
 export function EditorShell() {
+  const defaults = useTranslations('CommandDefaults');
   useDraftPersistence();
   useEditorShortcuts();
   const addCommand = useEditorStore(state => state.addCommand);
@@ -243,7 +246,13 @@ export function EditorShell() {
         return;
       }
       const overIndex = commands.findIndex(item => item.id === over.id);
-      addCommand(createCommand(type), overIndex >= 0 ? overIndex : undefined);
+      addCommand(createCommand(type, {
+        text: defaults('text'),
+        inlineText: defaults('inlineText'),
+        product: defaults('product'),
+        quantity: defaults('quantity'),
+        amount: defaults('amount'),
+      }), overIndex >= 0 ? overIndex : undefined);
       return;
     }
 

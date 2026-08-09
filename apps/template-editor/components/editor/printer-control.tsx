@@ -20,16 +20,17 @@ import { Input } from '@workspace/ui/components/ui/input';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@workspace/ui/components/ui/select';
 import { Cable, LoaderCircle, Network, Printer, RefreshCw, Usb } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 import { useEditorStore } from '../../lib/editor-store';
 import { parseSampleData, toPrintJob } from '../../lib/print-job';
 import {
+  classifyPrinterError,
   createTcpPrinter,
   getAuthorizedWebSerialPrinters,
   getAuthorizedWebUSBPrinters,
   isTcpPrintingSupported,
-  printerErrorMessage,
   printTemplate,
   requestWebSerialPrinter,
   requestWebUSBPrinter,
@@ -38,6 +39,9 @@ import {
 type Transport = PrinterDescriptor['transport'];
 
 export function PrinterControl() {
+  const t = useTranslations('Printer');
+  const common = useTranslations('Common');
+  const errors = useTranslations('Errors');
   const document = useEditorStore(state => state.document);
   const [open, setOpen] = useState(false);
   const [transport, setTransport] = useState<Transport>('webusb');
@@ -51,13 +55,20 @@ export function PrinterControl() {
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
 
+  function translatedPrinterError(error: unknown) {
+    const result = classifyPrinterError(error);
+    return result.code === 'failed'
+      ? t('error.failed', { detail: result.detail ?? t('unknownError') })
+      : t(`error.${result.code}`);
+  }
+
   async function loadAuthorizedPrinters(nextTransport = transport) {
     if (nextTransport === 'tcp') {
       setPrinters([]);
       setSelectedId('');
       setMessage(isTcpPrintingSupported()
-        ? '请输入打印机的局域网地址。'
-        : '当前页面没有 Direct Sockets 能力，普通浏览器标签页无法直连 TCP 打印机。');
+        ? t('enterLanAddress')
+        : t('tcpUnsupported'));
       setIsError(!isTcpPrintingSupported());
       return;
     }
@@ -77,14 +88,14 @@ export function PrinterControl() {
           : result[0]?.id ?? '',
       );
       if (result.length === 0) {
-        setMessage('尚未授权打印机，请点击“选择设备”。');
+        setMessage(t('noAuthorized'));
       }
     }
     catch (error) {
       setPrinters([]);
       setSelectedId('');
       setIsError(true);
-      setMessage(printerErrorMessage(error));
+      setMessage(translatedPrinterError(error));
     }
     finally {
       setLoading(false);
@@ -128,11 +139,11 @@ export function PrinterControl() {
         printer,
       ]);
       setSelectedId(printer.id);
-      setMessage('打印机已授权，可以发送打印任务。');
+      setMessage(t('authorized'));
     }
     catch (error) {
       setIsError(true);
-      setMessage(printerErrorMessage(error));
+      setMessage(translatedPrinterError(error));
     }
     finally {
       setLoading(false);
@@ -149,15 +160,15 @@ export function PrinterControl() {
     if (!printer) {
       setIsError(true);
       setMessage(transport === 'tcp'
-        ? '请输入有效的打印机地址和端口。'
-        : '请先选择一台可用打印机。');
+        ? t('invalidAddress')
+        : t('selectFirst'));
       return;
     }
 
     const sample = parseSampleData(document.sampleDataText);
     if (!sample.data) {
       setIsError(true);
-      setMessage(sample.error ?? '示例数据无效。');
+      setMessage(sample.errorKey ? errors(sample.errorKey) : t('invalidSample'));
       return;
     }
 
@@ -167,11 +178,11 @@ export function PrinterControl() {
 
     try {
       await printTemplate(printer, toPrintJob(document), sample.data);
-      setMessage('打印任务已发送。');
+      setMessage(t('sent'));
     }
     catch (error) {
       setIsError(true);
-      setMessage(printerErrorMessage(error));
+      setMessage(translatedPrinterError(error));
     }
     finally {
       setPrinting(false);
@@ -183,20 +194,20 @@ export function PrinterControl() {
       <DialogTrigger asChild>
         <Button type="button" variant="outline" size="sm">
           <Printer aria-hidden="true" />
-          <span className="hidden sm:inline">打印</span>
+          <span className="hidden sm:inline">{t('button')}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>打印小票</DialogTitle>
+          <DialogTitle>{t('title')}</DialogTitle>
           <DialogDescription>
-            由当前浏览器直接连接本机或局域网 ESC/POS 打印机。
+            {t('description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
-            <label htmlFor="transport-select" className="mb-1.5 block text-xs font-medium">连接方式</label>
+            <label htmlFor="transport-select" className="mb-1.5 block text-xs font-medium">{t('transport')}</label>
             <Select value={transport} onValueChange={handleTransportChange} disabled={printing}>
               <SelectTrigger id="transport-select" className="w-full">
                 <SelectValue />
@@ -208,11 +219,11 @@ export function PrinterControl() {
                 </SelectItem>
                 <SelectItem value="webserial">
                   <Cable aria-hidden="true" />
-                  串口
+                  {t('serial')}
                 </SelectItem>
                 <SelectItem value="tcp">
                   <Network aria-hidden="true" />
-                  网络（TCP）
+                  {t('network')}
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -221,7 +232,7 @@ export function PrinterControl() {
           {transport === 'webserial'
             ? (
                 <div>
-                  <label htmlFor="baud-rate" className="mb-1.5 block text-xs font-medium">波特率</label>
+                  <label htmlFor="baud-rate" className="mb-1.5 block text-xs font-medium">{t('baudRate')}</label>
                   <Select value={baudRate} onValueChange={handleBaudRateChange} disabled={loading || printing}>
                     <SelectTrigger id="baud-rate" className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -239,7 +250,7 @@ export function PrinterControl() {
             ? (
                 <div className="grid grid-cols-[1fr_7rem] gap-2">
                   <div>
-                    <label htmlFor="printer-host" className="mb-1.5 block text-xs font-medium">打印机地址</label>
+                    <label htmlFor="printer-host" className="mb-1.5 block text-xs font-medium">{t('host')}</label>
                     <Input
                       id="printer-host"
                       value={host}
@@ -248,7 +259,7 @@ export function PrinterControl() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="printer-port" className="mb-1.5 block text-xs font-medium">端口</label>
+                    <label htmlFor="printer-port" className="mb-1.5 block text-xs font-medium">{t('port')}</label>
                     <Input
                       id="printer-port"
                       inputMode="numeric"
@@ -261,10 +272,10 @@ export function PrinterControl() {
             : (
                 <div className="flex items-end gap-2">
                   <div className="min-w-0 flex-1">
-                    <label htmlFor="printer-select" className="mb-1.5 block text-xs font-medium">打印机</label>
+                    <label htmlFor="printer-select" className="mb-1.5 block text-xs font-medium">{t('printer')}</label>
                     <Select value={selectedId} onValueChange={setSelectedId} disabled={loading || printers.length === 0}>
                       <SelectTrigger id="printer-select" className="w-full">
-                        <SelectValue placeholder={loading ? '正在识别…' : '选择打印机'} />
+                        <SelectValue placeholder={loading ? t('detecting') : t('selectPrinter')} />
                       </SelectTrigger>
                       <SelectContent>
                         {printers.map(printer => (
@@ -283,7 +294,7 @@ export function PrinterControl() {
                     variant="outline"
                     size="icon"
                     disabled={loading}
-                    aria-label="刷新已授权打印机"
+                    aria-label={t('refresh')}
                     onClick={() => void loadAuthorizedPrinters()}
                   >
                     <span className={loading ? 'animate-spin' : ''}>
@@ -291,7 +302,7 @@ export function PrinterControl() {
                     </span>
                   </Button>
                   <Button type="button" variant="outline" disabled={loading} onClick={() => void handleRequestDevice()}>
-                    选择设备
+                    {t('selectDevice')}
                   </Button>
                 </div>
               )}
@@ -313,12 +324,12 @@ export function PrinterControl() {
             : null}
 
           <p className="text-[11px] leading-5 text-muted-foreground">
-            USB/串口需要 Chrome 或 Edge，并通过 HTTPS 或 localhost 打开。网络 TCP 仅在启用 Direct Sockets 的隔离式 Web 应用中可用。
+            {t('help')}
           </p>
         </div>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => setOpen(false)}>取消</Button>
+          <Button type="button" variant="outline" onClick={() => setOpen(false)}>{common('cancel')}</Button>
           <Button
             type="button"
             disabled={(transport !== 'tcp' && !selectedId) || loading || printing}
@@ -331,7 +342,7 @@ export function PrinterControl() {
                   </span>
                 )
               : <Printer aria-hidden="true" />}
-            {printing ? '正在打印…' : '发送打印任务'}
+            {printing ? t('printing') : t('send')}
           </Button>
         </DialogFooter>
       </DialogContent>

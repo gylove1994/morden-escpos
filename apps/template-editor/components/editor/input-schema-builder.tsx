@@ -5,41 +5,23 @@
 'use client';
 
 import type { JsonSchema } from '@workspace/jsonjoy-builder';
+import type { Translation } from '@workspace/jsonjoy-builder/locales';
 import type { TemplateInputSchema } from 'morden-node-escpos/schema';
-import type { ComponentProps } from 'react';
 
 import { Button } from '@workspace/ui/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { useMessages, useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 
 const SchemaBuilder = dynamic(
-  () => import('@workspace/jsonjoy-builder').then(module =>
-    function LocalizedSchemaBuilder(props: ComponentProps<typeof module.SchemaBuilder>) {
-      return <module.SchemaBuilder {...props} locale={module.zh} />;
-    }),
+  () => import('@workspace/jsonjoy-builder').then(module => module.SchemaBuilder),
   {
     ssr: false,
-    loading: () => (
-      <div className="grid h-full min-h-64 place-items-center bg-muted/20 text-sm text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          <span>正在加载 Schema 编辑器…</span>
-        </div>
-      </div>
-    ),
   },
 );
 
 const InferSchemaDialog = dynamic(
-  () => import('@workspace/jsonjoy-builder').then(module =>
-    function LocalizedInferSchemaDialog(props: ComponentProps<typeof module.InferSchemaDialog>) {
-      return (
-        <module.SchemaBuilderProvider locale={module.zh}>
-          <module.InferSchemaDialog {...props} />
-        </module.SchemaBuilderProvider>
-      );
-    }),
+  () => import('@workspace/jsonjoy-builder').then(module => module.InferSchemaDialog),
   { ssr: false },
 );
 
@@ -57,13 +39,16 @@ function asInputSchema(schema: JsonSchema): TemplateInputSchema {
 }
 
 export function InputSchemaBuilder({ value, onChange, fill = false }: InputSchemaBuilderProps) {
+  const messages = useMessages();
+  const schemaBuilderMessages = messages.SchemaBuilder as unknown as Translation;
+  const t = useTranslations('Schema');
   const [inferOpen, setInferOpen] = useState(false);
 
   return (
     <div className={fill ? 'jsonjoy flex h-full min-h-0 flex-col gap-3' : 'jsonjoy space-y-2'}>
       <div className="flex items-center justify-end">
         <Button type="button" variant="outline" size="sm" onClick={() => setInferOpen(true)}>
-          从 JSON 推断
+          {t('infer')}
         </Button>
       </div>
       <div className={fill
@@ -76,11 +61,13 @@ export function InputSchemaBuilder({ value, onChange, fill = false }: InputSchem
           showFullscreenToggle={!fill}
           initialLeftPanelWidth={55}
           value={value as JsonSchema}
+          messages={schemaBuilderMessages}
           onChange={schema => onChange(asInputSchema(schema))}
         />
       </div>
       <InferSchemaDialog
         open={inferOpen}
+        messages={schemaBuilderMessages}
         onOpenChange={setInferOpen}
         onInfer={schema => onChange(asInputSchema(schema))}
       />

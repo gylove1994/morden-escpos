@@ -9,6 +9,7 @@
   ],
   "exports": {
     ".": "./src/index.ts",
+    "./locales": "./src/i18n/index.ts",
     "./styles.css": "./src/styles.css"
   },
   "scripts": {

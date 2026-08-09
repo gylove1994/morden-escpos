@@ -59,10 +59,15 @@ export interface DocumentSnapshot {
 
 export interface ImportResult {
   document?: EditorDocument
-  errors: string[]
+  errors: UserMessage[]
 }
 
 export interface ValidationResult {
   job?: PrintJobJSON
-  errors: string[]
+  errors: UserMessage[]
+}
+
+export interface UserMessage {
+  key: string
+  values?: Record<string, string | number>
 }

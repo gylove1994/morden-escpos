@@ -5,6 +5,7 @@
 'use client';
 
 import { TemplateEngine } from 'morden-node-escpos/template';
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useEditorStore } from '../../lib/editor-store';
@@ -13,6 +14,8 @@ import { buildReceiptRaster } from '../../lib/escpos-canvas/rasterize';
 import { parseSampleData, toPrintJob } from '../../lib/print-job';
 
 export function PrintPreview() {
+  const t = useTranslations('PrintPreview');
+  const errors = useTranslations('Errors');
   const document = useEditorStore(state => state.document);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const source = useMemo(() => {
@@ -25,16 +28,16 @@ export function PrintPreview() {
         : sourceJob;
       return {
         job,
-        dataError: sample.error,
+        dataError: sample.errorKey ? errors(sample.errorKey) : undefined,
       };
     }
-    catch (error) {
+    catch {
       return {
         job: null,
-        dataError: error instanceof Error ? error.message : '无法生成打印预览。',
+        dataError: t('unable'),
       };
     }
-  }, [document]);
+  }, [document, errors, t]);
   const [raster, setRaster] = useState<Awaited<ReturnType<typeof buildReceiptRaster>> | null>(null);
   const [rasterError, setRasterError] = useState<string>();
 
@@ -54,17 +57,17 @@ export function PrintPreview() {
           setRasterError(undefined);
         }
       })
-      .catch((error: unknown) => {
+      .catch(() => {
         if (!cancelled) {
           setRaster(null);
-          setRasterError(error instanceof Error ? error.message : '无法生成打印预览。');
+          setRasterError(t('unable'));
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [source.job]);
+  }, [source.job, t]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -77,13 +80,13 @@ export function PrintPreview() {
   const dataError = source.dataError ?? rasterError;
 
   return (
-    <main className="relative flex h-full flex-col overflow-hidden bg-muted/55" aria-label="ESC/POS 打印预览">
+    <main className="relative flex h-full flex-col overflow-hidden bg-muted/55" aria-label={t('ariaLabel')}>
       {dataError
         ? (
             <div role="alert" className="mx-4 mt-3 rounded-lg border border-destructive/30 bg-destructive/8 px-3 py-2 text-xs text-destructive">
               {dataError}
               {' '}
-              预览暂时保留变量占位符。
+              {t('dataErrorSuffix')}
             </div>
           )
         : null}
@@ -98,13 +101,13 @@ export function PrintPreview() {
                   ref={canvasRef}
                   className="block h-auto max-w-full"
                   style={{ imageRendering: 'pixelated' }}
-                  aria-label={`${document.paperWidth} 毫米 ESC/POS 点阵打印效果`}
+                  aria-label={t('canvasAria', { width: document.paperWidth })}
                 />
               </div>
             )
           : (
               <div className="mx-auto grid min-h-56 max-w-md place-items-center rounded-lg border border-dashed px-6 text-center text-xs text-muted-foreground">
-                当前模板无法生成打印预览。
+                {t('empty')}
               </div>
             )}
       </div>

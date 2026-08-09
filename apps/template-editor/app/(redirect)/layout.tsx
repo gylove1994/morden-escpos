@@ -5,17 +5,17 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
-import './globals.css';
+import '../globals.css';
 import '@workspace/jsonjoy-builder/styles.css';
 
 export const metadata: Metadata = {
   title: 'Receipt Studio',
-  description: 'ESC/POS 热敏小票可视化模板编辑器',
+  description: 'A visual ESC/POS receipt template editor.',
 };
 
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+export default function RedirectLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh">
       <body>{children}</body>
     </html>
   );

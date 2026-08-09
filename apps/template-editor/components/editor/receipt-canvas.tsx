@@ -15,6 +15,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 
 import { GripVertical, QrCode, Settings2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEditorStore } from '../../lib/editor-store';
 import { CUT_COMPONENT_ID } from '../../lib/editor-types';
 import { buildPreview, groupPreviewItems } from '../../lib/preview';
@@ -32,6 +33,7 @@ function previewTextStyle(item: PreviewItem): CSSProperties {
 }
 
 function PreviewContent({ item, charactersPerLine }: { item: PreviewItem, charactersPerLine: number }) {
+  const t = useTranslations('Canvas');
   if (item.kind === 'text') {
     if (item.richValue) {
       return (
@@ -72,7 +74,7 @@ function PreviewContent({ item, charactersPerLine }: { item: PreviewItem, charac
       <div
         className="grid w-full font-mono text-xs leading-5"
         style={{ gridTemplateColumns: `repeat(${charactersPerLine}, minmax(0, 1fr))` }}
-        aria-label={`${charactersPerLine} 个 ${character} 字符组成的分隔线`}
+        aria-label={t('dividerAria', { count: charactersPerLine, character })}
       >
         {cells.map(cell => <span key={cell.id} className="text-center" aria-hidden="true">{cell.character}</span>)}
       </div>
@@ -127,7 +129,7 @@ function PreviewContent({ item, charactersPerLine }: { item: PreviewItem, charac
       >
         <img
           src={item.content}
-          alt={item.content ? `打印图片：${item.content}` : '打印图片地址为空'}
+          alt={item.content ? t('imageAlt', { url: item.content }) : t('imageEmptyAlt')}
           className="max-h-48 max-w-full object-contain text-[10px] text-receipt-ink/55"
         />
       </div>
@@ -136,13 +138,14 @@ function PreviewContent({ item, charactersPerLine }: { item: PreviewItem, charac
 
   if (item.kind === 'space') {
     const lines = Math.max(1, Number(item.content) || 1);
-    return <div style={{ height: `${lines * 12}px` }} aria-label={`${lines} 行空白`} />;
+    return <div style={{ height: `${lines * 12}px` }} aria-label={t('blankLines', { count: lines })} />;
   }
 
   if (item.kind === 'cut') {
+    const mode = item.content === 'partial' ? t('partial') : t('full');
     return (
       <div className="relative my-2 border-t border-dashed border-receipt-ink/45 text-center">
-        <span className="relative -top-2 bg-receipt-paper px-2 text-[9px] text-receipt-ink/55">{item.content}</span>
+        <span className="relative -top-2 bg-receipt-paper px-2 text-[9px] text-receipt-ink/55">{mode}</span>
       </div>
     );
   }
@@ -152,9 +155,7 @@ function PreviewContent({ item, charactersPerLine }: { item: PreviewItem, charac
       <div className="flex items-center gap-1.5 rounded border border-dashed border-receipt-ink/20 bg-receipt-ink/4 px-2 py-1 text-[10px] text-receipt-ink/55">
         <Settings2 className="size-3" aria-hidden="true" />
         <span>
-          {item.content}
-          {' '}
-          状态
+          {t('state', { name: item.content ?? item.commandType })}
         </span>
       </div>
     );
@@ -162,21 +163,21 @@ function PreviewContent({ item, charactersPerLine }: { item: PreviewItem, charac
 
   return (
     <div className="rounded border border-dashed px-2 py-1 text-[10px] text-receipt-ink/55">
-      {item.commandType}
-      {' '}
-      暂无可视化预览
+      {t('noPreview', { type: item.commandType })}
     </div>
   );
 }
 
 function CutIndicator({ mode, selected }: { mode: CutMode, selected: boolean }) {
+  const t = useTranslations('Canvas');
   const select = useEditorStore(state => state.select);
+  const modeLabel = mode === 'partial' ? t('partial') : mode === 'full' ? t('full') : t('none');
 
   return (
     <div
       role="button"
       tabIndex={0}
-      aria-label={`选择切纸组件，当前为${mode === 'partial' ? '半切' : mode === 'full' ? '全切' : '不切'}`}
+      aria-label={t('selectCut', { mode: modeLabel })}
       aria-pressed={selected}
       className={`relative mx-3 mt-5 rounded-sm border-t border-dashed border-receipt-ink/45 text-center outline-none ${
         selected ? 'ring-2 ring-primary ring-offset-2 ring-offset-receipt-paper' : 'hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-ring'
@@ -190,9 +191,7 @@ function CutIndicator({ mode, selected }: { mode: CutMode, selected: boolean }) 
       }}
     >
       <span className="relative -top-2 bg-receipt-paper px-2 text-[9px] text-receipt-ink/55">
-        切纸 ·
-        {' '}
-        {mode === 'partial' ? '半切' : mode === 'full' ? '全切' : '不切'}
+        {t('cut', { mode: modeLabel })}
       </span>
     </div>
   );
@@ -207,6 +206,7 @@ function SortableReceiptNode({
   selected: boolean
   charactersPerLine: number
 }) {
+  const t = useTranslations('Canvas');
   const item = group.items[0];
   const select = useEditorStore(state => state.select);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -223,7 +223,7 @@ function SortableReceiptNode({
       ref={setNodeRef}
       role="button"
       tabIndex={0}
-      aria-label={`选择 ${item.commandType} 命令`}
+      aria-label={t('selectCommand', { type: item.commandType })}
       aria-pressed={selected}
       className={`group/node relative rounded-sm px-3 py-1.5 text-receipt-ink outline-none transition-[box-shadow,background-color] ${
         selected
@@ -247,7 +247,7 @@ function SortableReceiptNode({
       <button
         type="button"
         className="absolute top-1/2 -left-7 flex size-7 -translate-y-1/2 touch-none items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity group-hover/node:opacity-100 focus:opacity-100"
-        aria-label={`拖动 ${item.commandType} 命令`}
+        aria-label={t('dragCommand', { type: item.commandType })}
         {...attributes}
         {...listeners}
       >
@@ -265,6 +265,8 @@ function SortableReceiptNode({
 }
 
 export function ReceiptCanvas() {
+  const t = useTranslations('Canvas');
+  const errors = useTranslations('Errors');
   const document = useEditorStore(state => state.document);
   const selectedIds = useEditorStore(state => state.selectedIds);
   const clearSelection = useEditorStore(state => state.clearSelection);
@@ -275,13 +277,13 @@ export function ReceiptCanvas() {
   const charactersPerLine = document.paperWidth === 58 ? 32 : 48;
 
   return (
-    <main className="relative flex h-full flex-col overflow-hidden bg-muted/55" aria-label="模版编辑画布">
-      {preview.dataError
+    <main className="relative flex h-full flex-col overflow-hidden bg-muted/55" aria-label={t('ariaLabel')}>
+      {preview.dataErrorKey
         ? (
             <div role="alert" className="mx-4 mt-3 rounded-lg border border-destructive/30 bg-destructive/8 px-3 py-2 text-xs text-destructive">
-              {preview.dataError}
+              {errors(preview.dataErrorKey)}
               {' '}
-              预览暂时保留变量占位符。
+              {t('dataErrorSuffix')}
             </div>
           )
         : null}
@@ -303,7 +305,7 @@ export function ReceiptCanvas() {
                 ))
               : (
                   <div className="grid min-h-56 place-items-center rounded-lg border border-dashed border-receipt-ink/25 px-6 text-center text-xs leading-5 text-receipt-ink/50">
-                    从左侧点击组件，或将组件拖到这里
+                    {t('empty')}
                   </div>
                 )}
           </SortableContext>

@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/ui/tabs';
 import { Braces, Copy, MousePointerClick, Plus, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { extractDefinedPaths, isPathDefined } from 'morden-node-escpos/template-inputs';
+import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 
@@ -25,34 +26,39 @@ import { richTextFromPlainText } from '../../lib/rich-text';
 import { TextRichEditor } from './text-rich-editor';
 import { VariableTextEditor } from './variable-text-editor';
 
+function SampleDataLoading() {
+  const t = useTranslations('Properties');
+  return <div className="grid min-h-32 place-items-center text-xs text-muted-foreground">{t('loadingForm')}</div>;
+}
+
 const SampleDataForm = dynamic(() => import('./sample-data-form'), {
   ssr: false,
-  loading: () => <div className="grid min-h-32 place-items-center text-xs text-muted-foreground">正在加载数据表单…</div>,
+  loading: SampleDataLoading,
 });
 
-const commandLabels: Record<string, string> = {
-  text: '文本',
-  pureText: '文本',
-  print: '原始文本',
-  newLine: '空行',
-  align: '对齐',
-  style: '字形',
-  size: '字号',
-  qrcode: '二维码',
-  image: '图片',
-  raster: '图片',
-  drawLine: '分隔线',
-  table: '等宽表格',
-  tableCustom: '自定义表格',
-  feed: '空行',
+const commandLabelKeys: Record<string, string> = {
+  text: 'textContent',
+  pureText: 'textContent',
+  print: 'rawText',
+  newLine: 'newline',
+  align: 'align',
+  style: 'style',
+  size: 'fontSize',
+  qrcode: 'qrcode',
+  image: 'image',
+  raster: 'image',
+  drawLine: 'divider',
+  table: 'table',
+  tableCustom: 'customTable',
+  feed: 'newline',
 };
 
 const STYLE_OPTIONS = [
-  { value: 'NORMAL', label: '常规' },
-  { value: 'B', label: '粗体' },
-  { value: 'U', label: '下划线' },
-  { value: 'BU', label: '粗体 + 下划线' },
-  { value: 'I', label: '斜体' },
+  { value: 'NORMAL', labelKey: 'normal' },
+  { value: 'B', labelKey: 'bold' },
+  { value: 'U', labelKey: 'underline' },
+  { value: 'BU', labelKey: 'boldUnderline' },
+  { value: 'I', labelKey: 'italic' },
 ] as const;
 
 function styleSelectValue(style: ContentFormat['style'] | undefined): string {
@@ -117,18 +123,19 @@ function ContentFormatFields({
   showSize?: boolean
   onChange: (patch: Partial<ContentFormat>) => void
 }) {
+  const t = useTranslations('Properties');
   return (
     <FieldGroup>
       {showAlign
         ? (
             <Field>
-              <FieldLabel>对齐方式</FieldLabel>
+              <FieldLabel>{t('align')}</FieldLabel>
               <Select value={format.align} onValueChange={align => onChange({ align: align as ContentFormat['align'] })}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="LT">左对齐</SelectItem>
-                  <SelectItem value="CT">居中对齐</SelectItem>
-                  <SelectItem value="RT">右对齐</SelectItem>
+                  <SelectItem value="LT">{t('left')}</SelectItem>
+                  <SelectItem value="CT">{t('center')}</SelectItem>
+                  <SelectItem value="RT">{t('right')}</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
@@ -137,7 +144,7 @@ function ContentFormatFields({
       {showStyle
         ? (
             <Field>
-              <FieldLabel>字形</FieldLabel>
+              <FieldLabel>{t('style')}</FieldLabel>
               <Select
                 value={styleSelectValue(format.style)}
                 onValueChange={style =>
@@ -146,9 +153,9 @@ function ContentFormatFields({
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {STYLE_OPTIONS.map(option => (
-                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                    <SelectItem key={option.value} value={option.value}>{t(option.labelKey)}</SelectItem>
                   ))}
-                  <SelectItem value="CUSTOM" disabled>导入的自定义样式</SelectItem>
+                  <SelectItem value="CUSTOM" disabled>{t('customStyle')}</SelectItem>
                 </SelectContent>
               </Select>
             </Field>
@@ -157,8 +164,8 @@ function ContentFormatFields({
       {showSize
         ? (
             <div className="grid grid-cols-2 gap-3">
-              <NumberInput id="content-size-width" label="宽度倍数" value={format.width} onChange={width => onChange({ width })} />
-              <NumberInput id="content-size-height" label="高度倍数" value={format.height} onChange={height => onChange({ height })} />
+              <NumberInput id="content-size-width" label={t('widthScale')} value={format.width} onChange={width => onChange({ width })} />
+              <NumberInput id="content-size-height" label={t('heightScale')} value={format.height} onChange={height => onChange({ height })} />
             </div>
           )
         : null}
@@ -167,6 +174,7 @@ function ContentFormatFields({
 }
 
 function ElementProperties() {
+  const t = useTranslations('Properties');
   const document = useEditorStore(state => state.document);
   const selectedIds = useEditorStore(state => state.selectedIds);
   const updateDocument = useEditorStore(state => state.updateDocument);
@@ -181,18 +189,18 @@ function ElementProperties() {
     return (
       <div className="space-y-5 p-4">
         <div>
-          <p className="text-sm font-semibold">切纸</p>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">固定在小票末尾，不能删除、复制或排序。</p>
+          <p className="text-sm font-semibold">{t('cut')}</p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">{t('cutHint')}</p>
         </div>
-        <SectionTitle>组件属性</SectionTitle>
+        <SectionTitle>{t('componentProperties')}</SectionTitle>
         <Field>
-          <FieldLabel>切纸方式</FieldLabel>
+          <FieldLabel>{t('cutMode')}</FieldLabel>
           <Select value={document.cutMode} onValueChange={cutMode => updateDocument({ cutMode: cutMode as CutMode })}>
             <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="full">全切</SelectItem>
-              <SelectItem value="partial">半切</SelectItem>
-              <SelectItem value="none">不切</SelectItem>
+              <SelectItem value="full">{t('fullCut')}</SelectItem>
+              <SelectItem value="partial">{t('partialCut')}</SelectItem>
+              <SelectItem value="none">{t('noCut')}</SelectItem>
             </SelectContent>
           </Select>
         </Field>
@@ -208,8 +216,8 @@ function ElementProperties() {
             <MousePointerClick className="size-4" aria-hidden="true" />
           </div>
           <div>
-            <p className="text-sm font-medium">选择一个组件</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">点击画布中的内容，即可在这里调整属性。</p>
+            <p className="text-sm font-medium">{t('selectComponent')}</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">{t('selectHint')}</p>
           </div>
         </div>
       </div>
@@ -226,34 +234,32 @@ function ElementProperties() {
     <div className="space-y-5 p-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold">{commandLabels[command.type] ?? command.type}</p>
+          <p className="text-sm font-semibold">{commandLabelKeys[command.type] ? t(commandLabelKeys[command.type]) : command.type}</p>
           <p className="font-mono text-[10px] text-muted-foreground">{command.type}</p>
         </div>
         <div className="flex gap-1">
-          <Button type="button" variant="ghost" size="icon" aria-label="复制所选组件" onClick={duplicateSelected}>
+          <Button type="button" variant="ghost" size="icon" aria-label={t('duplicate')} onClick={duplicateSelected}>
             <Copy aria-hidden="true" />
           </Button>
-          <Button type="button" variant="ghost" size="icon" aria-label="删除所选组件" onClick={removeSelected}>
+          <Button type="button" variant="ghost" size="icon" aria-label={t('delete')} onClick={removeSelected}>
             <Trash2 aria-hidden="true" />
           </Button>
         </div>
       </div>
 
-      <SectionTitle>组件属性</SectionTitle>
+      <SectionTitle>{t('componentProperties')}</SectionTitle>
 
       {command.type === 'text' || command.type === 'pureText'
         ? (
             <Field>
-              <FieldLabel>文本内容</FieldLabel>
+              <FieldLabel>{t('textContent')}</FieldLabel>
               <TextRichEditor
                 contentKey={selected.id}
                 value={selected.richValue ?? richTextFromPlainText(command.content, selected.format)}
                 onChange={next => updateRichValue(selected.id, next)}
               />
               <FieldDescription>
-                选中文字可设置行内字形和宽高倍数；支持形如
-                {' {{key}} '}
-                的变量。
+                {t('variableHint')}
               </FieldDescription>
             </Field>
           )
@@ -262,20 +268,17 @@ function ElementProperties() {
       {command.type === 'print'
         ? (
             <Field>
-              <FieldLabel htmlFor="command-content">文本内容</FieldLabel>
+              <FieldLabel htmlFor="command-content">{t('textContent')}</FieldLabel>
               <VariableTextEditor
                 contentKey={selected.id}
-                ariaLabel="文本内容"
+                ariaLabel={t('textContent')}
                 id="command-content"
                 value={command.content}
                 onChange={content => patch({ content })}
                 multiline
               />
               <FieldDescription>
-                支持形如
-                {'{{key}}'}
-                {' '}
-                的变量。
+                {t('simpleVariableHint')}
               </FieldDescription>
             </Field>
           )
@@ -284,7 +287,7 @@ function ElementProperties() {
       {selected.format && (command.type === 'text' || command.type === 'pureText')
         ? (
             <>
-              <SectionTitle>内容排版</SectionTitle>
+              <SectionTitle>{t('contentLayout')}</SectionTitle>
               <ContentFormatFields format={selected.format} showAlign onChange={patchFormat} />
             </>
           )
@@ -293,7 +296,7 @@ function ElementProperties() {
       {selected.format && command.type === 'print'
         ? (
             <>
-              <SectionTitle>内容排版</SectionTitle>
+              <SectionTitle>{t('contentLayout')}</SectionTitle>
               <ContentFormatFields format={selected.format} showAlign showStyle showSize onChange={patchFormat} />
             </>
           )
@@ -302,7 +305,7 @@ function ElementProperties() {
       {selected.format && (command.type === 'qrcode' || command.type === 'qrimage')
         ? (
             <>
-              <SectionTitle>内容排版</SectionTitle>
+              <SectionTitle>{t('contentLayout')}</SectionTitle>
               <ContentFormatFields format={selected.format} showAlign onChange={patchFormat} />
             </>
           )
@@ -311,7 +314,7 @@ function ElementProperties() {
       {selected.format && (command.type === 'image' || command.type === 'raster')
         ? (
             <>
-              <SectionTitle>内容排版</SectionTitle>
+              <SectionTitle>{t('contentLayout')}</SectionTitle>
               <ContentFormatFields format={selected.format} showAlign onChange={patchFormat} />
             </>
           )
@@ -320,7 +323,7 @@ function ElementProperties() {
       {selected.format && command.type === 'table'
         ? (
             <>
-              <SectionTitle>内容排版</SectionTitle>
+              <SectionTitle>{t('contentLayout')}</SectionTitle>
               <ContentFormatFields format={selected.format} showStyle showSize onChange={patchFormat} />
             </>
           )
@@ -329,7 +332,7 @@ function ElementProperties() {
       {command.type === 'drawLine'
         ? (
             <Field>
-              <FieldLabel htmlFor="line-character">填充字符</FieldLabel>
+              <FieldLabel htmlFor="line-character">{t('fillCharacter')}</FieldLabel>
               <Input
                 id="line-character"
                 maxLength={1}
@@ -344,10 +347,10 @@ function ElementProperties() {
         ? (
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="qr-content">二维码内容</FieldLabel>
+                <FieldLabel htmlFor="qr-content">{t('qrContent')}</FieldLabel>
                 <VariableTextEditor
                   contentKey={selected.id}
-                  ariaLabel="二维码内容"
+                  ariaLabel={t('qrContent')}
                   id="qr-content"
                   value={command.content}
                   onChange={content => patch({ content })}
@@ -355,9 +358,9 @@ function ElementProperties() {
                 />
               </Field>
               <div className="grid grid-cols-2 gap-3">
-                <NumberInput id="qr-size" label="模块大小" value={command.size ?? 5} min={1} max={16} onChange={size => patch({ size })} />
+                <NumberInput id="qr-size" label={t('moduleSize')} value={command.size ?? 5} min={1} max={16} onChange={size => patch({ size })} />
                 <Field>
-                  <FieldLabel>容错级别</FieldLabel>
+                  <FieldLabel>{t('errorLevel')}</FieldLabel>
                   <Select value={(command.level ?? 'M').toUpperCase()} onValueChange={level => patch({ level })}>
                     <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -374,31 +377,29 @@ function ElementProperties() {
         ? (
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="image-url">图片 URL</FieldLabel>
+                <FieldLabel htmlFor="image-url">{t('imageUrl')}</FieldLabel>
                 <VariableTextEditor
                   contentKey={selected.id}
-                  ariaLabel="图片 URL"
+                  ariaLabel={t('imageUrl')}
                   id="image-url"
                   value={command.path}
                   onChange={path => patch({ path })}
                 />
                 <FieldDescription>
-                  仅支持可公开访问的 http(s) 图片地址；可使用形如
-                  {' {{logoUrl}} '}
-                  的变量。
+                  {t('imageHint')}
                 </FieldDescription>
               </Field>
               {command.type === 'raster'
                 ? (
                     <Field>
-                      <FieldLabel>光栅模式</FieldLabel>
+                      <FieldLabel>{t('rasterMode')}</FieldLabel>
                       <Select value={(command.mode ?? 'normal').toLowerCase()} onValueChange={mode => patch({ mode })}>
                         <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="normal">正常</SelectItem>
-                          <SelectItem value="dw">双倍宽度</SelectItem>
-                          <SelectItem value="dh">双倍高度</SelectItem>
-                          <SelectItem value="dwdh">双倍宽高</SelectItem>
+                          <SelectItem value="normal">{t('rasterNormal')}</SelectItem>
+                          <SelectItem value="dw">{t('doubleWidth')}</SelectItem>
+                          <SelectItem value="dh">{t('doubleHeight')}</SelectItem>
+                          <SelectItem value="dwdh">{t('doubleBoth')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </Field>
@@ -416,15 +417,12 @@ function ElementProperties() {
                 // eslint-disable-next-line react/no-array-index-key
                 <Field key={index}>
                   <FieldLabel htmlFor={`table-cell-${index}`}>
-                    第
-                    {index + 1}
-                    {' '}
-                    列
+                    {t('column', { number: index + 1 })}
                   </FieldLabel>
                   <div className="flex gap-2">
                     <VariableTextEditor
                       contentKey={`${selected.id}-table-${index}`}
-                      ariaLabel={`第 ${index + 1} 列`}
+                      ariaLabel={t('column', { number: index + 1 })}
                       id={`table-cell-${index}`}
                       value={String(cell)}
                       onChange={(content) => {
@@ -437,7 +435,7 @@ function ElementProperties() {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      aria-label={`删除第 ${index + 1} 列`}
+                      aria-label={t('deleteColumn', { number: index + 1 })}
                       onClick={() => patch({ data: command.data.filter((_, cellIndex) => cellIndex !== index) })}
                     >
                       <Trash2 aria-hidden="true" />
@@ -445,9 +443,9 @@ function ElementProperties() {
                   </div>
                 </Field>
               ))}
-              <Button type="button" variant="outline" onClick={() => patch({ data: [...command.data, '新列'] })}>
+              <Button type="button" variant="outline" onClick={() => patch({ data: [...command.data, t('newColumn')] })}>
                 <Plus aria-hidden="true" />
-                添加列
+                {t('addColumn')}
               </Button>
             </FieldGroup>
           )
@@ -457,10 +455,10 @@ function ElementProperties() {
         ? (
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="custom-table-each">循环数组</FieldLabel>
+                <FieldLabel htmlFor="custom-table-each">{t('loopArray')}</FieldLabel>
                 <Input
                   id="custom-table-each"
-                  placeholder="例如：items 或 order.lines"
+                  placeholder={t('loopPlaceholder')}
                   value={command.each ?? ''}
                   onChange={(event) => {
                     const each = event.target.value.trim();
@@ -468,17 +466,14 @@ function ElementProperties() {
                   }}
                 />
                 <FieldDescription>
-                  填写数组路径后，每个数组元素渲染一行；列文本使用当前元素字段，如
-                  {' '}
-                  {'{{name}}'}
-                  。
+                  {t('loopHint')}
                 </FieldDescription>
               </Field>
-              <SectionTitle>表格排版</SectionTitle>
+              <SectionTitle>{t('tableLayout')}</SectionTitle>
               <div className="grid grid-cols-2 gap-3">
                 <NumberInput
                   id="custom-table-size-width"
-                  label="宽度倍数"
+                  label={t('widthScale')}
                   value={command.options?.size[0] ?? 1}
                   onChange={(width) => {
                     const currentSize = command.options?.size ?? [1, 1];
@@ -493,7 +488,7 @@ function ElementProperties() {
                 />
                 <NumberInput
                   id="custom-table-size-height"
-                  label="高度倍数"
+                  label={t('heightScale')}
                   value={command.options?.size[1] ?? 1}
                   onChange={(height) => {
                     const currentSize = command.options?.size ?? [1, 1];
@@ -513,16 +508,13 @@ function ElementProperties() {
                 <div key={index} className="space-y-2 rounded-lg border bg-muted/30 p-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium">
-                      第
-                      {index + 1}
-                      {' '}
-                      列
+                      {t('column', { number: index + 1 })}
                     </span>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`删除第 ${index + 1} 列`}
+                      aria-label={t('deleteColumn', { number: index + 1 })}
                       onClick={() => patch({ data: command.data.filter((_, columnIndex) => columnIndex !== index) })}
                     >
                       <Trash2 aria-hidden="true" />
@@ -530,7 +522,7 @@ function ElementProperties() {
                   </div>
                   <VariableTextEditor
                     contentKey={`${selected.id}-custom-table-${index}`}
-                    ariaLabel={`第 ${index + 1} 列文本`}
+                    ariaLabel={t('columnText', { number: index + 1 })}
                     id={`custom-table-text-${index}`}
                     value={column.text}
                     scopePath={command.each}
@@ -543,7 +535,7 @@ function ElementProperties() {
                   />
                   <div className="grid grid-cols-2 gap-2">
                     <Field>
-                      <FieldLabel htmlFor={`custom-table-width-${index}`}>列宽</FieldLabel>
+                      <FieldLabel htmlFor={`custom-table-width-${index}`}>{t('columnWidth')}</FieldLabel>
                       <Input
                         id={`custom-table-width-${index}`}
                         type="number"
@@ -558,7 +550,7 @@ function ElementProperties() {
                       />
                     </Field>
                     <Field>
-                      <FieldLabel>对齐方式</FieldLabel>
+                      <FieldLabel>{t('align')}</FieldLabel>
                       <Select
                         value={(column.align ?? 'LEFT').toUpperCase()}
                         onValueChange={(align) => {
@@ -568,17 +560,17 @@ function ElementProperties() {
                           patch({ data });
                         }}
                       >
-                        <SelectTrigger className="w-full" aria-label={`第 ${index + 1} 列对齐方式`}><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="w-full" aria-label={t('columnAlign', { number: index + 1 })}><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="LEFT">左对齐</SelectItem>
-                          <SelectItem value="CENTER">居中对齐</SelectItem>
-                          <SelectItem value="RIGHT">右对齐</SelectItem>
+                          <SelectItem value="LEFT">{t('left')}</SelectItem>
+                          <SelectItem value="CENTER">{t('center')}</SelectItem>
+                          <SelectItem value="RIGHT">{t('right')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </Field>
                   </div>
                   <Field>
-                    <FieldLabel>字形</FieldLabel>
+                    <FieldLabel>{t('style')}</FieldLabel>
                     <Select
                       value={styleSelectValue(column.style)}
                       onValueChange={(style) => {
@@ -593,13 +585,13 @@ function ElementProperties() {
                         patch({ data });
                       }}
                     >
-                      <SelectTrigger className="w-full" aria-label={`第 ${index + 1} 列字形`}><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-full" aria-label={t('columnStyle', { number: index + 1 })}><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="INHERIT">继承整体字形</SelectItem>
+                        <SelectItem value="INHERIT">{t('inheritStyle')}</SelectItem>
                         {STYLE_OPTIONS.map(option => (
-                          <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                          <SelectItem key={option.value} value={option.value}>{t(option.labelKey)}</SelectItem>
                         ))}
-                        <SelectItem value="CUSTOM" disabled>导入的自定义样式</SelectItem>
+                        <SelectItem value="CUSTOM" disabled>{t('customStyle')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </Field>
@@ -609,31 +601,32 @@ function ElementProperties() {
                 type="button"
                 variant="outline"
                 onClick={() => patch({ data: [...command.data, {
-                  text: '新列',
+                  text: t('newColumn'),
                   cols: 8,
                   align: 'LEFT',
                   style: 'NORMAL',
                 }] })}
               >
                 <Plus aria-hidden="true" />
-                添加列
+                {t('addColumn')}
               </Button>
             </FieldGroup>
           )
         : null}
 
       {command.type === 'feed'
-        ? <NumberInput id="feed-lines" label="行数" value={command.lines ?? 1} min={1} max={20} onChange={lines => patch({ lines })} />
+        ? <NumberInput id="feed-lines" label={t('lines')} value={command.lines ?? 1} min={1} max={20} onChange={lines => patch({ lines })} />
         : null}
 
-      {!commandLabels[command.type]
-        ? <p className="rounded-lg border border-dashed p-3 text-xs text-muted-foreground">此高级命令可保留并排序，但首版不提供属性表单。</p>
+      {!commandLabelKeys[command.type]
+        ? <p className="rounded-lg border border-dashed p-3 text-xs text-muted-foreground">{t('advanced')}</p>
         : null}
     </div>
   );
 }
 
 function DataProperties() {
+  const t = useTranslations('Properties');
   const document = useEditorStore(state => state.document);
   const updateDocument = useEditorStore(state => state.updateDocument);
   const variables = extractVariables(document);
@@ -653,8 +646,8 @@ function DataProperties() {
     <div className="h-full min-h-0 space-y-6 overflow-y-auto p-4">
       <section className="space-y-2">
         <div>
-          <h3 className="text-sm font-semibold">示例数据</h3>
-          <p className="mt-1 text-xs text-muted-foreground">表单由顶部「输入 Schema」生成，只用于变量替换和实时预览。</p>
+          <h3 className="text-sm font-semibold">{t('sampleData')}</h3>
+          <p className="mt-1 text-xs text-muted-foreground">{t('sampleHint')}</p>
         </div>
         <SampleDataForm
           schema={document.inputSchema}
@@ -665,8 +658,8 @@ function DataProperties() {
 
       <section className="border-t pt-4">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <h3 className="text-xs font-semibold">模板变量</h3>
-          <span className="text-[10px] text-muted-foreground">蓝色已定义 · 红色未定义</span>
+          <h3 className="text-xs font-semibold">{t('variables')}</h3>
+          <span className="text-[10px] text-muted-foreground">{t('variableLegend')}</span>
         </div>
         <div className="flex flex-wrap gap-2">
           {variables.length > 0
@@ -677,25 +670,25 @@ function DataProperties() {
                   className={isPathDefined(variable, usablePaths)
                     ? 'rounded-md border border-blue-200 bg-blue-50 px-2 py-1 font-mono text-[10px] text-blue-700 hover:bg-blue-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
                     : 'rounded-md border border-red-200 bg-red-50 px-2 py-1 font-mono text-[10px] text-red-700 hover:bg-red-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'}
-                  title="点击复制变量"
+                  title={t('copyVariable')}
                   onClick={() => navigator.clipboard.writeText(`{{${variable}}}`)}
                 >
                   {`{{${variable}}}`}
                 </button>
               ))
-            : <p className="text-xs text-muted-foreground">模板中还没有变量。</p>}
+            : <p className="text-xs text-muted-foreground">{t('noVariables')}</p>}
         </div>
         {unusedPaths.length > 0
           ? (
               <div className="mt-4">
-                <p className="mb-2 text-[10px] font-medium text-muted-foreground">已定义但未使用</p>
+                <p className="mb-2 text-[10px] font-medium text-muted-foreground">{t('unused')}</p>
                 <div className="flex flex-wrap gap-2">
                   {unusedPaths.map(path => (
                     <button
                       key={path}
                       type="button"
                       className="rounded-md border bg-muted/40 px-2 py-1 font-mono text-[10px] text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                      title="点击复制变量"
+                      title={t('copyVariable')}
                       onClick={() => navigator.clipboard.writeText(`{{${path}}}`)}
                     >
                       {`{{${path}}}`}
@@ -711,6 +704,7 @@ function DataProperties() {
 }
 
 export function PropertyPanel() {
+  const t = useTranslations('Properties');
   const [panelTab, setPanelTab] = useState('element');
   const isReadOnly = useEditorStore(state => state.viewMode === 'printPreview');
 
@@ -722,16 +716,16 @@ export function PropertyPanel() {
 
   if (isReadOnly) {
     return (
-      <aside className="flex h-full flex-col bg-background" aria-label="属性面板">
+      <aside className="flex h-full flex-col bg-background" aria-label={t('panelAria')}>
         <div className="border-b px-4 py-3">
-          <h2 className="text-sm font-semibold">属性与数据</h2>
+          <h2 className="text-sm font-semibold">{t('title')}</h2>
         </div>
         <div className="grid min-h-0 flex-1 place-items-center p-4">
           <div className="max-w-64 rounded-lg border border-dashed bg-muted/30 p-4 text-center">
             <SlidersHorizontal className="mx-auto size-5 text-muted-foreground" aria-hidden="true" />
-            <p className="mt-3 text-sm font-medium">预览模式只读</p>
+            <p className="mt-3 text-sm font-medium">{t('previewReadOnly')}</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              切换回模版编辑后可调整组件属性和预览数据。
+              {t('previewHint')}
             </p>
           </div>
         </div>
@@ -740,7 +734,7 @@ export function PropertyPanel() {
   }
 
   return (
-    <aside className="flex h-full flex-col bg-background" aria-label="属性面板">
+    <aside className="flex h-full flex-col bg-background" aria-label={t('panelAria')}>
       <Tabs value={panelTab} onValueChange={setPanelTab} className="min-h-0 flex-1 flex-col gap-0">
         <div className="shrink-0 border-b px-3 py-2">
           <TabsList className="grid w-full grid-cols-2">
@@ -751,7 +745,7 @@ export function PropertyPanel() {
                 : 'hover:bg-background/70'}
             >
               <SlidersHorizontal aria-hidden="true" />
-              组件
+              {t('component')}
             </TabsTrigger>
             <TabsTrigger
               value="data"
@@ -760,7 +754,7 @@ export function PropertyPanel() {
                 : 'hover:bg-background/70'}
             >
               <Braces aria-hidden="true" />
-              数据
+              {t('data')}
             </TabsTrigger>
           </TabsList>
         </div>
