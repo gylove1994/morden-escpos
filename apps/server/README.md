@@ -16,7 +16,7 @@ BSL SaaS print-queue control plane. See [`CONTEXT.md`](./CONTEXT.md).
 | `pnpm --filter @workspace/server build` | Production build |
 | `pnpm --filter @workspace/server db:generate` | Generate Drizzle migrations from `lib/db/schema.ts` |
 | `pnpm --filter @workspace/server db:migrate` | Apply migrations |
-| `pnpm --filter @workspace/server test` | Vitest (health, OpenAPI, human-session auth) |
+| `pnpm --filter @workspace/server test` | Vitest (health, OpenAPI, auth, Printer Agent tokens) |
 | `pnpm --filter @workspace/server typecheck` | `tsc --noEmit` |
 
 ## Configuration
@@ -39,6 +39,16 @@ Printer Agent device token.
 - Protected example: `PATCH /api/console/org-settings` requires owner/admin
 - Session probe: `GET /api/console/session` (401 without a session cookie)
 
+## Printer Agents + device tokens
+
+- Console: `/console/printer-agents` (list / create / revoke / rotate)
+- APIs: `GET|POST /api/console/printer-agents`,
+  `POST /api/console/printer-agents/:printerAgentId/revoke|rotate`
+- Create and rotate return the plaintext device token **once**; DB stores SHA-256
+- Protocol auth: `POST /api/protocol/v1/printer-agents/heartbeat` with
+  `Authorization: Bearer <device-token>` (401 for missing/invalid/revoked)
+- owner/admin manage tokens; member may list only
+
 ## Edition stub
 
 Set `EDITION=cloud` (default) or `EDITION=self-hosted` for the compile/build stub.
@@ -47,9 +57,10 @@ trimming is deferred.
 
 ## Print Queue Agent Protocol
 
-OpenAPI skeleton: `contracts/print-queue-agent-protocol.openapi.yaml`.
+OpenAPI: `contracts/print-queue-agent-protocol.openapi.yaml`.
 
 The server references and serves it at `GET /api/protocol/openapi`.
+Heartbeat requires a Printer Agent device token; job lease/report remain stubs.
 
 ## Health
 

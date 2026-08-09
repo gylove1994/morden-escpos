@@ -16,6 +16,8 @@ those surfaces out via the `EDITION` stub (`cloud` | `self-hosted`).
 | Term | Meaning |
 | ---- | ------- |
 | **Printer Agent** | On-site print client process (Node or Go). MUST NOT be called a bare “Agent”. |
+| **printerAgentId** | Stable identifier for a Printer Agent registration. |
+| **device token** | Secret Bearer credential for Printer Agent protocol auth. Shown once on create/rotate; stored hashed at rest. MUST stay distinct from human sessions and future integrator API keys. |
 | **Print Queue Agent Protocol** | HTTP contract between the server and Printer Agents (OpenAPI under `contracts/`). Primary test seam. |
 | **edition** | Build flavor: `cloud` or `self-hosted`. |
 | **Organization** | Tenant that owns Printer Agents, printers, groups, jobs, and templates. |
@@ -29,20 +31,24 @@ those surfaces out via the `EDITION` stub (`cloud` | `self-hosted`).
 - Creating an Organization assigns the creator the **owner** role.
 - At least one protected console/API action (Organization settings update) is
   gated so **owner/admin** MAY and **member** MUST NOT.
-- **Printer Agent device tokens** are explicitly out of scope here (ticket #4)
-  and MUST NOT reuse session cookies.
+- **Printer Agent device tokens** authenticate the Print Queue Agent Protocol
+  (`Authorization: Bearer …`). They MUST NOT reuse session cookies.
+- Device tokens are stored as SHA-256 hashes; plaintext is returned only once on
+  create or rotate. Revoked/rotated tokens MUST fail protocol auth.
 
-## Scaffold + auth slice
+## Current slice
 
 This package currently provides:
 
 - Next.js app shell with `/api/health`
-- Postgres + Drizzle migration wiring (auth + Organization tables)
+- Postgres + Drizzle migration wiring (auth, Organization, Printer Agent tables)
 - Better Auth email/password signup/login and Organization plugin
 - Signed-in Organization console shell under `/console`
+- Printer Agent console management (`/console/printer-agents`) with create /
+  list / revoke / rotate
+- Device-token auth on `POST /api/protocol/v1/printer-agents/heartbeat`
 - `EDITION` compile/build stub (no route trimming yet)
-- Print Queue Agent Protocol OpenAPI skeleton, served at `/api/protocol/openapi`
-- Vitest harness covering health and human-session auth HTTP boundaries
+- Print Queue Agent Protocol OpenAPI, served at `/api/protocol/openapi`
+- Vitest harness covering health, human-session auth, and device-token lifecycle
 
-Out of scope here: Printer Agent registration/device tokens, job
-enqueue/lease/report, client agents, landing, billing.
+Out of scope here: job enqueue/lease/report, billing, discovery, Node/Go clients.

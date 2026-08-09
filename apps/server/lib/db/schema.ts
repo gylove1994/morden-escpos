@@ -112,6 +112,28 @@ export const invitation = pgTable('invitation', {
     .references(() => user.id, { onDelete: 'cascade' }),
 });
 
+/**
+ * On-site Printer Agent registration.
+ * Device tokens are stored hashed (`deviceTokenHash`); plaintext is shown once on create/rotate.
+ */
+export const printerAgent = pgTable('printer_agent', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  /** `active` | `revoked` — revoked tokens MUST NOT authenticate. */
+  status: text('status').notNull().default('active'),
+  /** SHA-256 hex of the device token. Null when revoked. */
+  deviceTokenHash: text('device_token_hash').unique(),
+  /** Non-secret prefix for console display (e.g. `pa_abcd…`). */
+  deviceTokenPrefix: text('device_token_prefix'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  lastAuthenticatedAt: timestamp('last_authenticated_at', { withTimezone: true }),
+});
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
@@ -136,6 +158,7 @@ export const accountRelations = relations(account, ({ one }) => ({
 export const organizationRelations = relations(organization, ({ many }) => ({
   members: many(member),
   invitations: many(invitation),
+  printerAgents: many(printerAgent),
 }));
 
 export const memberRelations = relations(member, ({ one }) => ({
@@ -159,3 +182,13 @@ export const invitationRelations = relations(invitation, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+export const printerAgentRelations = relations(printerAgent, ({ one }) => ({
+  organization: one(organization, {
+    fields: [printerAgent.organizationId],
+    references: [organization.id],
+  }),
+}));
+
+export type PrinterAgentRow = typeof printerAgent.$inferSelect;
+export type PrinterAgentStatus = 'active' | 'revoked';

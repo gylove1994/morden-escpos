@@ -9,7 +9,7 @@ import { createAuthClient } from 'better-auth/react';
 
 /**
  * Browser client for human session auth.
- * Printer Agent device tokens MUST NOT use this client (#4).
+ * Printer Agent device tokens MUST NOT use this client.
  */
 export const authClient = createAuthClient({
   plugins: [organizationClient()],
