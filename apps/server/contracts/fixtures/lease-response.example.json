@@ -1,0 +1,17 @@
+{
+  "job": {
+    "id": "job_fixture_001",
+    "printerId": "printer_fixture_001",
+    "printerAgentId": "printer_agent_fixture_001",
+    "status": "leased",
+    "payloadBase64": "G0BISQo=",
+    "payloadByteLength": 5,
+    "connectionHints": {
+      "transport": "tcp",
+      "address": "192.168.1.50",
+      "port": 9100
+    },
+    "leaseExpiresAt": "2026-08-09T12:00:30.000Z",
+    "createdAt": "2026-08-09T12:00:00.000Z"
+  }
+}

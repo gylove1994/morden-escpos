@@ -1,0 +1,18 @@
+{
+  "description": "Printer Agent job status transitions for the Print Queue Agent Protocol",
+  "terminal": ["succeeded", "failed"],
+  "allowed": [
+    { "from": "leased", "to": "printing" },
+    { "from": "printing", "to": "succeeded" },
+    { "from": "printing", "to": "failed" }
+  ],
+  "illegal": [
+    { "from": "leased", "to": "succeeded" },
+    { "from": "leased", "to": "failed" },
+    { "from": "printing", "to": "leased" },
+    { "from": "printing", "to": "queued" },
+    { "from": "succeeded", "to": "printing" },
+    { "from": "failed", "to": "printing" },
+    { "from": "queued", "to": "printing" }
+  ]
+}

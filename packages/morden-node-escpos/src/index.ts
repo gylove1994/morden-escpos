@@ -88,4 +88,5 @@ export type {
 } from './printer';
 
 // 导出适配器
+export { default as NetworkAdapter } from './network';
 export { default as USBAdapter } from './usb';

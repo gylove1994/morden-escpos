@@ -1,0 +1,9 @@
+{
+  "SERVER_URL": "http://127.0.0.1:43128",
+  "DEVICE_TOKEN": "replace-with-printer-agent-device-token",
+  "POLL_IDLE_INITIAL_MS": "1000",
+  "POLL_IDLE_MAX_MS": "30000",
+  "POLL_IDLE_MULTIPLIER": "2",
+  "POLL_AFTER_WORK_MS": "0",
+  "LOG_LEVEL": "info"
+}
