@@ -2,13 +2,14 @@
  * Copyright (c) 2026 morden-escpos-contributors
  * SPDX-License-Identifier: MIT
  */
+import type { SerialPortLike } from './index';
+import { Buffer } from 'node:buffer';
 import { EventEmitter } from 'node:events';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import SerialAdapter from './index';
-import type { SerialPortLike } from './index';
 
 function openAdapter(adapter: SerialAdapter): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -66,7 +67,7 @@ class FakeSerialPort extends EventEmitter implements SerialPortLike {
   }
 }
 
-describe('SerialAdapter', () => {
+describe('serialAdapter', () => {
   let dir: string | null = null;
 
   afterEach(async () => {

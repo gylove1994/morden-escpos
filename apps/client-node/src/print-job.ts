@@ -2,12 +2,7 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import {
-  DevicePathAdapter,
-  NetworkAdapter,
-  Printer,
-  SerialAdapter,
-} from 'morden-node-escpos';
+import type { Buffer } from 'node:buffer';
 import type {
   ConnectionHints,
   LeasedJob,
@@ -15,6 +10,12 @@ import type {
   TcpConnectionHints,
   UsbConnectionHints,
 } from './protocol/types';
+import {
+  DevicePathAdapter,
+  NetworkAdapter,
+  Printer,
+  SerialAdapter,
+} from 'morden-node-escpos';
 import { decodeJobPayload } from './protocol/codec';
 
 type PrintAdapter = DevicePathAdapter | NetworkAdapter | SerialAdapter;

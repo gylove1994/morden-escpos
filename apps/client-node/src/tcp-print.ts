@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import type { LeasedJob, TcpConnectionHints } from './protocol/types';
-import { decodeJobPayload } from './protocol/codec';
 import { printRawOverTcp } from './print-job';
+import { decodeJobPayload } from './protocol/codec';
 
 /**
  * Print leased raw ESC/POS bytes over TCP.

@@ -12,11 +12,11 @@ const DEFAULT_BAUD_RATE = 9600;
 const MIN_BAUD_RATE = 300;
 const MAX_BAUD_RATE = 1_000_000;
 
-export type SerialPortLike = {
+export interface SerialPortLike {
   open: () => Promise<void> | void
   write: (data: Buffer, callback: (error: Error | null | undefined) => void) => void
   close: (callback?: (error: Error | null | undefined) => void) => void
-};
+}
 
 export type SerialPortFactory = (options: {
   path: string

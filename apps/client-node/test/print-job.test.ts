@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import type { AddressInfo } from 'node:net';
-import { createServer } from 'node:net';
+import type { LeasedJob } from '../src/protocol/types';
+import { Buffer } from 'node:buffer';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { LeasedJob } from '../src/protocol/types';
 import { printLeasedJob } from '../src/print-job';
 
 function leasedJob(overrides: Partial<LeasedJob>): LeasedJob {

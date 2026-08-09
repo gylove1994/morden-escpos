@@ -2,6 +2,7 @@
  * Copyright (c) 2026 morden-escpos-contributors
  * SPDX-License-Identifier: MIT
  */
+import { Buffer } from 'node:buffer';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -38,7 +39,7 @@ function closeAdapter(adapter: DevicePathAdapter): Promise<void> {
   });
 }
 
-describe('DevicePathAdapter', () => {
+describe('devicePathAdapter', () => {
   let dir: string | null = null;
 
   afterEach(async () => {
