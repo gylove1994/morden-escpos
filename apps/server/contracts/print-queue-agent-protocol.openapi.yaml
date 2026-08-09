@@ -4,8 +4,10 @@ info:
   description: |
     HTTP contract between the morden-escpos SaaS control plane and on-site
     Printer Agents. Device-token authentication is required for Printer Agent
-    operations. Job lease and report cover the single-Printer raw enqueue path.
-  version: 0.2.0-queue
+    operations. Job lease/report cover the single-Printer raw enqueue path.
+    Discovery reports let Printer Agents surface local endpoints for admin
+    confirm/name in the console.
+  version: 0.3.0-discovery
   license:
     name: BUSL-1.1
 servers:
@@ -13,7 +15,7 @@ servers:
     description: Server-mounted Print Queue Agent Protocol prefix
 tags:
   - name: PrinterAgent
-    description: On-site Printer Agent device authentication and presence
+    description: On-site Printer Agent device authentication, presence, and discovery
   - name: Jobs
     description: Job lease and outcome reporting for Printer Agents
 paths:
@@ -39,8 +41,9 @@ paths:
       summary: Printer Agent heartbeat
       description: |
         Authenticate with a Printer Agent device token and acknowledge presence.
-        Invalid or revoked tokens are rejected with 401. Full online/offline
-        semantics (last poll windows) land with later tickets.
+        Successful authentication updates lastAuthenticatedAt. The console derives
+        online/offline from that timestamp within PRINTER_AGENT_ONLINE_WINDOW_MS.
+        Invalid or revoked tokens are rejected with 401.
       security:
         - printerAgentDeviceToken: []
       responses:
@@ -50,6 +53,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PrinterAgentHeartbeatResponse'
+        '401':
+          description: Missing, invalid, or revoked device token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolError'
+  /printer-agents/discoveries:
+    post:
+      tags: [PrinterAgent]
+      operationId: postPrinterAgentDiscoveries
+      summary: Report discovered printer endpoints
+      description: |
+        Upsert local endpoints discovered by this Printer Agent (TCP / USB /
+        Serial connection hints). Re-reporting the same endpoint refreshes
+        lastSeenAt. Admins confirm and name Printers from these discoveries
+        in the console.
+      security:
+        - printerAgentDeviceToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscoveryReportRequest'
+      responses:
+        '200':
+          description: Discoveries accepted and upserted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryReportResponse'
+        '400':
+          description: Invalid body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolError'
         '401':
           description: Missing, invalid, or revoked device token
           content:
@@ -157,6 +197,78 @@ components:
           type: string
         organizationId:
           type: string
+    DiscoveryEndpoint:
+      type: object
+      required: [connectionHints]
+      properties:
+        connectionHints:
+          $ref: '#/components/schemas/ConnectionHints'
+        suggestedName:
+          type: string
+          nullable: true
+    DiscoveryReportRequest:
+      type: object
+      required: [endpoints]
+      properties:
+        endpoints:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DiscoveryEndpoint'
+    PrinterDiscovery:
+      type: object
+      required:
+        - id
+        - organizationId
+        - printerAgentId
+        - endpointKey
+        - connectionHints
+        - firstSeenAt
+        - lastSeenAt
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        printerAgentId:
+          type: string
+        endpointKey:
+          type: string
+        connectionHints:
+          $ref: '#/components/schemas/ConnectionHints'
+        suggestedName:
+          type: string
+          nullable: true
+        firstSeenAt:
+          type: string
+          format: date-time
+        lastSeenAt:
+          type: string
+          format: date-time
+        confirmedPrinterId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    DiscoveryReportResponse:
+      type: object
+      required: [status, printerAgentId, discoveries]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        printerAgentId:
+          type: string
+        discoveries:
+          type: array
+          items:
+            $ref: '#/components/schemas/PrinterDiscovery'
     ProtocolError:
       type: object
       required: [error, message]

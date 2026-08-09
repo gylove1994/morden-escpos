@@ -6,6 +6,7 @@
 import process from 'node:process';
 import { IdleBackoff } from './backoff';
 import { CLIENT_CONFIG } from './config';
+import { parseTcpDiscoveryEndpoints } from './discovery';
 import { runPrinterAgentLoop } from './loop';
 import { ProtocolClient } from './protocol/client';
 
@@ -21,6 +22,17 @@ async function main(): Promise<void> {
     organizationId: heartbeat.organizationId,
     serverUrl: CLIENT_CONFIG.SERVER_URL,
   });
+
+  const discoveryEndpoints = parseTcpDiscoveryEndpoints(
+    CLIENT_CONFIG.DISCOVER_TCP_ENDPOINTS,
+  );
+  if (discoveryEndpoints.length > 0) {
+    const report = await client.reportDiscoveries(discoveryEndpoints);
+    console.info('[printer-agent] Reported discoveries', {
+      count: report.discoveries.length,
+      endpointKeys: report.discoveries.map(item => item.endpointKey),
+    });
+  }
 
   const backoff = new IdleBackoff({
     initialMs: CLIENT_CONFIG.POLL_IDLE_INITIAL_MS,
@@ -40,7 +52,6 @@ async function main(): Promise<void> {
     signal: abort.signal,
   });
 }
-
 main().catch((error) => {
   console.error('[printer-agent] Fatal error', error);
   process.exit(1);

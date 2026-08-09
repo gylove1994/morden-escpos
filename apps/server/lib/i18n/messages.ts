@@ -112,6 +112,9 @@ export interface ConsoleMessages {
     statusActive: string
     statusRevoked: string
     tokenPrefix: string
+    presence: string
+    lastSeen: string
+    never: string
     created: string
     revoked: string
     membersReadOnly: string
@@ -241,7 +244,7 @@ const en: ConsoleMessages = {
   printerAgents: {
     title: 'Printer Agents',
     blurb:
-      'Register an on-site Printer Agent and receive a device token. Tokens are shown once on create or rotate.',
+      'Register an on-site Printer Agent and receive a device token. Tokens are shown once on create or rotate. Online/offline reflects the last heartbeat or poll.',
     nameLabel: 'Name',
     create: 'Create Printer Agent',
     creating: 'Creating…',
@@ -252,6 +255,9 @@ const en: ConsoleMessages = {
     statusActive: 'active',
     statusRevoked: 'revoked',
     tokenPrefix: 'Token prefix',
+    presence: 'Presence',
+    lastSeen: 'Last seen',
+    never: 'never',
     created: 'Created',
     revoked: 'Revoked',
     membersReadOnly: 'Members may list Printer Agents but cannot manage tokens.',
@@ -392,6 +398,9 @@ const zh: ConsoleMessages = {
     statusActive: '活跃',
     statusRevoked: '已吊销',
     tokenPrefix: '令牌前缀',
+    presence: '在线状态',
+    lastSeen: '最后活跃',
+    never: '从未',
     created: '创建时间',
     revoked: '吊销时间',
     membersReadOnly: '成员可以查看打印机代理，但不能管理令牌。',

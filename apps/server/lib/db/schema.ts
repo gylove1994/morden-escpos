@@ -304,6 +304,44 @@ export const printerGroupMember = pgTable(
 );
 
 /**
+ * Endpoint discovered by a Printer Agent and awaiting admin confirm/name.
+ * Reporting the same endpointKey again refreshes lastSeenAt (upsert).
+ */
+export const printerDiscovery = pgTable(
+  'printer_discovery',
+  {
+    id: text('id').primaryKey(),
+    organizationId: text('organization_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    printerAgentId: text('printer_agent_id')
+      .notNull()
+      .references(() => printerAgent.id, { onDelete: 'cascade' }),
+    /**
+     * Stable fingerprint of the local endpoint within the Printer Agent
+     * (e.g. `tcp://10.0.0.5:9100`, `usb:///dev/usb/lp0`).
+     */
+    endpointKey: text('endpoint_key').notNull(),
+    connectionHintsJson: text('connection_hints_json').notNull(),
+    suggestedName: text('suggested_name'),
+    firstSeenAt: timestamp('first_seen_at', { withTimezone: true }).notNull(),
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).notNull(),
+    /** Set when an admin confirms this discovery into a Printer. */
+    confirmedPrinterId: text('confirmed_printer_id').references(() => printer.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  table => [
+    uniqueIndex('printer_discovery_agent_endpoint_uidx').on(
+      table.printerAgentId,
+      table.endpointKey,
+    ),
+  ],
+);
+
+/**
  * Raw print job targeting a single Printer, or a parent/child fan-out pair.
  */
 export const printJob = pgTable(
@@ -405,6 +443,7 @@ export const organizationRelations = relations(organization, ({ many }) => ({
   invitations: many(invitation),
   printerAgents: many(printerAgent),
   printers: many(printer),
+  printerDiscoveries: many(printerDiscovery),
   printJobs: many(printJob),
   printerGroups: many(printerGroup),
   integratorApiKeys: many(integratorApiKey),
@@ -440,6 +479,7 @@ export const printerAgentRelations = relations(printerAgent, ({ one, many }) => 
     references: [organization.id],
   }),
   printers: many(printer),
+  discoveries: many(printerDiscovery),
   printerGroups: many(printerGroup),
   printJobs: many(printJob),
 }));
@@ -467,11 +507,29 @@ export const printerRelations = relations(printer, ({ one, many }) => ({
     references: [printerAgent.id],
   }),
   groupMemberships: many(printerGroupMember),
+  discoveries: many(printerDiscovery),
   printJobs: many(printJob),
 }));
 
 export type PrinterRow = typeof printer.$inferSelect;
 export type PrinterStatus = 'active' | 'disabled';
+
+export const printerDiscoveryRelations = relations(printerDiscovery, ({ one }) => ({
+  organization: one(organization, {
+    fields: [printerDiscovery.organizationId],
+    references: [organization.id],
+  }),
+  printerAgent: one(printerAgent, {
+    fields: [printerDiscovery.printerAgentId],
+    references: [printerAgent.id],
+  }),
+  confirmedPrinter: one(printer, {
+    fields: [printerDiscovery.confirmedPrinterId],
+    references: [printer.id],
+  }),
+}));
+
+export type PrinterDiscoveryRow = typeof printerDiscovery.$inferSelect;
 
 export const printJobRelations = relations(printJob, ({ one, many }) => ({
   organization: one(organization, {

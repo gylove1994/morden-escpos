@@ -86,18 +86,23 @@ This package currently provides:
 - Signed-in Organization console shell under `/console` (incl. Billing on cloud)
 - Printer Agent console management (`/console/printer-agents`) with create /
   list / revoke / rotate and cloud plan limits on create
-- Printer console management (`/console/printers`) with connection hints
+- Printer console management (`/console/printers`) with connection hints,
+  discovery confirm/name, disable (history retained), and owning Printer Agent
+  presence
+- Discovery listing + confirm APIs under `/api/console/discoveries`
 - Raw job enqueue + auditable job history (`/console/jobs`)
 - Job history labels `kind` (`raw` | `template_confirmation`) and parent/child
   relationships (`parentJobId`, `childCount`, `relation`) when present
 - Console UI i18n for Chinese and English (`console_locale` cookie)
 - Device-token auth on Print Queue Agent Protocol:
   - `POST /api/protocol/v1/printer-agents/heartbeat`
+  - `POST /api/protocol/v1/printer-agents/discoveries`
   - `POST /api/protocol/v1/jobs/lease`
   - `POST /api/protocol/v1/jobs/{jobId}/report`
 - Cloud Stripe Checkout / Customer Portal / webhook sync
 - Plan-limit enforcement on Printer Agent create, Printer create, and job enqueue
 - Exclusive lease with expiry requeue (`JOB_LEASE_MS`)
+- Online/offline window (`PRINTER_AGENT_ONLINE_WINDOW_MS`)
 - Idempotent enqueue via `idempotencyKey`
 - `EDITION` compile-out via `pageExtensions` + `*.cloud.ts(x)` surfaces
 - Minimal cloud platform tenant ops (lookup / ban / suspend)
@@ -107,6 +112,5 @@ This package currently provides:
   proofs
 
 Out of scope here: full Printer Group admin UI, embedded template editor,
-discovery, integrator API keys, landing.
-Go/Node Printer Agent binaries live in `apps/client-go` (#12) /
+landing polish. Go/Node Printer Agent binaries live in `apps/client-go` (#12) /
 `apps/client-node` (#6).

@@ -43,8 +43,10 @@ describe('saas server scaffold', () => {
     const body = await response.text();
     expect(body).toContain('Print Queue Agent Protocol');
     expect(body).toContain('printer-agents/heartbeat');
+    expect(body).toContain('printer-agents/discoveries');
     expect(body).toContain('/jobs/lease');
     expect(body).toContain('JobLeaseResponse');
+    expect(body).toContain('DiscoveryReportResponse');
     expect(body).toContain('connectionHints');
     expect(response.headers.get('x-morden-protocol-contract')).toBe(
       'contracts/print-queue-agent-protocol.openapi.yaml',

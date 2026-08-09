@@ -8,6 +8,7 @@ import {
   getConsoleSession,
 } from '../../../lib/console-auth';
 import { getConsoleMessages } from '../../../lib/i18n/server';
+import { listDiscoveries } from '../../../lib/discoveries';
 import { listPrinterAgents } from '../../../lib/printer-agents';
 import { listPrinters } from '../../../lib/printers';
 import { PrintersPanel } from '../../components/printers-panel';
@@ -22,10 +23,14 @@ export default async function PrintersPage() {
     redirect('/console/create-organization');
   }
 
-  const [{ messages }, printers, printerAgents] = await Promise.all([
+  const [{ messages }, printers, printerAgents, discoveries] = await Promise.all([
     getConsoleMessages(),
     listPrinters(session.organization.id),
     listPrinterAgents(session.organization.id),
+    listDiscoveries({
+      organizationId: session.organization.id,
+      pendingOnly: true,
+    }),
   ]);
 
   return (
@@ -34,6 +39,7 @@ export default async function PrintersPage() {
       <p className="muted">{messages.printers.blurb}</p>
       <PrintersPanel
         initialPrinters={printers}
+        initialDiscoveries={discoveries}
         printerAgents={printerAgents}
         canManage={canManagePrinters(session.role)}
       />

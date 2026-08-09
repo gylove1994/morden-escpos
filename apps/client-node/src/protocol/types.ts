@@ -92,6 +92,43 @@ export const HeartbeatResponseSchema = z.object({
 
 export type HeartbeatResponse = z.infer<typeof HeartbeatResponseSchema>;
 
+export const DiscoveryEndpointSchema = z.object({
+  connectionHints: ConnectionHintsSchema,
+  suggestedName: z.string().trim().min(1).max(120).optional().nullable(),
+});
+
+export type DiscoveryEndpoint = z.infer<typeof DiscoveryEndpointSchema>;
+
+export const DiscoveryReportRequestSchema = z.object({
+  endpoints: z.array(DiscoveryEndpointSchema).max(100),
+});
+
+export type DiscoveryReportRequest = z.infer<typeof DiscoveryReportRequestSchema>;
+
+export const PrinterDiscoverySchema = z.object({
+  id: z.string().min(1),
+  organizationId: z.string().min(1),
+  printerAgentId: z.string().min(1),
+  endpointKey: z.string().min(1),
+  connectionHints: ConnectionHintsSchema,
+  suggestedName: z.string().nullable().optional(),
+  firstSeenAt: z.string().min(1),
+  lastSeenAt: z.string().min(1),
+  confirmedPrinterId: z.string().nullable().optional(),
+  createdAt: z.string().min(1),
+  updatedAt: z.string().min(1),
+});
+
+export type PrinterDiscovery = z.infer<typeof PrinterDiscoverySchema>;
+
+export const DiscoveryReportResponseSchema = z.object({
+  status: z.literal('ok'),
+  printerAgentId: z.string().min(1),
+  discoveries: z.array(PrinterDiscoverySchema),
+});
+
+export type DiscoveryReportResponse = z.infer<typeof DiscoveryReportResponseSchema>;
+
 export const ProtocolErrorSchema = z.object({
   error: z.string(),
   message: z.string(),

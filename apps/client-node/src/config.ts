@@ -45,6 +45,11 @@ const EnvSchema = z.object({
     .refine(v => v >= 0 && v <= 60_000, {
       message: 'POLL_AFTER_WORK_MS must be between 0 and 60000',
     }),
+  /**
+   * Optional comma-separated TCP endpoints (`host:port`) reported at startup
+   * for console discovery confirm/name. USB/Serial discovery is #13.
+   */
+  DISCOVER_TCP_ENDPOINTS: z.string().optional().default(''),
 });
 
 export type ClientConfig = z.infer<typeof EnvSchema>;

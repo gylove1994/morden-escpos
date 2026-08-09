@@ -1,0 +1,12 @@
+{
+  "endpoints": [
+    {
+      "connectionHints": {
+        "transport": "tcp",
+        "address": "192.168.1.50",
+        "port": 9100
+      },
+      "suggestedName": "Front counter"
+    }
+  ]
+}

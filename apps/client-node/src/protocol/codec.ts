@@ -2,9 +2,19 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import type { HeartbeatResponse, JobPublic, LeasedJob, ReportStatus } from './types';
+import type {
+  DiscoveryEndpoint,
+  DiscoveryReportRequest,
+  DiscoveryReportResponse,
+  HeartbeatResponse,
+  JobPublic,
+  LeasedJob,
+  ReportStatus,
+} from './types';
 import { Buffer } from 'node:buffer';
 import {
+  DiscoveryReportRequestSchema,
+  DiscoveryReportResponseSchema,
   HeartbeatResponseSchema,
   JobLeaseResponseSchema,
   JobReportResponseSchema,
@@ -48,6 +58,16 @@ export function decodeReportResponse(body: unknown): JobPublic {
 
 export function decodeHeartbeatResponse(body: unknown): HeartbeatResponse {
   return HeartbeatResponseSchema.parse(body);
+}
+
+export function encodeDiscoveryReportRequest(
+  endpoints: DiscoveryEndpoint[],
+): DiscoveryReportRequest {
+  return DiscoveryReportRequestSchema.parse({ endpoints });
+}
+
+export function decodeDiscoveryReportResponse(body: unknown): DiscoveryReportResponse {
+  return DiscoveryReportResponseSchema.parse(body);
 }
 
 /**

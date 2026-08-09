@@ -12,12 +12,14 @@ import {
   generateDeviceToken,
   hashDeviceToken,
 } from './device-token';
+import { presenceFromLastSeen, type PresenceStatus } from './presence';
 
 export interface PrinterAgentPublic {
   id: string
   organizationId: string
   name: string
   status: PrinterAgentStatus
+  presence: PresenceStatus
   deviceTokenPrefix: string | null
   createdAt: string
   updatedAt: string
@@ -32,6 +34,7 @@ function toPublic(row: PrinterAgentRow): PrinterAgentPublic {
     organizationId: row.organizationId,
     name: row.name,
     status,
+    presence: presenceFromLastSeen(row.lastAuthenticatedAt),
     deviceTokenPrefix: row.deviceTokenPrefix,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
