@@ -45,7 +45,9 @@ function fakeStripePort(): StripeBillingPort {
     async retrieveSubscription(subscriptionId) {
       return {
         id: subscriptionId,
-        customerId: 'cus_from_sub',
+        // Unique per subscription so parallel/sequential orgs do not collide on
+        // organization_billing.stripe_customer_id UNIQUE.
+        customerId: `cus_for_${subscriptionId}`,
         status: 'active',
         priceId: SERVER_CONFIG.STRIPE_PRICE_PERSONAL ?? 'price_test_personal',
         currentPeriodStart: new Date('2026-08-01T00:00:00.000Z'),
@@ -170,17 +172,18 @@ describe('cloud billing Stripe + plan limits', () => {
       body: JSON.stringify({ plan: 'personal' }),
     });
 
+    const subscriptionId = `sub_test_personal_${organizationId}`;
     const event = {
-      id: 'evt_test_checkout',
+      id: `evt_test_checkout_${organizationId}`,
       object: 'event',
       type: 'checkout.session.completed',
       data: {
         object: {
-          id: 'cs_test_done',
+          id: `cs_test_done_${organizationId}`,
           object: 'checkout.session',
           mode: 'subscription',
           customer: `cus_test_${organizationId}`,
-          subscription: 'sub_test_personal',
+          subscription: subscriptionId,
           client_reference_id: organizationId,
           metadata: { organizationId, plan: 'personal' },
         },
