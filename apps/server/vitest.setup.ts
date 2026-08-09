@@ -6,6 +6,7 @@ import process from 'node:process';
 
 const databaseUrl = 'postgres://morden:morden@127.0.0.1:5432/morden_escpos_test';
 const baseUrl = 'http://127.0.0.1:43128';
+const authSecret = 'test-only-auth-secret-at-least-32-chars!!';
 
 // Vitest/Vite sets BASE_URL to the Vite `base` path (often "/"), which is not a
 // valid absolute URL for SERVER_CONFIG. Always overwrite scaffold test env.
@@ -14,6 +15,7 @@ process.env.BASE_URL = baseUrl;
 process.env.LOG_LEVEL = 'info';
 process.env.EDITION = 'cloud';
 process.env.DATABASE_URL = databaseUrl;
+process.env.AUTH_SECRET = authSecret;
 
 // When the harness boots Next in dev mode, Next sets NODE_ENV=development and
 // the config module reads APP_* keys — keep both shapes populated for tests.
@@ -23,3 +25,4 @@ process.env.APP_BASE_URL = baseUrl;
 process.env.APP_LOG_LEVEL = 'info';
 process.env.APP_EDITION = 'cloud';
 process.env.APP_DATABASE_URL = databaseUrl;
+process.env.APP_AUTH_SECRET = authSecret;
