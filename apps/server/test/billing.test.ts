@@ -5,6 +5,7 @@
 import type Stripe from 'stripe';
 import type { StripeBillingPort } from '../lib/billing/stripe-port';
 import type { BootedServer } from './harness';
+import { Buffer } from 'node:buffer';
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { PLAN_CATALOG } from '../lib/billing/plans';
@@ -28,7 +29,7 @@ const TEST_TCP_HINTS = {
   address: '127.0.0.1',
   port: 9100,
 };
-const TEST_PAYLOAD_BASE64 = Buffer.from([0x1b, 0x40]).toString('base64');
+const TEST_PAYLOAD_BASE64 = Buffer.from([0x1B, 0x40]).toString('base64');
 
 function fakeStripePort(): StripeBillingPort {
   return {
