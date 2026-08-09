@@ -159,16 +159,22 @@ export function createStripeSdkPort(): StripeBillingPort {
   };
 }
 
-let stripePort: StripeBillingPort | null = null;
+const globalForStripe = globalThis as typeof globalThis & {
+  __mordenStripeBillingPort?: StripeBillingPort | null
+};
 
 export function getStripeBillingPort(): StripeBillingPort {
-  if (!stripePort) {
-    stripePort = createStripeSdkPort();
+  // Prefer globalThis so Vitest and the in-process Next.js harness share one port
+  // even when module graphs are duplicated.
+  if (globalForStripe.__mordenStripeBillingPort) {
+    return globalForStripe.__mordenStripeBillingPort;
   }
-  return stripePort;
+  const created = createStripeSdkPort();
+  globalForStripe.__mordenStripeBillingPort = created;
+  return created;
 }
 
 /** Test-only seam for injecting a fake Stripe adapter. */
 export function setStripeBillingPortForTests(port: StripeBillingPort | null): void {
-  stripePort = port;
+  globalForStripe.__mordenStripeBillingPort = port;
 }
