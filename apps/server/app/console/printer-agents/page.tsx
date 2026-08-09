@@ -1,0 +1,39 @@
+/**
+ * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
+ * SPDX-License-Identifier: BUSL-1.1
+ */
+import { redirect } from 'next/navigation';
+import { PrinterAgentsPanel } from '../../components/printer-agents-panel';
+import {
+  canManagePrinterAgents,
+  getConsoleSession,
+} from '../../../lib/console-auth';
+import { listPrinterAgents } from '../../../lib/printer-agents';
+
+export default async function PrinterAgentsPage() {
+  const session = await getConsoleSession();
+  if (!session) {
+    redirect('/login');
+  }
+
+  if (!session.organization) {
+    redirect('/console/create-organization');
+  }
+
+  const printerAgents = await listPrinterAgents(session.organization.id);
+
+  return (
+    <section className="stack">
+      <h1>Printer Agents</h1>
+      <p className="muted">
+        Register on-site Printer Agents and manage device tokens. Tokens are shown
+        once on create or rotate and stored hashed at rest. This is separate from
+        human session cookies.
+      </p>
+      <PrinterAgentsPanel
+        initialPrinterAgents={printerAgents}
+        canManage={canManagePrinterAgents(session.role)}
+      />
+    </section>
+  );
+}

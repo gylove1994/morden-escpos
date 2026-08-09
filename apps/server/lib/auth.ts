@@ -13,7 +13,7 @@ import * as schema from './db/schema';
 /**
  * Human session authentication (email/password + Organization RBAC).
  *
- * This MUST remain distinct from future Printer Agent device-token auth (#4).
+ * This MUST remain distinct from Printer Agent device-token auth.
  * Device tokens authenticate on-site Printer Agents; they MUST NOT reuse session cookies.
  */
 export const auth = betterAuth({

@@ -10,6 +10,6 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Better Auth catch-all for human session endpoints (sign-up, sign-in, organization, …).
- * Printer Agent device-token routes MUST live elsewhere (#4).
+ * Printer Agent device-token routes live under /api/protocol and /api/console/printer-agents.
  */
 export const { GET, POST } = toNextJsHandler(auth);

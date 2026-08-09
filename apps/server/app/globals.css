@@ -166,3 +166,68 @@ button:disabled {
   display: grid;
   gap: 1rem;
 }
+
+.token-reveal {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--brand);
+  border-radius: 0.5rem;
+  background: #f3faf6;
+}
+
+.token-value {
+  display: block;
+  word-break: break-all;
+  padding: 0.75rem;
+  border-radius: 0.4rem;
+  background: #102418;
+  color: #e8f7ee;
+  font-size: 0.9rem;
+}
+
+.agent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.agent-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.agent-name {
+  font-weight: 600;
+}
+
+.agent-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.agent-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+}
+
+.agent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+button.danger {
+  background: var(--danger);
+  color: #fff;
+}
