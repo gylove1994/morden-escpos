@@ -9,8 +9,8 @@ import { SERVER_CONFIG } from '../config';
 import { db } from '../db';
 import {
   organizationBilling,
-  printerAgent,
   printer,
+  printerAgent,
 } from '../db/schema';
 import { isCheckoutPlanId, isPlanId, PLAN_CATALOG, resolveEffectiveLimits } from './plans';
 
