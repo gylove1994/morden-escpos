@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { setOrganizationPlanForTests } from '../lib/billing/subscription';
 import { SERVER_CONFIG } from '../lib/config';
 import {
   authOriginHeaders,
@@ -89,10 +90,7 @@ describe('cloud platform tenant ops', () => {
 
     const blocked = await fetch(`${booted.baseUrl}/api/console/printer-agents`, {
       method: 'POST',
-      headers: {
-        ...authOriginHeaders(cookie),
-        'Content-Type': 'application/json',
-      },
+      headers: authOriginHeaders({ Cookie: cookie }),
       body: JSON.stringify({ name: 'should-block' }),
     });
     expect(blocked.status).toBe(403);
@@ -128,12 +126,16 @@ describe('cloud platform tenant ops', () => {
     );
     expect(restore.status).toBe(200);
 
+    // Grant an active Personal plan so restore path is not blocked by quotas.
+    await setOrganizationPlanForTests({
+      organizationId,
+      plan: 'personal',
+      status: 'active',
+    });
+
     const allowed = await fetch(`${booted.baseUrl}/api/console/printer-agents`, {
       method: 'POST',
-      headers: {
-        ...authOriginHeaders(cookie),
-        'Content-Type': 'application/json',
-      },
+      headers: authOriginHeaders({ Cookie: cookie }),
       body: JSON.stringify({ name: 'after-restore' }),
     });
     expect(allowed.status).toBe(201);
