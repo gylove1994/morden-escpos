@@ -10,6 +10,7 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
 /**
@@ -160,17 +161,71 @@ export const organizationBilling = pgTable('organization_billing', {
 });
 
 /**
- * Minimal Printer stub for plan-limit HTTP seams until #5 owns the model.
- * #5 MUST replace or extend this — not a full printer inventory.
+ * Confirmed Printer bound under a Printer Agent.
+ * Connection hints travel with leased job payloads so the Printer Agent
+ * knows which local device to open (TCP / USB / Serial).
  */
-export const printerStub = pgTable('printer_stub', {
+export const printer = pgTable('printer', {
   id: text('id').primaryKey(),
   organizationId: text('organization_id')
     .notNull()
     .references(() => organization.id, { onDelete: 'cascade' }),
+  printerAgentId: text('printer_agent_id')
+    .notNull()
+    .references(() => printerAgent.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
+  /** `active` | `disabled` — disabled printers MUST NOT accept new enqueue. */
+  status: text('status').notNull().default('active'),
+  /**
+   * JSON connection hints (transport + endpoint fields).
+   * Stored as text JSON for MVP; validated at the API boundary.
+   */
+  connectionHintsJson: text('connection_hints_json').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
+
+/**
+ * Raw print job targeting a single Printer.
+ * State machine: queued → leased → printing → succeeded | failed.
+ * Expired leases return to queued.
+ */
+export const printJob = pgTable(
+  'print_job',
+  {
+    id: text('id').primaryKey(),
+    organizationId: text('organization_id')
+      .notNull()
+      .references(() => organization.id, { onDelete: 'cascade' }),
+    printerId: text('printer_id')
+      .notNull()
+      .references(() => printer.id, { onDelete: 'restrict' }),
+    /** Denormalized for Printer Agent lease queries. */
+    printerAgentId: text('printer_agent_id')
+      .notNull()
+      .references(() => printerAgent.id, { onDelete: 'cascade' }),
+    /** `queued` | `leased` | `printing` | `succeeded` | `failed` */
+    status: text('status').notNull().default('queued'),
+    /** Raw ESC/POS bytes encoded as standard base64. */
+    payloadBase64: text('payload_base64').notNull(),
+    payloadByteLength: integer('payload_byte_length').notNull(),
+    /** Optional integrator idempotency key; unique per Organization when set. */
+    idempotencyKey: text('idempotency_key'),
+    leaseExpiresAt: timestamp('lease_expires_at', { withTimezone: true }),
+    errorMessage: text('error_message'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+    leasedAt: timestamp('leased_at', { withTimezone: true }),
+    printingAt: timestamp('printing_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+  },
+  table => [
+    uniqueIndex('print_job_org_idempotency_uidx').on(
+      table.organizationId,
+      table.idempotencyKey,
+    ),
+  ],
+);
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
@@ -197,6 +252,8 @@ export const organizationRelations = relations(organization, ({ many }) => ({
   members: many(member),
   invitations: many(invitation),
   printerAgents: many(printerAgent),
+  printers: many(printer),
+  printJobs: many(printJob),
 }));
 
 export const memberRelations = relations(member, ({ one }) => ({
@@ -221,11 +278,13 @@ export const invitationRelations = relations(invitation, ({ one }) => ({
   }),
 }));
 
-export const printerAgentRelations = relations(printerAgent, ({ one }) => ({
+export const printerAgentRelations = relations(printerAgent, ({ one, many }) => ({
   organization: one(organization, {
     fields: [printerAgent.organizationId],
     references: [organization.id],
   }),
+  printers: many(printer),
+  printJobs: many(printJob),
 }));
 
 export const organizationBillingRelations = relations(
@@ -240,3 +299,36 @@ export const organizationBillingRelations = relations(
 
 export type PrinterAgentRow = typeof printerAgent.$inferSelect;
 export type PrinterAgentStatus = 'active' | 'revoked';
+
+export const printerRelations = relations(printer, ({ one, many }) => ({
+  organization: one(organization, {
+    fields: [printer.organizationId],
+    references: [organization.id],
+  }),
+  printerAgent: one(printerAgent, {
+    fields: [printer.printerAgentId],
+    references: [printerAgent.id],
+  }),
+  printJobs: many(printJob),
+}));
+
+export type PrinterRow = typeof printer.$inferSelect;
+export type PrinterStatus = 'active' | 'disabled';
+
+export const printJobRelations = relations(printJob, ({ one }) => ({
+  organization: one(organization, {
+    fields: [printJob.organizationId],
+    references: [organization.id],
+  }),
+  printer: one(printer, {
+    fields: [printJob.printerId],
+    references: [printer.id],
+  }),
+  printerAgent: one(printerAgent, {
+    fields: [printJob.printerAgentId],
+    references: [printerAgent.id],
+  }),
+}));
+
+export type PrintJobRow = typeof printJob.$inferSelect;
+export type PrintJobStatus = 'queued' | 'leased' | 'printing' | 'succeeded' | 'failed';

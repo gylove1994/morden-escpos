@@ -16,7 +16,7 @@ BSL SaaS print-queue control plane. See [`CONTEXT.md`](./CONTEXT.md).
 | `pnpm --filter @workspace/server build` | Production build |
 | `pnpm --filter @workspace/server db:generate` | Generate Drizzle migrations from `lib/db/schema.ts` |
 | `pnpm --filter @workspace/server db:migrate` | Apply migrations |
-| `pnpm --filter @workspace/server test` | Vitest (health, OpenAPI, auth, Printer Agent tokens, billing/plan limits) |
+| `pnpm --filter @workspace/server test` | Vitest (health, auth, tokens, billing/plan limits, enqueue/lease/report) |
 | `pnpm --filter @workspace/server typecheck` | `tsc --noEmit` |
 
 ## Configuration
@@ -45,6 +45,11 @@ When `EDITION=cloud`, these are required (use [Stripe test mode](https://docs.st
 Self-hosted builds do not require Stripe variables. Point Stripe webhooks at
 `POST /api/billing/webhook`.
 
+Optional lease duration:
+
+- Dev: `APP_JOB_LEASE_MS` (default `30000`)
+- Server: `JOB_LEASE_MS` (default `30000`)
+
 ## Human session auth + Organization RBAC
 
 - Signup / login: `/signup`, `/login` → Better Auth at `/api/auth/*`
@@ -61,8 +66,7 @@ Self-hosted builds do not require Stripe variables. Point Stripe webhooks at
   `POST /api/console/printer-agents/:printerAgentId/revoke|rotate`
 - Create and rotate return the plaintext device token **once**; DB stores SHA-256
 - Cloud plan limits apply on create (`403` with `plan_limit_exceeded` when over quota)
-- Protocol auth: `POST /api/protocol/v1/printer-agents/heartbeat` with
-  `Authorization: Bearer <device-token>` (401 for missing/invalid/revoked)
+- Protocol auth: Bearer device token on `/api/protocol/v1/*`
 - owner/admin manage tokens; member may list only
 
 ## Cloud billing + plan limits
@@ -77,7 +81,20 @@ Self-hosted builds do not require Stripe variables. Point Stripe webhooks at
 - Directional Business quotas: 25 printers / 5 Printer Agents / 5000 monthly jobs
 - Over-quota create/enqueue returns `403` with `error: "plan_limit_exceeded"`
 
-Stub seams (for #5 to replace): `POST /api/console/printers`, `POST /api/console/jobs`.
+## Printers + raw queue
+
+- Console: `/console/printers` (create under a Printer Agent with connection hints)
+- Console: `/console/jobs` (enqueue raw base64 ESC/POS + job history)
+- APIs: `GET|POST /api/console/printers`, `GET|POST /api/console/jobs`
+- Enqueue accepts optional `idempotencyKey` (dedupes per Organization)
+- Protocol:
+  - `POST /api/protocol/v1/jobs/lease` → `200 { job }` or `204`
+  - `POST /api/protocol/v1/jobs/{jobId}/report` with
+    `printing` → `succeeded` | `failed` (`errorMessage` required on failure)
+- Job states: `queued` → `leased` → `printing` → `succeeded` | `failed`
+- Expired leases return to `queued`
+- Leased payloads include `payloadBase64`, `payloadByteLength`, and
+  `connectionHints`
 
 ## Edition stub
 
@@ -90,7 +107,7 @@ trimming is deferred.
 OpenAPI: `contracts/print-queue-agent-protocol.openapi.yaml`.
 
 The server references and serves it at `GET /api/protocol/openapi`.
-Heartbeat requires a Printer Agent device token; job lease/report remain stubs.
+Integration tests drive lease/report with an in-process fake Printer Agent.
 
 ## Health
 

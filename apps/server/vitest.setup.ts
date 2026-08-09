@@ -28,6 +28,7 @@ process.env.STRIPE_WEBHOOK_SECRET = stripeWebhookSecret;
 process.env.STRIPE_PRICE_PERSONAL = stripePricePersonal;
 process.env.STRIPE_PRICE_BUSINESS = stripePriceBusiness;
 process.env.BILLING_RESELLER_CONTACT_URL = resellerContact;
+process.env.JOB_LEASE_MS = '5000';
 
 // When the harness boots Next in dev mode, Next sets NODE_ENV=development and
 // the config module reads APP_* keys — keep both shapes populated for tests.
@@ -43,3 +44,4 @@ process.env.APP_STRIPE_WEBHOOK_SECRET = stripeWebhookSecret;
 process.env.APP_STRIPE_PRICE_PERSONAL = stripePricePersonal;
 process.env.APP_STRIPE_PRICE_BUSINESS = stripePriceBusiness;
 process.env.APP_BILLING_RESELLER_CONTACT_URL = resellerContact;
+process.env.APP_JOB_LEASE_MS = '5000';

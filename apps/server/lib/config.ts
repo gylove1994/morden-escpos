@@ -49,6 +49,17 @@ const EnvSchema = z.object({
     .string()
     .min(1)
     .default('mailto:gylove1994@acgsteps.com?subject=morden-escpos%20reseller%20inquiry'),
+  /**
+   * Exclusive job lease duration in milliseconds.
+   * Expired leases return to queued so another poll can pick them up.
+   */
+  JOB_LEASE_MS: z.string()
+    .regex(/^\d+$/)
+    .default('30000')
+    .transform(Number)
+    .refine(v => v >= 1_000 && v <= 600_000, {
+      message: 'JOB_LEASE_MS must be between 1000 and 600000',
+    }),
 }).superRefine((data, ctx) => {
   if (data.EDITION !== 'cloud') {
     return;

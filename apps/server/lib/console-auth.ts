@@ -100,3 +100,13 @@ export function canManagePrinterAgents(
 ): boolean {
   return role === 'owner' || role === 'admin';
 }
+
+/**
+ * Whether the role may create / confirm Printers under a Printer Agent.
+ * owner and admin MAY; member MUST NOT.
+ */
+export function canManagePrinters(
+  role: ConsoleSession['role'],
+): boolean {
+  return role === 'owner' || role === 'admin';
+}
