@@ -21,9 +21,9 @@ const ConfirmBodySchema = z.object({
   name: z.string().trim().min(1).max(120),
 });
 
-type RouteContext = {
+interface RouteContext {
   params: Promise<{ discoveryId: string }>
-};
+}
 
 /**
  * Confirm and name a discovered endpoint as a Printer.

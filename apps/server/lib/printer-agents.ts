@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import type { PrinterAgentRow, PrinterAgentStatus } from './db/schema';
+import type { PresenceStatus } from './presence';
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
 import { db } from './db';
@@ -12,7 +13,7 @@ import {
   generateDeviceToken,
   hashDeviceToken,
 } from './device-token';
-import { presenceFromLastSeen, type PresenceStatus } from './presence';
+import { presenceFromLastSeen } from './presence';
 
 export interface PrinterAgentPublic {
   id: string

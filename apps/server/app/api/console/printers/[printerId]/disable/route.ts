@@ -11,9 +11,9 @@ import { disablePrinter } from '../../../../../../lib/printers';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-type RouteContext = {
+interface RouteContext {
   params: Promise<{ printerId: string }>
-};
+}
 
 /**
  * Disable a Printer without deleting job history.

@@ -2,26 +2,25 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import { and, desc, eq, isNull } from 'drizzle-orm';
+import type { ConnectionHints } from './connection-hints';
+import type { PrinterDiscoveryRow } from './db/schema';
+import type { PrinterPublic } from './printers';
 import { randomUUID } from 'node:crypto';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import {
-  type ConnectionHints,
   parseConnectionHintsJson,
   stringifyConnectionHints,
 } from './connection-hints';
 import { db } from './db';
-import {
-  printerDiscovery,
-  type PrinterDiscoveryRow,
-} from './db/schema';
-import { createPrinter, type PrinterPublic } from './printers';
+import { printerDiscovery } from './db/schema';
+import { createPrinter } from './printers';
 
-export type DiscoveredEndpointInput = {
+export interface DiscoveredEndpointInput {
   connectionHints: ConnectionHints
   suggestedName?: string | null
-};
+}
 
-export type PrinterDiscoveryPublic = {
+export interface PrinterDiscoveryPublic {
   id: string
   organizationId: string
   printerAgentId: string
@@ -33,7 +32,7 @@ export type PrinterDiscoveryPublic = {
   confirmedPrinterId: string | null
   createdAt: string
   updatedAt: string
-};
+}
 
 /**
  * Stable endpoint fingerprint used for discovery upserts.
