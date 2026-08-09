@@ -32,10 +32,13 @@ export default async function ConsoleHomePage() {
       </p>
       <p className="muted">
         RBAC roles are owner, admin, and member. Updating Organization settings
-        and managing Printer Agent device tokens require owner or admin.
+        and managing Printer Agent device tokens require owner or admin. Cloud
+        billing (Stripe Checkout + plan limits) is under Billing.
       </p>
       <p>
         <a href="/console/printer-agents">Manage Printer Agents</a>
+        {' · '}
+        <a href="/console/billing">Billing</a>
       </p>
     </section>
   );

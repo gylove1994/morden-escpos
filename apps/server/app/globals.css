@@ -108,6 +108,23 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  padding: 0.65rem 0.9rem;
+  text-decoration: none;
+  color: var(--ink);
+  background: #fff;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
 .error {
   color: var(--danger);
   font-size: 0.92rem;

@@ -24,6 +24,9 @@ those surfaces out via the `EDITION` stub (`cloud` | `self-hosted`).
 | **Printer Group** | Fan-out target under exactly one Printer Agent (MVP). |
 | **human session auth** | Better Auth email/password sessions for console users (cookies). MUST stay distinct from Printer Agent device tokens. |
 | **RBAC role** | Organization membership role: `owner`, `admin`, or `member`. |
+| **Personal / Business** | Self-serve cloud plans via Stripe Checkout (~$1/mo / ~$5+/mo directional). |
+| **Reseller** | Negotiated pricing path — contact CTA only, not self-serve Checkout. |
+| **plan limits** | Numeric cloud quotas on printers, Printer Agents, and monthly jobs. |
 
 ## Auth boundaries
 
@@ -36,19 +39,31 @@ those surfaces out via the `EDITION` stub (`cloud` | `self-hosted`).
 - Device tokens are stored as SHA-256 hashes; plaintext is returned only once on
   create or rotate. Revoked/rotated tokens MUST fail protocol auth.
 
+## Billing boundaries (cloud)
+
+- Stripe Checkout is available for **Personal** and **Business** only.
+- **Reseller** MUST remain a contact CTA (`reseller_contact_only`); no Checkout.
+- Customer Portal manages payment methods / subscription after a Stripe customer exists.
+- Plan limits reject over-quota printer create, Printer Agent create, and monthly
+  job enqueue at the HTTP boundary (`plan_limit_exceeded`).
+- Printer create and monthly job enqueue remain thin stub routes (`stub: true`) until
+  #5 owns full printer inventory and job lifecycle.
+
 ## Current slice
 
 This package currently provides:
 
 - Next.js app shell with `/api/health`
-- Postgres + Drizzle migration wiring (auth, Organization, Printer Agent tables)
+- Postgres + Drizzle migration wiring (auth, Organization, Printer Agent, billing tables)
 - Better Auth email/password signup/login and Organization plugin
-- Signed-in Organization console shell under `/console`
+- Signed-in Organization console shell under `/console` (incl. Billing + Printer Agents)
 - Printer Agent console management (`/console/printer-agents`) with create /
-  list / revoke / rotate
+  list / revoke / rotate and cloud plan limits on create
 - Device-token auth on `POST /api/protocol/v1/printer-agents/heartbeat`
+- Cloud Stripe Checkout / Customer Portal / webhook sync
+- Plan-limit enforcement on Printer Agent create, printer stub create, and job enqueue
 - `EDITION` compile/build stub (no route trimming yet)
 - Print Queue Agent Protocol OpenAPI, served at `/api/protocol/openapi`
-- Vitest harness covering health, human-session auth, and device-token lifecycle
+- Vitest harness covering health, human-session auth, device-token lifecycle, and billing HTTP boundaries
 
-Out of scope here: job enqueue/lease/report, billing, discovery, Node/Go clients.
+Out of scope here: full job enqueue/lease/report (#5), discovery, Node/Go clients, landing, self-hosted compile-out.

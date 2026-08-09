@@ -38,6 +38,35 @@ const EnvSchema = z.object({
   EDITION: z.enum(['cloud', 'self-hosted']).default('cloud'),
   // Better Auth human-session signing secret (NOT Printer Agent device tokens).
   AUTH_SECRET: z.string().min(32, { message: 'AUTH_SECRET must be at least 32 characters' }),
+
+  // Stripe (cloud billing). Required when EDITION=cloud; unused on self-hosted.
+  // Use Stripe test-mode keys (`sk_test_…`, `whsec_…`, `price_…`) locally.
+  STRIPE_SECRET_KEY: z.string().min(1).optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+  STRIPE_PRICE_PERSONAL: z.string().min(1).optional(),
+  STRIPE_PRICE_BUSINESS: z.string().min(1).optional(),
+  BILLING_RESELLER_CONTACT_URL: z
+    .string()
+    .min(1)
+    .default('mailto:gylove1994@acgsteps.com?subject=morden-escpos%20reseller%20inquiry'),
+}).superRefine((data, ctx) => {
+  if (data.EDITION !== 'cloud') {
+    return;
+  }
+  for (const key of [
+    'STRIPE_SECRET_KEY',
+    'STRIPE_WEBHOOK_SECRET',
+    'STRIPE_PRICE_PERSONAL',
+    'STRIPE_PRICE_BUSINESS',
+  ] as const) {
+    if (!data[key]) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [key],
+        message: `${key} is required when EDITION=cloud`,
+      });
+    }
+  }
 });
 
 const parsed = EnvSchema.safeParse(envForParse);

@@ -2,17 +2,16 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { PlanLimitError } from '../../../../lib/billing/errors';
 import { assertPlanAllows } from '../../../../lib/billing/plan-limits';
 import {
-  canManagePrinterAgents,
+  canManageOrganizationSettings,
   getConsoleSession,
 } from '../../../../lib/console-auth';
-import {
-  createPrinterAgent,
-  listPrinterAgents,
-} from '../../../../lib/printer-agents';
+import { db } from '../../../../lib/db';
+import { printerStub } from '../../../../lib/db/schema';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,32 +21,10 @@ const CreateBodySchema = z.object({
 });
 
 /**
- * List Printer Agents for the active Organization.
- * Any signed-in org member MAY list; device tokens are never returned.
- */
-export async function GET(request: Request) {
-  const consoleSession = await getConsoleSession(request.headers);
-  if (!consoleSession) {
-    return Response.json(
-      { error: 'unauthorized', message: 'Sign in required' },
-      { status: 401 },
-    );
-  }
-
-  if (!consoleSession.organization) {
-    return Response.json(
-      { error: 'no_organization', message: 'Active Organization required' },
-      { status: 400 },
-    );
-  }
-
-  const printerAgents = await listPrinterAgents(consoleSession.organization.id);
-  return Response.json({ printerAgents });
-}
-
-/**
- * Create a Printer Agent and return the device token once.
- * owner/admin MAY; member MUST NOT. Cloud plan limits apply before insert.
+ * Thin guarded stub for printer create (#5 will own the full inventory model).
+ *
+ * Purpose: enforce cloud plan limits at the future create seam and prove
+ * over-quota rejection at the HTTP boundary.
  */
 export async function POST(request: Request) {
   const consoleSession = await getConsoleSession(request.headers);
@@ -57,7 +34,6 @@ export async function POST(request: Request) {
       { status: 401 },
     );
   }
-
   if (!consoleSession.organization) {
     return Response.json(
       { error: 'no_organization', message: 'Active Organization required' },
@@ -65,11 +41,12 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!canManagePrinterAgents(consoleSession.role)) {
+  const allowed = await canManageOrganizationSettings(request.headers);
+  if (!allowed) {
     return Response.json(
       {
         error: 'forbidden',
-        message: 'owner or admin role required to create a Printer Agent',
+        message: 'owner or admin role required to create a printer',
       },
       { status: 403 },
     );
@@ -92,7 +69,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await assertPlanAllows(consoleSession.organization.id, 'printer_agent');
+    await assertPlanAllows(consoleSession.organization.id, 'printer');
   }
   catch (error) {
     if (error instanceof PlanLimitError) {
@@ -101,16 +78,25 @@ export async function POST(request: Request) {
     throw error;
   }
 
-  const created = await createPrinterAgent({
-    organizationId: consoleSession.organization.id,
-    name: parsed.data.name,
-  });
+  const id = randomUUID();
+  const [created] = await db
+    .insert(printerStub)
+    .values({
+      id,
+      organizationId: consoleSession.organization.id,
+      name: parsed.data.name,
+    })
+    .returning();
 
   return Response.json(
     {
-      printerAgent: created.printerAgent,
-      deviceToken: created.deviceToken,
-      deviceTokenShownOnce: true,
+      stub: true as const,
+      ticket: '#5',
+      printer: {
+        id: created?.id ?? id,
+        name: created?.name ?? parsed.data.name,
+        organizationId: consoleSession.organization.id,
+      },
     },
     { status: 201 },
   );
