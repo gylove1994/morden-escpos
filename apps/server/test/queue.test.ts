@@ -2,6 +2,8 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { BootedServer } from './harness';
+import { Buffer } from 'node:buffer';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { auth } from '../lib/auth';
 import { expireJobLeaseForTests } from '../lib/jobs';
@@ -13,13 +15,12 @@ import {
   signUp,
 } from './auth-helpers';
 import { FakePrinterAgent } from './fake-printer-agent';
-import type { BootedServer } from './harness';
 import { bootServer } from './harness';
 
-const ESC_POS_BYTES = Buffer.from([0x1b, 0x40, 0x48, 0x69, 0x0a]); // ESC @ Hi LF
+const ESC_POS_BYTES = Buffer.from([0x1B, 0x40, 0x48, 0x69, 0x0A]); // ESC @ Hi LF
 const ESC_POS_BASE64 = ESC_POS_BYTES.toString('base64');
 
-describe('Raw enqueue → lease → report (single Printer)', () => {
+describe('raw enqueue → lease → report (single Printer)', () => {
   let booted: BootedServer;
   const suffix = Date.now().toString(36);
 
@@ -243,7 +244,7 @@ describe('Raw enqueue → lease → report (single Printer)', () => {
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${ctx.deviceToken}`,
+          'Authorization': `Bearer ${ctx.deviceToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ status: 'failed' }),
