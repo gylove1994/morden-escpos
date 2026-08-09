@@ -120,3 +120,13 @@ export function canManageIntegratorAuth(
 ): boolean {
   return role === 'owner' || role === 'admin';
 }
+
+/**
+ * Whether the role may create / update / delete JSON print templates.
+ * owner and admin MAY; member MUST NOT (members MAY list and enqueue).
+ */
+export function canManageTemplates(
+  role: ConsoleSession['role'],
+): boolean {
+  return role === 'owner' || role === 'admin';
+}

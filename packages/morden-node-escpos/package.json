@@ -41,6 +41,11 @@
       "import": "./dist/controller/template-inputs.js",
       "require": "./dist/controller/template-inputs.js"
     },
+    "./render": {
+      "types": "./dist/render-bytes.d.ts",
+      "import": "./dist/render-bytes.js",
+      "require": "./dist/render-bytes.js"
+    },
     "./browser": {
       "types": "./dist/browser.d.ts",
       "import": "./dist/browser.js",
