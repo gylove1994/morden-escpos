@@ -1,23 +1,37 @@
 # Receipt Studio
 
-纯前端 ESC/POS 小票模板编辑器。生产构建使用 Next.js 静态导出，不需要
-Node.js 服务端运行时，打印数据由浏览器直接发送到用户本机或局域网打印机。
+A browser-only ESC/POS receipt template editor. Production builds use the
+Next.js static export and do not require a Node.js server runtime. The browser
+sends print data directly to a printer connected locally or over the LAN.
 
-## 开发与构建
+## Development and builds
 
 ```bash
 pnpm dev
 pnpm --filter @workspace/template-editor build
 ```
 
-静态文件生成到 `apps/template-editor/out/`，可部署到任意静态文件服务。
+Static files are generated in `apps/template-editor/out/` and MAY be deployed
+to any static file host.
 
-## 浏览器打印
+For the GitHub Pages project site, build with the repository base path enabled:
 
-- USB：Chrome / Edge 的 WebUSB，需要用户点击“选择设备”授权。
-- 串口：Chrome / Edge 的 Web Serial，可配置波特率。
-- 网络 RAW 9100：需要提供 Direct Sockets 能力的 Chrome 隔离式 Web 应用；
-  普通浏览器标签页不能直接创建 TCP Socket。
-- WebUSB 和 Web Serial 需要 HTTPS 安全上下文；本地开发可使用 `localhost`。
+```bash
+GITHUB_PAGES=true pnpm --filter @workspace/template-editor build
+```
 
-图片命令在浏览器打印时仅接受可跨域访问的 `http(s)` 地址。
+Pushes to `main` deploy the app through
+`.github/workflows/deploy-template-editor-pages.yml`. The public site is
+<https://gylove1994.github.io/morden-escpos/>.
+
+## Browser printing
+
+- USB: WebUSB in Chrome or Edge. The user MUST select and authorize a device.
+- Serial: Web Serial in Chrome or Edge, with a configurable baud rate.
+- Network RAW 9100: requires a Chrome Isolated Web App with Direct Sockets.
+  A regular browser tab cannot open a raw TCP socket.
+- WebUSB and Web Serial require a secure HTTPS context. `localhost` MAY be used
+  during local development.
+
+Image commands used for browser printing accept only cross-origin-accessible
+`http(s)` URLs.
