@@ -4,8 +4,8 @@
  */
 import type { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
-import { SignOutButton } from '../components/auth-forms';
 import { getConsoleSession } from '../../lib/console-auth';
+import { SignOutButton } from '../components/auth-forms';
 
 export default async function ConsoleLayout({ children }: { children: ReactNode }) {
   const session = await getConsoleSession();

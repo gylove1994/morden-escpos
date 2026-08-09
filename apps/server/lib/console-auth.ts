@@ -5,7 +5,7 @@
 import { headers } from 'next/headers';
 import { auth } from './auth';
 
-export type ConsoleSession = {
+export interface ConsoleSession {
   user: {
     id: string
     name: string
@@ -21,7 +21,7 @@ export type ConsoleSession = {
     slug: string
   } | null
   role: 'owner' | 'admin' | 'member' | null
-};
+}
 
 /**
  * Load the human console session and active Organization membership.

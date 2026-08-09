@@ -1,3 +1,4 @@
+import type { BootedServer } from './harness';
 /**
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
@@ -11,7 +12,6 @@ import {
   signIn,
   signUp,
 } from './auth-helpers';
-import type { BootedServer } from './harness';
 import { bootServer } from './harness';
 
 describe('human session auth and Organization RBAC', () => {

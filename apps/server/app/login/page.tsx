@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { redirect } from 'next/navigation';
-import { SignInForm } from '../components/auth-forms';
 import { getConsoleSession } from '../../lib/console-auth';
+import { SignInForm } from '../components/auth-forms';
 
 export default async function LoginPage() {
   const session = await getConsoleSession();

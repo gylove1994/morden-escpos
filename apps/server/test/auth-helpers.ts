@@ -21,9 +21,11 @@ export function mergeCookies(
   if (existing) {
     for (const part of existing.split(';')) {
       const trimmed = part.trim();
-      if (!trimmed) continue;
+      if (!trimmed)
+        continue;
       const eq = trimmed.indexOf('=');
-      if (eq === -1) continue;
+      if (eq === -1)
+        continue;
       jar.set(trimmed.slice(0, eq), trimmed.slice(eq + 1));
     }
   }
@@ -36,7 +38,8 @@ export function mergeCookies(
   for (const raw of setCookies) {
     const first = raw.split(';')[0] ?? '';
     const eq = first.indexOf('=');
-    if (eq === -1) continue;
+    if (eq === -1)
+      continue;
     const name = first.slice(0, eq);
     const value = first.slice(eq + 1);
     if (value === '' || value.toLowerCase() === 'deleted') {
