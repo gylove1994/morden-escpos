@@ -203,6 +203,22 @@ export const printJob = pgTable(
   ],
 );
 
+/**
+ * Organization-scoped JSON print template (PrintJobJSON definition).
+ * Server renders `templateId + inputs` to raw ESC/POS at enqueue time.
+ */
+export const printTemplate = pgTable('print_template', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  /** Stored PrintJobJSON definition (commands + optional inputs schema). */
+  definitionJson: text('definition_json').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
@@ -299,22 +315,6 @@ export const printJobRelations = relations(printJob, ({ one }) => ({
 
 export type PrintJobRow = typeof printJob.$inferSelect;
 export type PrintJobStatus = 'queued' | 'leased' | 'printing' | 'succeeded' | 'failed';
-
-/**
- * Organization-scoped JSON print template (PrintJobJSON definition).
- * Server renders `templateId + inputs` to raw ESC/POS at enqueue time.
- */
-export const printTemplate = pgTable('print_template', {
-  id: text('id').primaryKey(),
-  organizationId: text('organization_id')
-    .notNull()
-    .references(() => organization.id, { onDelete: 'cascade' }),
-  name: text('name').notNull(),
-  /** Stored PrintJobJSON definition (commands + optional inputs schema). */
-  definitionJson: text('definition_json').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
 
 export const printTemplateRelations = relations(printTemplate, ({ one }) => ({
   organization: one(organization, {

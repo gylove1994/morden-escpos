@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: MIT
  */
 import type { PrintJobJSON } from './controller/json-schema';
+import { Buffer } from 'node:buffer';
 import { describe, expect, it } from 'vitest';
 import { TemplateInputValidationError } from './controller/template-inputs';
 import { renderPrintJobToBytes, renderTemplateToBytes } from './render-bytes';
@@ -14,7 +15,7 @@ describe('renderPrintJobToBytes / renderTemplateToBytes', () => {
     };
 
     const bytes = await renderPrintJobToBytes(job);
-    expect(bytes.equals(Buffer.from([0x1b, 0x40, 0x48, 0x69, 0x0a]))).toBe(true);
+    expect(bytes.equals(Buffer.from([0x1B, 0x40, 0x48, 0x69, 0x0A]))).toBe(true);
   });
 
   it('substitutes template variables then renders raw bytes', async () => {
@@ -32,7 +33,7 @@ describe('renderPrintJobToBytes / renderTemplateToBytes', () => {
     const bytes = await renderTemplateToBytes(template, {
       payload: '1b4048690a',
     });
-    expect(bytes.equals(Buffer.from([0x1b, 0x40, 0x48, 0x69, 0x0a]))).toBe(true);
+    expect(bytes.equals(Buffer.from([0x1B, 0x40, 0x48, 0x69, 0x0A]))).toBe(true);
   });
 
   it('rejects invalid template inputs before producing bytes', async () => {

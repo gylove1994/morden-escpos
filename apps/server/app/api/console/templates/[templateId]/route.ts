@@ -26,9 +26,9 @@ const UpdateBodySchema = z.object({
   { message: 'At least one of name or definition is required' },
 );
 
-type RouteContext = {
+interface RouteContext {
   params: Promise<{ templateId: string }>
-};
+}
 
 /**
  * Fetch a single JSON print template.

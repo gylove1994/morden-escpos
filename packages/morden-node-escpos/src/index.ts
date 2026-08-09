@@ -64,14 +64,8 @@ export {
 } from './controller/template-inputs';
 export type { TemplateInputValidationResult } from './controller/template-inputs';
 export { MemoryAdapter } from './memory-adapter';
-export {
-  renderPrintJobToBytes,
-  renderTemplateToBytes,
-} from './render-bytes';
-export type { RenderBytesOptions } from './render-bytes';
 // 导出打印机核心
 export { command, Image, Printer } from './printer';
-
 export type {
   Alignment,
   BarcodeFont,
@@ -92,6 +86,12 @@ export type {
   StyleString,
   TableAlignment,
 } from './printer';
+export {
+  renderPrintJobToBytes,
+  renderTemplateToBytes,
+} from './render-bytes';
+
+export type { RenderBytesOptions } from './render-bytes';
 
 // 导出适配器
 export { default as USBAdapter } from './usb';
