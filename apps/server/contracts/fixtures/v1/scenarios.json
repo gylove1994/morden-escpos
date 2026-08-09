@@ -1,0 +1,229 @@
+{
+  "protocol": "print-queue-agent-protocol",
+  "version": "0.2.0-queue",
+  "basePath": "/api/protocol/v1",
+  "security": {
+    "scheme": "bearer",
+    "header": "Authorization",
+    "valueTemplate": "Bearer ${deviceToken}"
+  },
+  "identifiers": {
+    "deviceToken": "pat_fixture_device_token_example",
+    "printerAgentId": "pa_fixture_001",
+    "organizationId": "org_fixture_001",
+    "printerId": "ptr_fixture_001",
+    "jobId": "job_fixture_001"
+  },
+  "scenarios": [
+    {
+      "id": "heartbeat-ok",
+      "description": "Printer Agent authenticates with device token and heartbeats",
+      "steps": [
+        {
+          "operation": "heartbeat",
+          "request": {
+            "method": "POST",
+            "path": "/printer-agents/heartbeat",
+            "headers": {
+              "Authorization": "Bearer ${deviceToken}",
+              "Content-Type": "application/json"
+            },
+            "body": null
+          },
+          "response": {
+            "status": 200,
+            "bodyFixture": "heartbeat.ok.response.json"
+          }
+        }
+      ]
+    },
+    {
+      "id": "heartbeat-unauthorized",
+      "description": "Printer Agent client surfaces 401 when the control plane rejects the device token",
+      "steps": [
+        {
+          "operation": "heartbeat",
+          "request": {
+            "method": "POST",
+            "path": "/printer-agents/heartbeat",
+            "headers": {
+              "Authorization": "Bearer ${deviceToken}",
+              "Content-Type": "application/json"
+            },
+            "body": null
+          },
+          "response": {
+            "status": 401,
+            "bodyFixture": "auth.error.response.json"
+          }
+        }
+      ]
+    },
+    {
+      "id": "lease-empty",
+      "description": "Short-poll lease returns 204 when no work is available",
+      "steps": [
+        {
+          "operation": "lease",
+          "request": {
+            "method": "POST",
+            "path": "/jobs/lease",
+            "headers": {
+              "Authorization": "Bearer ${deviceToken}",
+              "Content-Type": "application/json"
+            },
+            "body": null
+          },
+          "response": {
+            "status": 204,
+            "bodyFixture": null,
+            "metaFixture": "lease.empty.meta.json"
+          }
+        }
+      ]
+    },
+    {
+      "id": "lease-job-tcp",
+      "description": "Lease returns a raw job with TCP connection hints and base64 payload",
+      "steps": [
+        {
+          "operation": "lease",
+          "request": {
+            "method": "POST",
+            "path": "/jobs/lease",
+            "headers": {
+              "Authorization": "Bearer ${deviceToken}",
+              "Content-Type": "application/json"
+            },
+            "body": null
+          },
+          "response": {
+            "status": 200,
+            "bodyFixture": "lease.job.response.json"
+          }
+        }
+      ]
+    },
+    {
+      "id": "report-printing-succeeded",
+      "description": "Leased job reports printing then succeeded",
+      "steps": [
+        {
+          "operation": "report",
+          "request": {
+            "method": "POST",
+            "path": "/jobs/${jobId}/report",
+            "headers": {
+              "Authorization": "Bearer ${deviceToken}",
+              "Content-Type": "application/json"
+            },
+            "bodyFixture": "report.printing.request.json"
+          },
+          "response": {
+            "status": 200,
+            "bodyFixture": "report.printing.response.json"
+          }
+        },
+        {
+          "operation": "report",
+          "request": {
+            "method": "POST",
+            "path": "/jobs/${jobId}/report",
+            "headers": {
+              "Authorization": "Bearer ${deviceToken}",
+              "Content-Type": "application/json"
+            },
+            "bodyFixture": "report.succeeded.request.json"
+          },
+          "response": {
+            "status": 200,
+            "bodyFixture": "report.succeeded.response.json"
+          }
+        }
+      ]
+    },
+    {
+      "id": "report-failed",
+      "description": "Failed report requires errorMessage",
+      "steps": [
+        {
+          "operation": "report",
+          "request": {
+            "method": "POST",
+            "path": "/jobs/${jobId}/report",
+            "headers": {
+              "Authorization": "Bearer ${deviceToken}",
+              "Content-Type": "application/json"
+            },
+            "bodyFixture": "report.failed.request.json"
+          },
+          "response": {
+            "status": 200,
+            "bodyFixture": "report.failed.response.json"
+          }
+        }
+      ]
+    },
+    {
+      "id": "drain-succeeded",
+      "description": "End-to-end Printer Agent drain: lease → printing → succeeded",
+      "steps": [
+        {
+          "operation": "lease",
+          "request": {
+            "method": "POST",
+            "path": "/jobs/lease",
+            "headers": {
+              "Authorization": "Bearer ${deviceToken}",
+              "Content-Type": "application/json"
+            },
+            "body": null
+          },
+          "response": {
+            "status": 200,
+            "bodyFixture": "lease.job.response.json"
+          }
+        },
+        {
+          "operation": "report",
+          "request": {
+            "method": "POST",
+            "path": "/jobs/${jobId}/report",
+            "headers": {
+              "Authorization": "Bearer ${deviceToken}",
+              "Content-Type": "application/json"
+            },
+            "bodyFixture": "report.printing.request.json"
+          },
+          "response": {
+            "status": 200,
+            "bodyFixture": "report.printing.response.json"
+          }
+        },
+        {
+          "operation": "report",
+          "request": {
+            "method": "POST",
+            "path": "/jobs/${jobId}/report",
+            "headers": {
+              "Authorization": "Bearer ${deviceToken}",
+              "Content-Type": "application/json"
+            },
+            "bodyFixture": "report.succeeded.request.json"
+          },
+          "response": {
+            "status": 200,
+            "bodyFixture": "report.succeeded.response.json"
+          }
+        }
+      ]
+    }
+  ],
+  "stateTransitions": {
+    "queued": ["leased"],
+    "leased": ["printing"],
+    "printing": ["succeeded", "failed"],
+    "succeeded": [],
+    "failed": []
+  }
+}

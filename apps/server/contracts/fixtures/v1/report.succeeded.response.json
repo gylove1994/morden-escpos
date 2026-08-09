@@ -1,0 +1,19 @@
+{
+  "job": {
+    "id": "job_fixture_001",
+    "organizationId": "org_fixture_001",
+    "printerId": "ptr_fixture_001",
+    "printerAgentId": "pa_fixture_001",
+    "status": "succeeded",
+    "payloadBase64": "G0BIaQo=",
+    "payloadByteLength": 5,
+    "idempotencyKey": null,
+    "leaseExpiresAt": null,
+    "errorMessage": null,
+    "createdAt": "2026-08-09T12:00:00.000Z",
+    "updatedAt": "2026-08-09T12:00:08.000Z",
+    "leasedAt": "2026-08-09T12:00:01.000Z",
+    "printingAt": "2026-08-09T12:00:05.000Z",
+    "completedAt": "2026-08-09T12:00:08.000Z"
+  }
+}
