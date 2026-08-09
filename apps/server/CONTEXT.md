@@ -77,10 +77,11 @@ This package currently provides:
 - Idempotent enqueue via `idempotencyKey`
 - `EDITION` compile/build stub (no route trimming yet)
 - Print Queue Agent Protocol OpenAPI, served at `/api/protocol/openapi`
-- Shared protocol fixtures under `contracts/fixtures/` for Node/Go Printer Agent contract tests
+- Shared protocol fixtures under `contracts/fixtures/v1/` for Printer Agent
+  client contract tests (consumed by `apps/client-go`, `apps/client-node`)
 - Vitest harness covering health, human-session auth, device-token lifecycle,
   billing HTTP boundaries, and in-process fake Printer Agent queue tests
 
-Out of scope here: Printer Groups, templates, Go agents, discovery,
-integrator API keys, landing, self-hosted compile-out. Node Printer Agent lives
-in `apps/client-node` (#6).
+Out of scope here: Printer Groups, templates, discovery, integrator API keys,
+landing, self-hosted compile-out. Go/Node Printer Agent binaries live in
+`apps/client-go` (#12) / `apps/client-node` (#6).

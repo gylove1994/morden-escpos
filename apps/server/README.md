@@ -112,6 +112,10 @@ Shared JSON fixtures for Printer Agent contract tests:
 The server references and serves OpenAPI at `GET /api/protocol/openapi`.
 Integration tests drive lease/report with an in-process fake Printer Agent.
 
+Shared wire-format fixtures for Printer Agent clients live under
+`contracts/fixtures/` (see that README). The Go Printer Agent
+(`apps/client-go`) runs contract tests against them.
+
 ## Health
 
 `GET /api/health` returns `{ status: "ok", edition, database: "up" }` when

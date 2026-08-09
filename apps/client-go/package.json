@@ -1,0 +1,13 @@
+{
+  "name": "@workspace/client-go",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Go Printer Agent for the morden-escpos print-queue SaaS",
+  "license": "BUSL-1.1",
+  "scripts": {
+    "build": "go build -o dist/printer-agent ./cmd/printer-agent",
+    "test": "go test ./...",
+    "typecheck": "go vet ./...",
+    "lint": "go vet ./..."
+  }
+}

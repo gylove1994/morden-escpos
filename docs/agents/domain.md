@@ -30,7 +30,7 @@ Multi-context by **license** (MIT drivers vs BSL SaaS):
 │   │   ├── CONTEXT.md
 │   │   └── docs/adr/
 │   ├── client-node/                       ← BSL (Node Printer Agent)
-│   ├── client-go/                         ← BSL (planned)
+│   ├── client-go/                         ← BSL (Go Printer Agent, TCP)
 │   └── landing/                           ← BSL (marketing landing)
 └── …                                      ← SaaS-only packages: CONTEXT.md + docs/adr/
 ```

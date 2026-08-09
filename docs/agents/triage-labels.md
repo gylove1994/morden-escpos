@@ -40,7 +40,7 @@ Area labels are **orthogonal** to state and category. They mark which package or
 | `area:template-editor`         | `apps/template-editor`                             | MIT template editor app                    |
 | `area:server`                  | `apps/server`                                      | Planned BSL SaaS API / print-queue backend |
 | `area:client-node`             | `apps/client-node`                                 | BSL Node Printer Agent                     |
-| `area:client-go`               | `apps/client-go`                                   | Planned BSL Go client                      |
+| `area:client-go`               | `apps/client-go`                                   | BSL Go Printer Agent                       |
 | `area:landing`                 | `apps/landing`                                     | BSL marketing landing site                 |
 
 License context for these paths is in root `CONTEXT-MAP.md`. Area labels do **not** replace license context; they only route issues.
