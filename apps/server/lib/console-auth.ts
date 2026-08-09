@@ -90,3 +90,13 @@ export async function canManageOrganizationSettings(
   });
   return permission?.success === true;
 }
+
+/**
+ * Whether the role may create / revoke / rotate Printer Agent device tokens.
+ * owner and admin MAY; member MUST NOT.
+ */
+export function canManagePrinterAgents(
+  role: ConsoleSession['role'],
+): boolean {
+  return role === 'owner' || role === 'admin';
+}

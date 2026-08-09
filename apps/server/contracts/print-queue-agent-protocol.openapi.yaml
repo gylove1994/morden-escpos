@@ -3,15 +3,14 @@ info:
   title: Print Queue Agent Protocol
   description: |
     HTTP contract between the morden-escpos SaaS control plane and on-site
-    Printer Agents. This skeleton is the primary architectural seam for the MVP;
-    concrete request/response schemas land with the registration, lease, and
-    report tickets.
-  version: 0.0.0-scaffold
+    Printer Agents. Device-token authentication is required for Printer Agent
+    operations. Job lease/report schemas land with later tickets.
+  version: 0.1.0-agent-tokens
   license:
     name: BUSL-1.1
 servers:
   - url: /api/protocol/v1
-    description: Server-mounted Print Queue Agent Protocol prefix (scaffold)
+    description: Server-mounted Print Queue Agent Protocol prefix
 tags:
   - name: PrinterAgent
     description: On-site Printer Agent device authentication and presence
@@ -25,8 +24,7 @@ paths:
       summary: Protocol surface health (scaffold)
       description: |
         Scaffold-only probe confirming the Print Queue Agent Protocol mount is
-        reachable. Domain operations (register, lease, report) are intentionally
-        omitted until their tickets land.
+        reachable. Does not require a device token.
       responses:
         '200':
           description: Protocol surface is up
@@ -38,17 +36,34 @@ paths:
     post:
       tags: [PrinterAgent]
       operationId: postPrinterAgentHeartbeat
-      summary: Printer Agent heartbeat (stub)
-      description: Not implemented in the scaffold. See registration / presence tickets.
+      summary: Printer Agent heartbeat
+      description: |
+        Authenticate with a Printer Agent device token and acknowledge presence.
+        Invalid or revoked tokens are rejected with 401. Full online/offline
+        semantics (last poll windows) land with later tickets.
+      security:
+        - printerAgentDeviceToken: []
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Device token accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrinterAgentHeartbeatResponse'
+        '401':
+          description: Missing, invalid, or revoked device token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolError'
   /jobs/lease:
     post:
       tags: [Jobs]
       operationId: postJobLease
       summary: Lease the next printable job (stub)
-      description: Not implemented in the scaffold. See job enqueue/lease/report tickets.
+      description: Not implemented yet. See job enqueue/lease/report tickets.
+      security:
+        - printerAgentDeviceToken: []
       responses:
         '501':
           description: Not implemented
@@ -57,7 +72,9 @@ paths:
       tags: [Jobs]
       operationId: postJobReport
       summary: Report job printing / succeeded / failed (stub)
-      description: Not implemented in the scaffold. See job enqueue/lease/report tickets.
+      description: Not implemented yet. See job enqueue/lease/report tickets.
+      security:
+        - printerAgentDeviceToken: []
       parameters:
         - name: jobId
           in: path
@@ -82,9 +99,30 @@ components:
         edition:
           type: string
           enum: [cloud, self-hosted]
+    PrinterAgentHeartbeatResponse:
+      type: object
+      required: [status, printerAgentId, organizationId]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        printerAgentId:
+          type: string
+        organizationId:
+          type: string
+    ProtocolError:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+        message:
+          type: string
   securitySchemes:
     printerAgentDeviceToken:
       type: http
       scheme: bearer
       bearerFormat: device-token
-      description: Device token issued when a Printer Agent is registered (future ticket).
+      description: |
+        Device token issued when a Printer Agent is registered or rotated.
+        Tokens are stored hashed at rest; plaintext is shown once in the console.
