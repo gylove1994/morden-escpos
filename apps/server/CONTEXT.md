@@ -34,6 +34,7 @@ those surfaces out via the `EDITION` stub (`cloud` | `self-hosted`).
 | **Personal / Business** | Self-serve cloud plans via Stripe Checkout (~$1/mo / ~$5+/mo directional). |
 | **Reseller** | Negotiated pricing path — contact CTA only, not self-serve Checkout. |
 | **plan limits** | Numeric cloud quotas on printers, Printer Agents, and monthly jobs. |
+| **print template** | Organization-scoped JSON `PrintJobJSON` definition. Rendered to raw ESC/POS at enqueue. |
 
 ## Auth boundaries
 
@@ -53,8 +54,9 @@ those surfaces out via the `EDITION` stub (`cloud` | `self-hosted`).
   `X-Webhook-Signature: sha256=…` (HMAC over `${timestamp}.${rawBody}`).
 - Integrator API keys / webhook secrets MUST NOT authenticate as device tokens
   (and vice versa). Unauthenticated or bad-signature enqueue is rejected (401).
-- Members MAY enqueue raw jobs and list job history; only owner/admin MAY create
-  Printers and manage Printer Agent tokens / integrator credentials.
+- Members MAY enqueue raw or template jobs and list job history; only owner/admin
+  MAY create Printers and manage Printer Agent tokens / integrator credentials /
+  templates.
 
 ## Billing boundaries (cloud)
 
@@ -70,13 +72,17 @@ This package currently provides:
 
 - Next.js app shell with `/api/health`
 - Postgres + Drizzle migration wiring (auth, Organization, Printer Agent,
-  billing, Printer, PrintJob tables)
+  billing, Printer, PrintJob, PrintTemplate tables)
 - Better Auth email/password signup/login and Organization plugin
 - Signed-in Organization console shell under `/console` (incl. Billing + Printer Agents)
 - Printer Agent console management (`/console/printer-agents`) with create /
   list / revoke / rotate and cloud plan limits on create
 - Printer console management (`/console/printers`) with connection hints
-- Raw job enqueue + minimal job history (`/console/jobs`)
+- Template CRUD (`/api/console/templates`) for stored JSON definitions
+- Job enqueue + minimal job history (`/console/jobs`):
+  - raw `payloadBase64`, or
+  - `templateId + inputs` (server renders via MIT `morden-node-escpos/render`
+    before the job is queued; leased payloads are raw ESC/POS only)
 - Integrator auth console (`/console/integrator-auth`) for API keys + webhook secrets
 - Integrator enqueue surfaces:
   - `POST /api/integrator/v1/jobs` (API key)
@@ -94,8 +100,8 @@ This package currently provides:
 - Shared protocol fixtures under `contracts/fixtures/v1/` for Printer Agent
   client contract tests (consumed by `apps/client-go`, `apps/client-node`)
 - Vitest harness covering health, human-session auth, device-token lifecycle,
-  billing HTTP boundaries, and in-process fake Printer Agent queue tests
+  billing HTTP boundaries, templates, and in-process fake Printer Agent queue tests
 
-Out of scope here: Printer Groups, templates, discovery, landing,
+Out of scope here: Printer Groups, embedded template editor, discovery, landing,
 self-hosted compile-out. Go/Node Printer Agent binaries live in
 `apps/client-go` (#12) / `apps/client-node` (#6).

@@ -11,6 +11,8 @@ import { SERVER_CONFIG } from './config';
 import { parseConnectionHintsJson } from './connection-hints';
 import { db } from './db';
 import { printer, printJob } from './db/schema';
+import { renderTemplateJob, TemplateRenderError } from './template-render';
+import { getTemplate, TemplateNotFoundError } from './templates';
 
 export interface PrintJobPublic {
   id: string
@@ -115,6 +117,8 @@ export class JobReportConflictError extends Error {
   }
 }
 
+export { TemplateNotFoundError, TemplateRenderError };
+
 export async function listPrintJobs(
   organizationId: string,
   limit = 50,
@@ -145,36 +149,27 @@ export async function getPrintJob(input: {
   return rows[0] ? toPublic(rows[0]) : null;
 }
 
-/**
- * Enqueue a raw ESC/POS job for a Printer.
- * When an idempotency key matches an existing org job, returns that job and
- * `deduped: true` without creating a second print.
- */
-export async function enqueueRawJob(input: {
+async function findExistingIdempotentJob(input: {
+  organizationId: string
+  idempotencyKey: string
+}): Promise<PrintJobPublic | null> {
+  const existing = await db
+    .select()
+    .from(printJob)
+    .where(
+      and(
+        eq(printJob.organizationId, input.organizationId),
+        eq(printJob.idempotencyKey, input.idempotencyKey),
+      ),
+    )
+    .limit(1);
+  return existing[0] ? toPublic(existing[0]) : null;
+}
+
+async function resolveEnqueueablePrinter(input: {
   organizationId: string
   printerId: string
-  payloadBase64: string
-  idempotencyKey?: string | null
-}): Promise<{ job: PrintJobPublic, deduped: boolean }> {
-  const payload = decodePayloadBase64(input.payloadBase64);
-  const idempotencyKey = input.idempotencyKey?.trim() || null;
-
-  if (idempotencyKey) {
-    const existing = await db
-      .select()
-      .from(printJob)
-      .where(
-        and(
-          eq(printJob.organizationId, input.organizationId),
-          eq(printJob.idempotencyKey, idempotencyKey),
-        ),
-      )
-      .limit(1);
-    if (existing[0]) {
-      return { job: toPublic(existing[0]), deduped: true };
-    }
-  }
-
+}) {
   const printers = await db
     .select()
     .from(printer)
@@ -193,7 +188,16 @@ export async function enqueueRawJob(input: {
   if (target.status !== 'active') {
     throw new PrinterNotEnqueueableError('Printer is disabled');
   }
+  return target;
+}
 
+async function insertQueuedJob(input: {
+  organizationId: string
+  printerId: string
+  printerAgentId: string
+  payload: Buffer
+  idempotencyKey: string | null
+}): Promise<{ job: PrintJobPublic, deduped: boolean }> {
   const now = new Date();
   try {
     const [row] = await db
@@ -201,12 +205,12 @@ export async function enqueueRawJob(input: {
       .values({
         id: randomUUID(),
         organizationId: input.organizationId,
-        printerId: target.id,
-        printerAgentId: target.printerAgentId,
+        printerId: input.printerId,
+        printerAgentId: input.printerAgentId,
         status: 'queued',
-        payloadBase64: payload.toString('base64'),
-        payloadByteLength: payload.byteLength,
-        idempotencyKey,
+        payloadBase64: input.payload.toString('base64'),
+        payloadByteLength: input.payload.byteLength,
+        idempotencyKey: input.idempotencyKey,
         createdAt: now,
         updatedAt: now,
       })
@@ -220,23 +224,107 @@ export async function enqueueRawJob(input: {
   }
   catch (error) {
     // Concurrent idempotent retries: unique index race → return existing.
-    if (idempotencyKey && isUniqueViolation(error)) {
-      const existing = await db
-        .select()
-        .from(printJob)
-        .where(
-          and(
-            eq(printJob.organizationId, input.organizationId),
-            eq(printJob.idempotencyKey, idempotencyKey),
-          ),
-        )
-        .limit(1);
-      if (existing[0]) {
-        return { job: toPublic(existing[0]), deduped: true };
+    if (input.idempotencyKey && isUniqueViolation(error)) {
+      const existing = await findExistingIdempotentJob({
+        organizationId: input.organizationId,
+        idempotencyKey: input.idempotencyKey,
+      });
+      if (existing) {
+        return { job: existing, deduped: true };
       }
     }
     throw error;
   }
+}
+
+/**
+ * Enqueue a raw ESC/POS job for a Printer.
+ * When an idempotency key matches an existing org job, returns that job and
+ * `deduped: true` without creating a second print.
+ */
+export async function enqueueRawJob(input: {
+  organizationId: string
+  printerId: string
+  payloadBase64: string
+  idempotencyKey?: string | null
+}): Promise<{ job: PrintJobPublic, deduped: boolean }> {
+  const payload = decodePayloadBase64(input.payloadBase64);
+  const idempotencyKey = input.idempotencyKey?.trim() || null;
+
+  if (idempotencyKey) {
+    const existing = await findExistingIdempotentJob({
+      organizationId: input.organizationId,
+      idempotencyKey,
+    });
+    if (existing) {
+      return { job: existing, deduped: true };
+    }
+  }
+
+  const target = await resolveEnqueueablePrinter({
+    organizationId: input.organizationId,
+    printerId: input.printerId,
+  });
+
+  return insertQueuedJob({
+    organizationId: input.organizationId,
+    printerId: target.id,
+    printerAgentId: target.printerAgentId,
+    payload,
+    idempotencyKey,
+  });
+}
+
+/**
+ * Enqueue by rendering a stored JSON template with inputs to raw ESC/POS.
+ * Render happens before the job is persisted so leased payloads are raw only.
+ * Invalid template/inputs fail at enqueue (no queued job is created).
+ */
+export async function enqueueTemplateJob(input: {
+  organizationId: string
+  printerId: string
+  templateId: string
+  inputs: Record<string, unknown>
+  idempotencyKey?: string | null
+}): Promise<{ job: PrintJobPublic, deduped: boolean }> {
+  const idempotencyKey = input.idempotencyKey?.trim() || null;
+
+  if (idempotencyKey) {
+    const existing = await findExistingIdempotentJob({
+      organizationId: input.organizationId,
+      idempotencyKey,
+    });
+    if (existing) {
+      return { job: existing, deduped: true };
+    }
+  }
+
+  const template = await getTemplate({
+    organizationId: input.organizationId,
+    templateId: input.templateId,
+  });
+  if (!template) {
+    throw new TemplateNotFoundError();
+  }
+
+  // Fail closed before printer lookup when inputs/definition cannot render.
+  const payload = await renderTemplateJob({
+    definition: template.definition,
+    inputs: input.inputs,
+  });
+
+  const target = await resolveEnqueueablePrinter({
+    organizationId: input.organizationId,
+    printerId: input.printerId,
+  });
+
+  return insertQueuedJob({
+    organizationId: input.organizationId,
+    printerId: target.id,
+    printerAgentId: target.printerAgentId,
+    payload,
+    idempotencyKey,
+  });
 }
 
 function isUniqueViolation(error: unknown): boolean {

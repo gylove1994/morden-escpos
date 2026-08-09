@@ -281,6 +281,22 @@ export const webhookSigningSecret = pgTable('webhook_signing_secret', {
   lastAuthenticatedAt: timestamp('last_authenticated_at', { withTimezone: true }),
 });
 
+/**
+ * Organization-scoped JSON print template (PrintJobJSON definition).
+ * Server renders `templateId + inputs` to raw ESC/POS at enqueue time.
+ */
+export const printTemplate = pgTable('print_template', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  /** Stored PrintJobJSON definition (commands + optional inputs schema). */
+  definitionJson: text('definition_json').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
@@ -310,6 +326,7 @@ export const organizationRelations = relations(organization, ({ many }) => ({
   printJobs: many(printJob),
   integratorApiKeys: many(integratorApiKey),
   webhookSigningSecrets: many(webhookSigningSecret),
+  printTemplates: many(printTemplate),
 }));
 
 export const memberRelations = relations(member, ({ one }) => ({
@@ -396,6 +413,13 @@ export const integratorApiKeyRelations = relations(integratorApiKey, ({ one }) =
   }),
 }));
 
+export const printTemplateRelations = relations(printTemplate, ({ one }) => ({
+  organization: one(organization, {
+    fields: [printTemplate.organizationId],
+    references: [organization.id],
+  }),
+}));
+
 export type IntegratorApiKeyRow = typeof integratorApiKey.$inferSelect;
 export type IntegratorApiKeyStatus = 'active' | 'revoked';
 
@@ -408,3 +432,5 @@ export const webhookSigningSecretRelations = relations(webhookSigningSecret, ({ 
 
 export type WebhookSigningSecretRow = typeof webhookSigningSecret.$inferSelect;
 export type WebhookSigningSecretStatus = 'active' | 'revoked';
+
+export type PrintTemplateRow = typeof printTemplate.$inferSelect;
