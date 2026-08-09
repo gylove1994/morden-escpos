@@ -16,7 +16,7 @@ BSL SaaS print-queue control plane. See [`CONTEXT.md`](./CONTEXT.md).
 | `pnpm --filter @workspace/server build` | Production build |
 | `pnpm --filter @workspace/server db:generate` | Generate Drizzle migrations from `lib/db/schema.ts` |
 | `pnpm --filter @workspace/server db:migrate` | Apply migrations |
-| `pnpm --filter @workspace/server test` | Vitest (health, auth, tokens, billing/plan limits, enqueue/lease/report) |
+| `pnpm --filter @workspace/server test` | Vitest (health, auth, tokens, billing/plan limits, queue, integrator auth) |
 | `pnpm --filter @workspace/server typecheck` | `tsc --noEmit` |
 
 ## Configuration
