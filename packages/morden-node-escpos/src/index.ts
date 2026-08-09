@@ -63,9 +63,9 @@ export {
   validateTemplateInputs,
 } from './controller/template-inputs';
 export type { TemplateInputValidationResult } from './controller/template-inputs';
-export { MemoryAdapter } from './memory-adapter';
 // 导出适配器
 export { default as DevicePathAdapter } from './device-path';
+export { MemoryAdapter } from './memory-adapter';
 export { default as NetworkAdapter } from './network';
 // 导出打印机核心
 export { command, Image, Printer } from './printer';
