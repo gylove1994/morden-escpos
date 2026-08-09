@@ -6,17 +6,27 @@ import { z } from 'zod';
 import { getConsoleSession } from '../../../../lib/console-auth';
 import {
   enqueueRawJob,
+  enqueueTemplateJob,
   InvalidPayloadError,
   listPrintJobs,
   PrinterNotEnqueueableError,
+  TemplateNotFoundError,
+  TemplateRenderError,
 } from '../../../../lib/jobs';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const EnqueueBodySchema = z.object({
+const RawEnqueueBodySchema = z.object({
   printerId: z.string().trim().min(1),
   payloadBase64: z.string().min(1),
+  idempotencyKey: z.string().trim().min(1).max(200).optional(),
+});
+
+const TemplateEnqueueBodySchema = z.object({
+  printerId: z.string().trim().min(1),
+  templateId: z.string().trim().min(1),
+  inputs: z.record(z.string(), z.unknown()),
   idempotencyKey: z.string().trim().min(1).max(200).optional(),
 });
 
@@ -51,7 +61,8 @@ export async function GET(request: Request) {
 }
 
 /**
- * Enqueue a raw ESC/POS job targeting a Printer.
+ * Enqueue a print job targeting a Printer.
+ * Accepts either raw `payloadBase64` or `templateId + inputs` (server-rendered).
  * Any signed-in org member MAY enqueue. Idempotency keys dedupe retries.
  */
 export async function POST(request: Request) {
@@ -78,15 +89,65 @@ export async function POST(request: Request) {
     return Response.json({ error: 'invalid_json' }, { status: 400 });
   }
 
-  const parsed = EnqueueBodySchema.safeParse(body);
-  if (!parsed.success) {
+  const asRecord = body && typeof body === 'object' && !Array.isArray(body)
+    ? body as Record<string, unknown>
+    : null;
+
+  if (!asRecord) {
     return Response.json(
-      { error: 'invalid_body', details: parsed.error.flatten() },
+      { error: 'invalid_body', message: 'Enqueue body must be a JSON object' },
+      { status: 400 },
+    );
+  }
+
+  const isTemplateEnqueue = 'templateId' in asRecord;
+  const isRawEnqueue = 'payloadBase64' in asRecord;
+
+  if (isTemplateEnqueue === isRawEnqueue) {
+    return Response.json(
+      {
+        error: 'invalid_body',
+        message: 'Provide either payloadBase64 or templateId+inputs, not both',
+      },
       { status: 400 },
     );
   }
 
   try {
+    if (isTemplateEnqueue) {
+      const parsed = TemplateEnqueueBodySchema.safeParse(body);
+      if (!parsed.success) {
+        return Response.json(
+          { error: 'invalid_body', details: parsed.error.flatten() },
+          { status: 400 },
+        );
+      }
+
+      const result = await enqueueTemplateJob({
+        organizationId: consoleSession.organization.id,
+        printerId: parsed.data.printerId,
+        templateId: parsed.data.templateId,
+        inputs: parsed.data.inputs,
+        idempotencyKey: parsed.data.idempotencyKey,
+      });
+
+      return Response.json(
+        {
+          job: result.job,
+          deduped: result.deduped,
+        },
+        { status: result.deduped ? 200 : 201 },
+      );
+    }
+
+    const parsed = RawEnqueueBodySchema.safeParse(body);
+    if (!parsed.success) {
+      return Response.json(
+        { error: 'invalid_body', details: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+
     const result = await enqueueRawJob({
       organizationId: consoleSession.organization.id,
       printerId: parsed.data.printerId,
@@ -107,6 +168,22 @@ export async function POST(request: Request) {
       return Response.json(
         { error: 'invalid_payload', message: error.message },
         { status: 400 },
+      );
+    }
+    if (error instanceof TemplateRenderError) {
+      return Response.json(
+        {
+          error: 'invalid_template_inputs',
+          message: error.message,
+          details: error.errors,
+        },
+        { status: 400 },
+      );
+    }
+    if (error instanceof TemplateNotFoundError) {
+      return Response.json(
+        { error: 'template_not_found', message: error.message },
+        { status: 404 },
       );
     }
     if (error instanceof PrinterNotEnqueueableError) {

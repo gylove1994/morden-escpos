@@ -16,7 +16,7 @@ BSL SaaS print-queue control plane. See [`CONTEXT.md`](./CONTEXT.md).
 | `pnpm --filter @workspace/server build` | Production build |
 | `pnpm --filter @workspace/server db:generate` | Generate Drizzle migrations from `lib/db/schema.ts` |
 | `pnpm --filter @workspace/server db:migrate` | Apply migrations |
-| `pnpm --filter @workspace/server test` | Vitest (health, auth, tokens, enqueue/lease/report) |
+| `pnpm --filter @workspace/server test` | Vitest (health, auth, tokens, templates, enqueue/lease/report) |
 | `pnpm --filter @workspace/server typecheck` | `tsc --noEmit` |
 
 ## Configuration
@@ -53,11 +53,20 @@ Optional lease duration:
 - Protocol auth: Bearer device token on `/api/protocol/v1/*`
 - owner/admin manage tokens; member may list only
 
-## Printers + raw queue
+## Printers + queue (raw + templates)
 
 - Console: `/console/printers` (create under a Printer Agent with connection hints)
-- Console: `/console/jobs` (enqueue raw base64 ESC/POS + job history)
+- Console: `/console/jobs` (enqueue + job history)
 - APIs: `GET|POST /api/console/printers`, `GET|POST /api/console/jobs`
+- Template APIs: `GET|POST /api/console/templates`,
+  `GET|PATCH|DELETE /api/console/templates/:templateId`
+  (owner/admin mutate; members may list)
+- Enqueue body is either:
+  - raw: `{ printerId, payloadBase64, idempotencyKey? }`, or
+  - template: `{ printerId, templateId, inputs, idempotencyKey? }`
+- Template enqueue renders to raw ESC/POS on the server (MIT
+  `morden-node-escpos/render`) before the job is queued; invalid templates/inputs
+  fail at enqueue with `400`
 - Enqueue accepts optional `idempotencyKey` (dedupes per Organization)
 - Protocol:
   - `POST /api/protocol/v1/jobs/lease` → `200 { job }` or `204`
@@ -66,7 +75,7 @@ Optional lease duration:
 - Job states: `queued` → `leased` → `printing` → `succeeded` | `failed`
 - Expired leases return to `queued`
 - Leased payloads include `payloadBase64`, `payloadByteLength`, and
-  `connectionHints`
+  `connectionHints` (raw bytes only — never template JSON)
 
 ## Edition stub
 

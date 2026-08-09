@@ -29,6 +29,7 @@ those surfaces out via the `EDITION` stub (`cloud` | `self-hosted`).
 | **Printer Group** | Fan-out target under exactly one Printer Agent (MVP; later ticket). |
 | **human session auth** | Better Auth email/password sessions for console users (cookies). MUST stay distinct from Printer Agent device tokens. |
 | **RBAC role** | Organization membership role: `owner`, `admin`, or `member`. |
+| **print template** | Organization-scoped JSON `PrintJobJSON` definition. Rendered to raw ESC/POS at enqueue. |
 
 ## Auth boundaries
 
@@ -40,8 +41,8 @@ those surfaces out via the `EDITION` stub (`cloud` | `self-hosted`).
   (`Authorization: Bearer …`). They MUST NOT reuse session cookies.
 - Device tokens are stored as SHA-256 hashes; plaintext is returned only once on
   create or rotate. Revoked/rotated tokens MUST fail protocol auth.
-- Members MAY enqueue raw jobs and list job history; only owner/admin MAY create
-  Printers and manage Printer Agent tokens.
+- Members MAY enqueue raw or template jobs and list job history; only owner/admin
+  MAY create Printers, manage Printer Agent tokens, and mutate templates.
 
 ## Current slice
 
@@ -49,13 +50,17 @@ This package currently provides:
 
 - Next.js app shell with `/api/health`
 - Postgres + Drizzle migration wiring (auth, Organization, Printer Agent,
-  Printer, PrintJob tables)
+  Printer, PrintJob, PrintTemplate tables)
 - Better Auth email/password signup/login and Organization plugin
 - Signed-in Organization console shell under `/console`
 - Printer Agent console management (`/console/printer-agents`) with create /
   list / revoke / rotate
 - Printer console management (`/console/printers`) with connection hints
-- Raw job enqueue + minimal job history (`/console/jobs`)
+- Template CRUD (`/api/console/templates`) for stored JSON definitions
+- Job enqueue + minimal job history (`/console/jobs`):
+  - raw `payloadBase64`, or
+  - `templateId + inputs` (server renders via MIT `morden-node-escpos/render`
+    before the job is queued; leased payloads are raw ESC/POS only)
 - Device-token auth on Print Queue Agent Protocol:
   - `POST /api/protocol/v1/printer-agents/heartbeat`
   - `POST /api/protocol/v1/jobs/lease`
@@ -66,5 +71,5 @@ This package currently provides:
 - Print Queue Agent Protocol OpenAPI, served at `/api/protocol/openapi`
 - Vitest harness with an in-process fake Printer Agent at the HTTP protocol seam
 
-Out of scope here: Printer Groups, templates, Node/Go agents, discovery,
-integrator API keys, billing.
+Out of scope here: Printer Groups, embedded template editor, Node/Go agents,
+discovery, integrator API keys, billing.

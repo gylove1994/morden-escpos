@@ -15,6 +15,9 @@ const nextConfig: NextConfig = {
   env: {
     EDITION: edition,
   },
+  // MIT driver is used only for headless template → ESC/POS render at enqueue.
+  transpilePackages: ['morden-node-escpos'],
+  serverExternalPackages: ['usb', 'get-pixels', 'ndarray', 'qr-image', 'iconv-lite'],
 };
 
 export default nextConfig;

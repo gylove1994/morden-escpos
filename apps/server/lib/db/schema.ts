@@ -230,6 +230,7 @@ export const organizationRelations = relations(organization, ({ many }) => ({
   printerAgents: many(printerAgent),
   printers: many(printer),
   printJobs: many(printJob),
+  printTemplates: many(printTemplate),
 }));
 
 export const memberRelations = relations(member, ({ one }) => ({
@@ -298,3 +299,28 @@ export const printJobRelations = relations(printJob, ({ one }) => ({
 
 export type PrintJobRow = typeof printJob.$inferSelect;
 export type PrintJobStatus = 'queued' | 'leased' | 'printing' | 'succeeded' | 'failed';
+
+/**
+ * Organization-scoped JSON print template (PrintJobJSON definition).
+ * Server renders `templateId + inputs` to raw ESC/POS at enqueue time.
+ */
+export const printTemplate = pgTable('print_template', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  /** Stored PrintJobJSON definition (commands + optional inputs schema). */
+  definitionJson: text('definition_json').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const printTemplateRelations = relations(printTemplate, ({ one }) => ({
+  organization: one(organization, {
+    fields: [printTemplate.organizationId],
+    references: [organization.id],
+  }),
+}));
+
+export type PrintTemplateRow = typeof printTemplate.$inferSelect;
