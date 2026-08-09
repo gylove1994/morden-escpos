@@ -4,7 +4,7 @@
  */
 import { createHash, randomBytes } from 'node:crypto';
 
-/** Device tokens are distinct from human sessions and future integrator API keys. */
+/** Device tokens are distinct from human sessions, integrator API keys, and webhook secrets. */
 export const DEVICE_TOKEN_PREFIX = 'pa_';
 
 /**

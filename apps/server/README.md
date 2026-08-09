@@ -96,6 +96,23 @@ Optional lease duration:
 - Leased payloads include `payloadBase64`, `payloadByteLength`, and
   `connectionHints`
 
+## Integrator API keys + webhook auth
+
+- Console: `/console/integrator-auth` (create / list / revoke)
+- APIs:
+  - `GET|POST /api/console/api-keys`,
+    `POST /api/console/api-keys/:apiKeyId/revoke`
+  - `GET|POST /api/console/webhook-secrets`,
+    `POST /api/console/webhook-secrets/:webhookSecretId/revoke`
+- Enqueue surfaces (not human session cookies):
+  - `POST /api/integrator/v1/jobs` with `Authorization: Bearer ik_…`
+  - `POST /api/webhooks/v1/jobs` with `X-Webhook-Secret: whsec_…`
+    **or** signed headers `X-Webhook-Id`, `X-Webhook-Timestamp`,
+    `X-Webhook-Signature: sha256=<hmac>` over `${timestamp}.${rawBody}`
+- owner/admin manage credentials; member may list only
+- Credentials are kind-separated from Printer Agent device tokens (`pa_…`):
+  cross-use is rejected with 401
+
 ## Edition stub
 
 Set `EDITION=cloud` (default) or `EDITION=self-hosted` for the compile/build stub.

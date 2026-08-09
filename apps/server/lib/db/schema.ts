@@ -254,6 +254,8 @@ export const organizationRelations = relations(organization, ({ many }) => ({
   printerAgents: many(printerAgent),
   printers: many(printer),
   printJobs: many(printJob),
+  integratorApiKeys: many(integratorApiKey),
+  webhookSigningSecrets: many(webhookSigningSecret),
 }));
 
 export const memberRelations = relations(member, ({ one }) => ({
@@ -332,3 +334,77 @@ export const printJobRelations = relations(printJob, ({ one }) => ({
 
 export type PrintJobRow = typeof printJob.$inferSelect;
 export type PrintJobStatus = 'queued' | 'leased' | 'printing' | 'succeeded' | 'failed';
+
+/**
+ * Integrator API key for REST enqueue (`Authorization: Bearer ik_…`).
+ * Stored hashed; plaintext shown once on create. MUST stay distinct from
+ * Printer Agent device tokens (`pa_…`) and human sessions.
+ */
+export const integratorApiKey = pgTable('integrator_api_key', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  /** `active` | `revoked` — revoked keys MUST NOT authenticate. */
+  status: text('status').notNull().default('active'),
+  /** SHA-256 hex of the API key. Null when revoked. */
+  keyHash: text('key_hash').unique(),
+  /** Non-secret prefix for console display (e.g. `ik_abcd…`). */
+  keyPrefix: text('key_prefix'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  lastAuthenticatedAt: timestamp('last_authenticated_at', { withTimezone: true }),
+});
+
+export const integratorApiKeyRelations = relations(integratorApiKey, ({ one }) => ({
+  organization: one(organization, {
+    fields: [integratorApiKey.organizationId],
+    references: [organization.id],
+  }),
+}));
+
+export type IntegratorApiKeyRow = typeof integratorApiKey.$inferSelect;
+export type IntegratorApiKeyStatus = 'active' | 'revoked';
+
+/**
+ * Webhook signing secret for integrator webhook enqueue.
+ * Auth: shared-secret header (`X-Webhook-Secret`) or HMAC-signed request
+ * (`X-Webhook-Id` + `X-Webhook-Timestamp` + `X-Webhook-Signature`).
+ * Secret is stored hashed (shared-secret lookup) and encrypted (HMAC verify).
+ * MUST stay distinct from device tokens and integrator API keys.
+ */
+export const webhookSigningSecret = pgTable('webhook_signing_secret', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  /** `active` | `revoked` — revoked secrets MUST NOT authenticate. */
+  status: text('status').notNull().default('active'),
+  /** SHA-256 hex of the webhook secret. Null when revoked. */
+  secretHash: text('secret_hash').unique(),
+  /**
+   * AES-256-GCM ciphertext (base64) of the plaintext secret, keyed from
+   * AUTH_SECRET — required to verify HMAC signatures without accepting the
+   * secret in the request.
+   */
+  secretEncrypted: text('secret_encrypted'),
+  /** Non-secret prefix for console display (e.g. `whsec_abcd…`). */
+  secretPrefix: text('secret_prefix'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  lastAuthenticatedAt: timestamp('last_authenticated_at', { withTimezone: true }),
+});
+
+export const webhookSigningSecretRelations = relations(webhookSigningSecret, ({ one }) => ({
+  organization: one(organization, {
+    fields: [webhookSigningSecret.organizationId],
+    references: [organization.id],
+  }),
+}));
+
+export type WebhookSigningSecretRow = typeof webhookSigningSecret.$inferSelect;
+export type WebhookSigningSecretStatus = 'active' | 'revoked';
