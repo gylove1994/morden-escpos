@@ -6,25 +6,25 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-type PrinterOption = {
+interface PrinterOption {
   id: string
   name: string
   status: string
-};
+}
 
-type PrinterGroupOption = {
+interface PrinterGroupOption {
   id: string
   name: string
   printerIds: string[]
-};
+}
 
-type TemplateDetail = {
+interface TemplateDetail {
   id: string
   name: string
   definition: unknown
-};
+}
 
-type EditorDocumentMessage = {
+interface EditorDocumentMessage {
   channel: 'morden-escpos-saas-embed'
   type: 'saas:document'
   requestId?: string
@@ -33,15 +33,15 @@ type EditorDocumentMessage = {
   definition: unknown
   sampleDataText: string
   inputs: Record<string, unknown>
-};
+}
 
-type Props = {
+interface Props {
   template: TemplateDetail
   editorOrigin: string
   printers: PrinterOption[]
   printerGroups: PrinterGroupOption[]
   canManage: boolean
-};
+}
 
 const EMBED_CHANNEL = 'morden-escpos-saas-embed';
 
@@ -85,7 +85,8 @@ export function EmbeddedTemplateEditor({
 
   function postToEditor(message: Record<string, unknown>) {
     const frame = iframeRef.current?.contentWindow;
-    if (!frame) return;
+    if (!frame)
+      return;
     frame.postMessage({ channel: EMBED_CHANNEL, ...message }, editorOrigin);
   }
 
@@ -105,14 +106,16 @@ export function EmbeddedTemplateEditor({
 
   useEffect(() => {
     function onMessage(event: MessageEvent) {
-      if (event.origin !== editorOrigin) return;
+      if (event.origin !== editorOrigin)
+        return;
       const data = event.data as {
         channel?: string
         type?: string
         requestId?: string
         message?: string
       };
-      if (!data || data.channel !== EMBED_CHANNEL) return;
+      if (!data || data.channel !== EMBED_CHANNEL)
+        return;
 
       if (data.type === 'saas:ready') {
         setEditorReady(true);
@@ -157,7 +160,8 @@ export function EmbeddedTemplateEditor({
   }, [editorOrigin, template.definition, template.id, template.name]);
 
   async function onSave() {
-    if (!canManage) return;
+    if (!canManage)
+      return;
     setPendingSave(true);
     setError(null);
     setStatus(null);
@@ -238,8 +242,8 @@ export function EmbeddedTemplateEditor({
           children?: unknown[]
         };
         setStatus(
-          `Confirmation job ${body.job.id} enqueued (${body.job.purpose})`
-          + (body.children?.length ? ` with ${body.children.length} children` : ''),
+          `Confirmation job ${body.job.id} enqueued (${body.job.purpose})${
+            body.children?.length ? ` with ${body.children.length} children` : ''}`,
         );
       }
       else {

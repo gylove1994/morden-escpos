@@ -2,6 +2,8 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { BootedServer } from './harness';
+import { Buffer } from 'node:buffer';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   authOriginHeaders,
@@ -9,7 +11,6 @@ import {
   signUp,
 } from './auth-helpers';
 import { FakePrinterAgent } from './fake-printer-agent';
-import type { BootedServer } from './harness';
 import { bootServer } from './harness';
 
 const TEMPLATE_DEFINITION = {
@@ -28,10 +29,10 @@ const TEMPLATE_DEFINITION = {
 };
 
 /** ESC @ "Hi" LF */
-const EXPECTED_RAW = Buffer.from([0x1b, 0x40, 0x48, 0x69, 0x0a]);
+const EXPECTED_RAW = Buffer.from([0x1B, 0x40, 0x48, 0x69, 0x0A]);
 const EXPECTED_RAW_HEX = '1b4048690a';
 
-describe('Embedded editor confirmation print', () => {
+describe('embedded editor confirmation print', () => {
   let booted: BootedServer;
   const suffix = Date.now().toString(36);
 

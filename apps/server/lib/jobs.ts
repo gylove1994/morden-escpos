@@ -2,27 +2,20 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import { and, asc, desc, eq, inArray, isNotNull, lt, ne } from 'drizzle-orm';
+import type { ConnectionHints } from './connection-hints';
+import type { PrintJobKind, PrintJobPurpose, PrintJobRow, PrintJobStatus } from './db/schema';
+import { Buffer } from 'node:buffer';
 import { randomUUID } from 'node:crypto';
-import {
-  type ConnectionHints,
-  parseConnectionHintsJson,
-} from './connection-hints';
+import { and, asc, desc, eq, inArray, isNotNull, lt, ne } from 'drizzle-orm';
 import { SERVER_CONFIG } from './config';
+import { parseConnectionHintsJson } from './connection-hints';
 import { db } from './db';
-import {
-  printer,
-  printJob,
-  type PrintJobKind,
-  type PrintJobPurpose,
-  type PrintJobRow,
-  type PrintJobStatus,
-} from './db/schema';
+import { printer, printJob } from './db/schema';
 import { resolveActiveGroupPrinters } from './printer-groups';
 import { renderTemplateJob, TemplateRenderError } from './template-render';
 import { getTemplate, TemplateNotFoundError } from './templates';
 
-export type PrintJobPublic = {
+export interface PrintJobPublic {
   id: string
   organizationId: string
   printerId: string | null
@@ -43,9 +36,9 @@ export type PrintJobPublic = {
   leasedAt: string | null
   printingAt: string | null
   completedAt: string | null
-};
+}
 
-export type LeasedJobPayload = {
+export interface LeasedJobPayload {
   id: string
   printerId: string
   printerAgentId: string
@@ -55,7 +48,7 @@ export type LeasedJobPayload = {
   connectionHints: ConnectionHints
   leaseExpiresAt: string
   createdAt: string
-};
+}
 
 function asKind(value: string): PrintJobKind {
   switch (value) {
@@ -113,7 +106,7 @@ function toPublic(row: PrintJobRow): PrintJobPublic {
 
 export function decodePayloadBase64(payloadBase64: string): Buffer {
   const normalized = payloadBase64.replace(/\s+/g, '');
-  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(normalized) || normalized.length % 4 !== 0) {
+  if (!/^[A-Z0-9+/]*={0,2}$/i.test(normalized) || normalized.length % 4 !== 0) {
     throw new InvalidPayloadError();
   }
   const buf = Buffer.from(normalized, 'base64');

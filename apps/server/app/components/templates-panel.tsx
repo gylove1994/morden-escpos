@@ -4,20 +4,21 @@
  */
 'use client';
 
+import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 
-export type TemplateListItem = {
+export interface TemplateListItem {
   id: string
   name: string
   createdAt: string
   updatedAt: string
-};
+}
 
-type Props = {
+interface Props {
   initialTemplates: TemplateListItem[]
   canManage: boolean
-};
+}
 
 const DEFAULT_DEFINITION = {
   name: 'untitled',
@@ -36,7 +37,8 @@ export function TemplatesPanel({ initialTemplates, canManage }: Props) {
 
   async function refreshList() {
     const response = await fetch('/api/console/templates');
-    if (!response.ok) return;
+    if (!response.ok)
+      return;
     const body = await response.json() as { templates: TemplateListItem[] };
     setTemplates(body.templates);
     router.refresh();
@@ -44,7 +46,8 @@ export function TemplatesPanel({ initialTemplates, canManage }: Props) {
 
   async function onCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canManage) return;
+    if (!canManage)
+      return;
     setPending(true);
     setError(null);
     const response = await fetch('/api/console/templates', {
@@ -69,7 +72,8 @@ export function TemplatesPanel({ initialTemplates, canManage }: Props) {
   }
 
   async function onDelete(templateId: string) {
-    if (!canManage) return;
+    if (!canManage)
+      return;
     setError(null);
     const response = await fetch(`/api/console/templates/${templateId}`, {
       method: 'DELETE',

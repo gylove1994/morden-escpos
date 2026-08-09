@@ -10,8 +10,8 @@
 
 export const SAAS_EMBED_CHANNEL = 'morden-escpos-saas-embed' as const;
 
-export type SaasEmbedHostToEditor =
-  | {
+export type SaasEmbedHostToEditor
+  = | {
     channel: typeof SAAS_EMBED_CHANNEL
     type: 'saas:load'
     templateId: string
@@ -25,8 +25,8 @@ export type SaasEmbedHostToEditor =
     requestId: string
   };
 
-export type SaasEmbedEditorToHost =
-  | {
+export type SaasEmbedEditorToHost
+  = | {
     channel: typeof SAAS_EMBED_CHANNEL
     type: 'saas:ready'
   }

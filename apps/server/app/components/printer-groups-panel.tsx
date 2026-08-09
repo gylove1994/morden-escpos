@@ -4,36 +4,37 @@
  */
 'use client';
 
+import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useState } from 'react';
 
-export type PrinterGroupListItem = {
+export interface PrinterGroupListItem {
   id: string
   printerAgentId: string
   name: string
   printerIds: string[]
   createdAt: string
-};
+}
 
-export type PrinterAgentOption = {
+export interface PrinterAgentOption {
   id: string
   name: string
   status: string
-};
+}
 
-export type PrinterOption = {
+export interface PrinterOption {
   id: string
   printerAgentId: string
   name: string
   status: string
-};
+}
 
-type Props = {
+interface Props {
   initialGroups: PrinterGroupListItem[]
   printerAgents: PrinterAgentOption[]
   printers: PrinterOption[]
   canManage: boolean
-};
+}
 
 export function PrinterGroupsPanel({
   initialGroups,
@@ -59,7 +60,8 @@ export function PrinterGroupsPanel({
 
   async function refreshList() {
     const response = await fetch('/api/console/printer-groups');
-    if (!response.ok) return;
+    if (!response.ok)
+      return;
     const body = await response.json() as { printerGroups: PrinterGroupListItem[] };
     setGroups(body.printerGroups);
     router.refresh();
@@ -76,7 +78,8 @@ export function PrinterGroupsPanel({
 
   async function onCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canManage) return;
+    if (!canManage)
+      return;
     setPending(true);
     setError(null);
 

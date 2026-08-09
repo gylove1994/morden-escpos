@@ -2,9 +2,9 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import {
-  type AnyPgColumn,
   boolean,
   integer,
   pgTable,
@@ -115,59 +115,6 @@ export const invitation = pgTable('invitation', {
     .references(() => user.id, { onDelete: 'cascade' }),
 });
 
-export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
-  accounts: many(account),
-  members: many(member),
-  invitations: many(invitation),
-}));
-
-export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(user, {
-    fields: [session.userId],
-    references: [user.id],
-  }),
-}));
-
-export const accountRelations = relations(account, ({ one }) => ({
-  user: one(user, {
-    fields: [account.userId],
-    references: [user.id],
-  }),
-}));
-
-export const organizationRelations = relations(organization, ({ many }) => ({
-  members: many(member),
-  invitations: many(invitation),
-  printerAgents: many(printerAgent),
-  printers: many(printer),
-  printerGroups: many(printerGroup),
-  printJobs: many(printJob),
-  printTemplates: many(printTemplate),
-}));
-
-export const memberRelations = relations(member, ({ one }) => ({
-  organization: one(organization, {
-    fields: [member.organizationId],
-    references: [organization.id],
-  }),
-  user: one(user, {
-    fields: [member.userId],
-    references: [user.id],
-  }),
-}));
-
-export const invitationRelations = relations(invitation, ({ one }) => ({
-  organization: one(organization, {
-    fields: [invitation.organizationId],
-    references: [organization.id],
-  }),
-  user: one(user, {
-    fields: [invitation.inviterId],
-    references: [user.id],
-  }),
-}));
-
 /**
  * On-site Printer Agent registration.
  * Device tokens are stored hashed (`deviceTokenHash`); plaintext is shown once on create/rotate.
@@ -189,19 +136,6 @@ export const printerAgent = pgTable('printer_agent', {
   revokedAt: timestamp('revoked_at', { withTimezone: true }),
   lastAuthenticatedAt: timestamp('last_authenticated_at', { withTimezone: true }),
 });
-
-export const printerAgentRelations = relations(printerAgent, ({ one, many }) => ({
-  organization: one(organization, {
-    fields: [printerAgent.organizationId],
-    references: [organization.id],
-  }),
-  printers: many(printer),
-  printerGroups: many(printerGroup),
-  printJobs: many(printJob),
-}));
-
-export type PrinterAgentRow = typeof printerAgent.$inferSelect;
-export type PrinterAgentStatus = 'active' | 'revoked';
 
 /**
  * Confirmed Printer bound under a Printer Agent.
@@ -227,22 +161,6 @@ export const printer = pgTable('printer', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
-
-export const printerRelations = relations(printer, ({ one, many }) => ({
-  organization: one(organization, {
-    fields: [printer.organizationId],
-    references: [organization.id],
-  }),
-  printerAgent: one(printerAgent, {
-    fields: [printer.printerAgentId],
-    references: [printerAgent.id],
-  }),
-  groupMemberships: many(printerGroupMember),
-  printJobs: many(printJob),
-}));
-
-export type PrinterRow = typeof printer.$inferSelect;
-export type PrinterStatus = 'active' | 'disabled';
 
 /**
  * Fan-out target under exactly one Printer Agent.
@@ -281,32 +199,21 @@ export const printerGroupMember = pgTable(
   ],
 );
 
-export const printerGroupRelations = relations(printerGroup, ({ one, many }) => ({
-  organization: one(organization, {
-    fields: [printerGroup.organizationId],
-    references: [organization.id],
-  }),
-  printerAgent: one(printerAgent, {
-    fields: [printerGroup.printerAgentId],
-    references: [printerAgent.id],
-  }),
-  members: many(printerGroupMember),
-  printJobs: many(printJob),
-}));
-
-export const printerGroupMemberRelations = relations(printerGroupMember, ({ one }) => ({
-  printerGroup: one(printerGroup, {
-    fields: [printerGroupMember.printerGroupId],
-    references: [printerGroup.id],
-  }),
-  printer: one(printer, {
-    fields: [printerGroupMember.printerId],
-    references: [printer.id],
-  }),
-}));
-
-export type PrinterGroupRow = typeof printerGroup.$inferSelect;
-export type PrinterGroupMemberRow = typeof printerGroupMember.$inferSelect;
+/**
+ * Organization-scoped JSON print template (PrintJobJSON definition).
+ * Server renders `templateId + inputs` to raw ESC/POS at enqueue time.
+ */
+export const printTemplate = pgTable('print_template', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  /** Stored PrintJobJSON definition (commands + optional inputs schema). */
+  definitionJson: text('definition_json').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
 
 /**
  * Raw print job targeting a single Printer, or a parent/child fan-out pair.
@@ -376,6 +283,116 @@ export const printJob = pgTable(
   ],
 );
 
+export const userRelations = relations(user, ({ many }) => ({
+  sessions: many(session),
+  accounts: many(account),
+  members: many(member),
+  invitations: many(invitation),
+}));
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, {
+    fields: [session.userId],
+    references: [user.id],
+  }),
+}));
+
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, {
+    fields: [account.userId],
+    references: [user.id],
+  }),
+}));
+
+export const organizationRelations = relations(organization, ({ many }) => ({
+  members: many(member),
+  invitations: many(invitation),
+  printerAgents: many(printerAgent),
+  printers: many(printer),
+  printerGroups: many(printerGroup),
+  printJobs: many(printJob),
+  printTemplates: many(printTemplate),
+}));
+
+export const memberRelations = relations(member, ({ one }) => ({
+  organization: one(organization, {
+    fields: [member.organizationId],
+    references: [organization.id],
+  }),
+  user: one(user, {
+    fields: [member.userId],
+    references: [user.id],
+  }),
+}));
+
+export const invitationRelations = relations(invitation, ({ one }) => ({
+  organization: one(organization, {
+    fields: [invitation.organizationId],
+    references: [organization.id],
+  }),
+  user: one(user, {
+    fields: [invitation.inviterId],
+    references: [user.id],
+  }),
+}));
+
+export const printerAgentRelations = relations(printerAgent, ({ one, many }) => ({
+  organization: one(organization, {
+    fields: [printerAgent.organizationId],
+    references: [organization.id],
+  }),
+  printers: many(printer),
+  printerGroups: many(printerGroup),
+  printJobs: many(printJob),
+  printTemplates: many(printTemplate),
+}));
+
+export type PrinterAgentRow = typeof printerAgent.$inferSelect;
+export type PrinterAgentStatus = 'active' | 'revoked';
+
+export const printerRelations = relations(printer, ({ one, many }) => ({
+  organization: one(organization, {
+    fields: [printer.organizationId],
+    references: [organization.id],
+  }),
+  printerAgent: one(printerAgent, {
+    fields: [printer.printerAgentId],
+    references: [printerAgent.id],
+  }),
+  groupMemberships: many(printerGroupMember),
+  printJobs: many(printJob),
+}));
+
+export type PrinterRow = typeof printer.$inferSelect;
+export type PrinterStatus = 'active' | 'disabled';
+
+export const printerGroupRelations = relations(printerGroup, ({ one, many }) => ({
+  organization: one(organization, {
+    fields: [printerGroup.organizationId],
+    references: [organization.id],
+  }),
+  printerAgent: one(printerAgent, {
+    fields: [printerGroup.printerAgentId],
+    references: [printerAgent.id],
+  }),
+  members: many(printerGroupMember),
+  printJobs: many(printJob),
+}));
+
+export const printerGroupMemberRelations = relations(printerGroupMember, ({ one }) => ({
+  printerGroup: one(printerGroup, {
+    fields: [printerGroupMember.printerGroupId],
+    references: [printerGroup.id],
+  }),
+  printer: one(printer, {
+    fields: [printerGroupMember.printerId],
+    references: [printer.id],
+  }),
+}));
+
+export type PrinterGroupRow = typeof printerGroup.$inferSelect;
+export type PrinterGroupMemberRow = typeof printerGroupMember.$inferSelect;
+
 export const printJobRelations = relations(printJob, ({ one, many }) => ({
   organization: one(organization, {
     fields: [printJob.organizationId],
@@ -410,29 +427,13 @@ export const printJobRelations = relations(printJob, ({ one, many }) => ({
 export type PrintJobRow = typeof printJob.$inferSelect;
 export type PrintJobKind = 'single' | 'parent' | 'child';
 export type PrintJobPurpose = 'standard' | 'template_confirmation';
-export type PrintJobStatus =
-  | 'queued'
-  | 'leased'
-  | 'printing'
-  | 'succeeded'
-  | 'failed'
-  | 'partial_failed';
-
-/**
- * Organization-scoped JSON print template (PrintJobJSON definition).
- * Server renders `templateId + inputs` to raw ESC/POS at enqueue time.
- */
-export const printTemplate = pgTable('print_template', {
-  id: text('id').primaryKey(),
-  organizationId: text('organization_id')
-    .notNull()
-    .references(() => organization.id, { onDelete: 'cascade' }),
-  name: text('name').notNull(),
-  /** Stored PrintJobJSON definition (commands + optional inputs schema). */
-  definitionJson: text('definition_json').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-});
+export type PrintJobStatus
+  = | 'queued'
+    | 'leased'
+    | 'printing'
+    | 'succeeded'
+    | 'failed'
+    | 'partial_failed';
 
 export const printTemplateRelations = relations(printTemplate, ({ one }) => ({
   organization: one(organization, {

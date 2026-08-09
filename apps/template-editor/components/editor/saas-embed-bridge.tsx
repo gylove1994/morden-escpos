@@ -4,15 +4,16 @@
  */
 'use client';
 
+import type { SaasEmbedHostToEditor } from '../../lib/saas-embed';
 import { useEffect, useRef } from 'react';
+import { useEditorStore } from '../../lib/editor-store';
+import { importPrintJob, parseSampleData, toPrintJob } from '../../lib/print-job';
 import {
   isSaasEmbedMessage,
   isSaasEmbedMode,
   SAAS_EMBED_CHANNEL,
-  type SaasEmbedHostToEditor,
+
 } from '../../lib/saas-embed';
-import { useEditorStore } from '../../lib/editor-store';
-import { importPrintJob, parseSampleData, toPrintJob } from '../../lib/print-job';
 
 /**
  * Host bridge for SaaS iframe embed.

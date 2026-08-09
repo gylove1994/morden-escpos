@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { redirect } from 'next/navigation';
-import { PrinterGroupsPanel } from '../../components/printer-groups-panel';
 import {
   canManagePrinterGroups,
   getConsoleSession,
@@ -11,6 +10,7 @@ import {
 import { listPrinterAgents } from '../../../lib/printer-agents';
 import { listPrinterGroups } from '../../../lib/printer-groups';
 import { listPrinters } from '../../../lib/printers';
+import { PrinterGroupsPanel } from '../../components/printer-groups-panel';
 
 export default async function PrinterGroupsPage() {
   const session = await getConsoleSession();

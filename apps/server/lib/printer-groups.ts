@@ -2,18 +2,18 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import type { PrinterGroupRow } from './db/schema';
 import { randomUUID } from 'node:crypto';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { db } from './db';
 import {
   printer,
   printerAgent,
   printerGroup,
   printerGroupMember,
-  type PrinterGroupRow,
 } from './db/schema';
 
-export type PrinterGroupPublic = {
+export interface PrinterGroupPublic {
   id: string
   organizationId: string
   printerAgentId: string
@@ -21,7 +21,7 @@ export type PrinterGroupPublic = {
   printerIds: string[]
   createdAt: string
   updatedAt: string
-};
+}
 
 function toPublic(row: PrinterGroupRow, printerIds: string[]): PrinterGroupPublic {
   return {

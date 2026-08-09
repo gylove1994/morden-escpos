@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { notFound, redirect } from 'next/navigation';
-import { EmbeddedTemplateEditor } from '../../../components/embedded-template-editor';
-import { canManageTemplates, getConsoleSession } from '../../../../lib/console-auth';
 import { SERVER_CONFIG } from '../../../../lib/config';
+import { canManageTemplates, getConsoleSession } from '../../../../lib/console-auth';
 import { listPrinterGroups } from '../../../../lib/printer-groups';
 import { listPrinters } from '../../../../lib/printers';
 import { getTemplate } from '../../../../lib/templates';
+import { EmbeddedTemplateEditor } from '../../../components/embedded-template-editor';
 
 export default async function TemplateEditorPage({
   params,

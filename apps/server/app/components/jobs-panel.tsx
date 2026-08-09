@@ -4,10 +4,11 @@
  */
 'use client';
 
+import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 
-export type JobListItem = {
+export interface JobListItem {
   id: string
   printerId: string | null
   printerGroupId: string | null
@@ -22,25 +23,25 @@ export type JobListItem = {
   errorMessage: string | null
   createdAt: string
   completedAt: string | null
-};
+}
 
-export type PrinterOption = {
+export interface PrinterOption {
   id: string
   name: string
   status: string
-};
+}
 
-export type PrinterGroupOption = {
+export interface PrinterGroupOption {
   id: string
   name: string
   printerIds: string[]
-};
+}
 
-type Props = {
+interface Props {
   initialJobs: JobListItem[]
   printers: PrinterOption[]
   printerGroups: PrinterGroupOption[]
-};
+}
 
 export function JobsPanel({ initialJobs, printers, printerGroups }: Props) {
   const router = useRouter();
@@ -64,7 +65,8 @@ export function JobsPanel({ initialJobs, printers, printerGroups }: Props) {
 
   async function refreshList() {
     const response = await fetch('/api/console/jobs');
-    if (!response.ok) return;
+    if (!response.ok)
+      return;
     const body = await response.json() as { jobs: JobListItem[] };
     setJobs(body.jobs);
     router.refresh();

@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { redirect } from 'next/navigation';
-import { TemplatesPanel } from '../../components/templates-panel';
 import { canManageTemplates, getConsoleSession } from '../../../lib/console-auth';
 import { listTemplates } from '../../../lib/templates';
+import { TemplatesPanel } from '../../components/templates-panel';
 
 export default async function TemplatesPage() {
   const session = await getConsoleSession();
