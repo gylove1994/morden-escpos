@@ -6,15 +6,15 @@ import type { IdleBackoff } from './backoff';
 import type { ProtocolClient } from './protocol/client';
 import type { LeasedJob } from './protocol/types';
 import { sleep } from './backoff';
+import { printLeasedJob } from './print-job';
 import { assertAllowedJobTransition } from './protocol/transitions';
-import { printLeasedJobOverTcp } from './tcp-print';
 
 export interface PrinterAgentLoopOptions {
   client: ProtocolClient
   backoff: IdleBackoff
   afterWorkMs: number
   signal?: AbortSignal
-  /** Injected for tests; defaults to TCP print via MIT NetworkAdapter. */
+  /** Injected for tests; defaults to connectionHints-routed MIT adapters. */
   printJob?: (job: LeasedJob) => Promise<void>
   logger?: {
     info: (message: string, meta?: Record<string, unknown>) => void
@@ -56,12 +56,12 @@ const defaultLogger = {
 };
 
 /**
- * Lease one job (if any), report printing, print over TCP, report outcome.
+ * Lease one job (if any), report printing, print via connectionHints, report outcome.
  */
 export async function drainOnce(options: PrinterAgentLoopOptions): Promise<DrainResult> {
   const {
     client,
-    printJob = printLeasedJobOverTcp,
+    printJob = printLeasedJob,
     logger = defaultLogger,
   } = options;
 

@@ -63,8 +63,9 @@ export {
   validateTemplateInputs,
 } from './controller/template-inputs';
 export type { TemplateInputValidationResult } from './controller/template-inputs';
-export { MemoryAdapter } from './memory-adapter';
 // 导出适配器
+export { default as DevicePathAdapter } from './device-path';
+export { MemoryAdapter } from './memory-adapter';
 export { default as NetworkAdapter } from './network';
 // 导出打印机核心
 export { command, Image, Printer } from './printer';
@@ -94,4 +95,6 @@ export {
   renderTemplateToBytes,
 } from './render-bytes';
 export type { RenderBytesOptions } from './render-bytes';
+export { default as SerialAdapter } from './serial';
+export type { SerialPortFactory, SerialPortLike } from './serial';
 export { default as USBAdapter } from './usb';

@@ -55,7 +55,7 @@ describe('printLeasedJobOverTcp', () => {
     expect(Buffer.concat(chunks)).toEqual(payload);
   });
 
-  it('rejects non-TCP connection hints in this slice', async () => {
+  it('rejects non-TCP connection hints for the TCP helper', async () => {
     const job: LeasedJob = {
       id: 'job_usb_1',
       printerId: 'printer_1',
@@ -71,6 +71,6 @@ describe('printLeasedJobOverTcp', () => {
       createdAt: '2026-08-09T12:00:00.000Z',
     };
 
-    await expect(printLeasedJobOverTcp(job)).rejects.toThrow(/TCP only/);
+    await expect(printLeasedJobOverTcp(job)).rejects.toThrow(/TCP helper/);
   });
 });

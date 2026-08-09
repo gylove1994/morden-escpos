@@ -1,7 +1,7 @@
 // Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
 // SPDX-License-Identifier: BUSL-1.1
 
-// Command printer-agent runs the Go Printer Agent (TCP) against a print-queue control plane.
+// Command printer-agent runs the Go Printer Agent against a print-queue control plane.
 package main
 
 import (
@@ -37,7 +37,7 @@ func main() {
 	client := protocol.NewClient(cfg.ServerURL, cfg.DeviceToken, nil)
 	runner := &agent.Runner{
 		Protocol:         client,
-		Printer:          agent.TCPPrinter{},
+		Printer:          agent.LocalPrinter{},
 		Logger:           logger,
 		PollInterval:     time.Duration(cfg.PollIntervalMS) * time.Millisecond,
 		IdleBackoff:      time.Duration(cfg.IdleBackoffMS) * time.Millisecond,

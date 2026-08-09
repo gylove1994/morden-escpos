@@ -1,8 +1,8 @@
 # @workspace/client-node
 
 Node **Printer Agent**: short-poll the Print Queue Agent Protocol, lease raw
-ESC/POS jobs, print over TCP via the MIT `morden-node-escpos` stack, and report
-outcomes.
+ESC/POS jobs, print over TCP / USB / Serial via the MIT `morden-node-escpos`
+stack, and report outcomes.
 
 ## Requirements
 
@@ -17,7 +17,7 @@ outcomes.
 | `pnpm --filter @workspace/client-node dev` | Run with `env.example.dev` via dotenvx |
 | `pnpm --filter @workspace/client-node build` | Compile to `dist/` |
 | `pnpm --filter @workspace/client-node start` | Run compiled agent with `env.example.server` |
-| `pnpm --filter @workspace/client-node test` | Vitest (contract, backoff, TCP print, loop) |
+| `pnpm --filter @workspace/client-node test` | Vitest (contract, backoff, transports, loop) |
 | `pnpm --filter @workspace/client-node typecheck` | `tsc --noEmit` |
 
 ## Configuration
@@ -42,10 +42,22 @@ Env values override keys from `CONFIG_FILE`. See `config.example.json`.
 Uses the shared OpenAPI contract and fixtures:
 
 - OpenAPI: `apps/server/contracts/print-queue-agent-protocol.openapi.yaml`
-- Fixtures: `apps/server/contracts/fixtures/`
+- Fixtures: `apps/server/contracts/fixtures/v1/`
 
-Flow: heartbeat → lease (`200` job / `204` idle) → report `printing` → TCP
-print → report `succeeded` \| `failed`.
+Flow: heartbeat → lease (`200` job / `204` idle) → report `printing` → print
+via `connectionHints.transport` (`tcp` / `usb` / `serial`) → report
+`succeeded` \| `failed`.
+
+## Transports
+
+| Hint | MIT adapter | Endpoint fields |
+| ---- | ----------- | --------------- |
+| `tcp` | `NetworkAdapter` | `address`, `port` |
+| `usb` | `DevicePathAdapter` | `path` (e.g. `/dev/usb/lp0`) |
+| `serial` | `SerialAdapter` | `path`, optional `baudRate` |
+
+Unit tests use TCP loopbacks and temp files (no hardware). Manual printer steps:
+`TRANSPORT-CHECKLIST.md`.
 
 ## License
 
