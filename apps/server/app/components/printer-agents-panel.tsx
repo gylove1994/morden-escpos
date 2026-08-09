@@ -4,23 +4,24 @@
  */
 'use client';
 
+import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useConsoleI18n } from '../../lib/i18n/client';
 
-export type PrinterAgentListItem = {
+export interface PrinterAgentListItem {
   id: string
   name: string
   status: 'active' | 'revoked'
   deviceTokenPrefix: string | null
   createdAt: string
   revokedAt: string | null
-};
+}
 
-type Props = {
+interface Props {
   initialPrinterAgents: PrinterAgentListItem[]
   canManage: boolean
-};
+}
 
 export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
   const router = useRouter();
@@ -49,7 +50,8 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
 
   async function onCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canManage) return;
+    if (!canManage)
+      return;
     setPending(true);
     setError(null);
     setRevealedToken(null);
@@ -82,7 +84,8 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
   }
 
   async function onRevoke(printerAgentId: string) {
-    if (!canManage) return;
+    if (!canManage)
+      return;
     setActionId(printerAgentId);
     setError(null);
     const response = await fetch(
@@ -102,7 +105,8 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
   }
 
   async function onRotate(printerAgentId: string, agentName: string) {
-    if (!canManage) return;
+    if (!canManage)
+      return;
     setActionId(printerAgentId);
     setError(null);
     const response = await fetch(

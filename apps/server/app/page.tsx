@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { redirect } from 'next/navigation';
-import { LocaleSwitcher } from './components/locale-switcher';
 import { getConsoleSession } from '../lib/console-auth';
 import { EDITION } from '../lib/edition';
 import { getConsoleMessages } from '../lib/i18n/server';
+import { LocaleSwitcher } from './components/locale-switcher';
 
 export default async function HomePage() {
   const session = await getConsoleSession();

@@ -4,10 +4,10 @@
  */
 import type { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
-import { SignOutButton } from '../components/auth-forms';
-import { LocaleSwitcher } from '../components/locale-switcher';
 import { getConsoleSession } from '../../lib/console-auth';
 import { getConsoleMessages } from '../../lib/i18n/server';
+import { SignOutButton } from '../components/auth-forms';
+import { LocaleSwitcher } from '../components/locale-switcher';
 
 export default async function ConsoleLayout({ children }: { children: ReactNode }) {
   const session = await getConsoleSession();

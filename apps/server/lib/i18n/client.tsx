@@ -4,26 +4,27 @@
  */
 'use client';
 
+import type { ReactNode } from 'react';
+import type { ConsoleLocale } from './locales';
+import type { ConsoleMessages } from './messages';
+import { useRouter } from 'next/navigation';
 import {
   createContext,
   use,
   useEffect,
   useState,
-  type ReactNode,
 } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   CONSOLE_LOCALE_COOKIE,
   isConsoleLocale,
-  type ConsoleLocale,
 } from './locales';
-import { getMessages, type ConsoleMessages } from './messages';
+import { getMessages } from './messages';
 
-type I18nContextValue = {
+interface I18nContextValue {
   locale: ConsoleLocale
   messages: ConsoleMessages
   setLocale: (locale: ConsoleLocale) => void
-};
+}
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
@@ -51,7 +52,8 @@ export function ConsoleI18nProvider({
   }, [initialLocale, initialMessages]);
 
   function setLocale(next: ConsoleLocale) {
-    if (!isConsoleLocale(next) || next === locale) return;
+    if (!isConsoleLocale(next) || next === locale)
+      return;
     writeLocaleCookie(next);
     setLocaleState(next);
     setMessages(getMessages(next));

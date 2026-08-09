@@ -4,11 +4,12 @@
  */
 'use client';
 
+import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useConsoleI18n } from '../../lib/i18n/client';
 
-export type PrinterListItem = {
+export interface PrinterListItem {
   id: string
   printerAgentId: string
   name: string
@@ -21,19 +22,19 @@ export type PrinterListItem = {
     baudRate?: number
   }
   createdAt: string
-};
+}
 
-export type PrinterAgentOption = {
+export interface PrinterAgentOption {
   id: string
   name: string
   status: string
-};
+}
 
-type Props = {
+interface Props {
   initialPrinters: PrinterListItem[]
   printerAgents: PrinterAgentOption[]
   canManage: boolean
-};
+}
 
 function formatHints(hints: PrinterListItem['connectionHints']): string {
   if (hints.transport === 'tcp') {
@@ -68,7 +69,8 @@ export function PrintersPanel({
 
   async function refreshList() {
     const response = await fetch('/api/console/printers');
-    if (!response.ok) return;
+    if (!response.ok)
+      return;
     const body = await response.json() as { printers: PrinterListItem[] };
     setPrinters(body.printers);
     router.refresh();
@@ -76,7 +78,8 @@ export function PrintersPanel({
 
   async function onCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canManage) return;
+    if (!canManage)
+      return;
     setPending(true);
     setError(null);
 

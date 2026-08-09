@@ -4,7 +4,7 @@
  */
 import type { ConsoleLocale } from './locales';
 
-export type ConsoleMessages = {
+export interface ConsoleMessages {
   brand: string
   nav: {
     overview: string
@@ -137,7 +137,7 @@ export type ConsoleMessages = {
     statusActive: string
     statusDisabled: string
   }
-};
+}
 
 const en: ConsoleMessages = {
   brand: 'morden-escpos',

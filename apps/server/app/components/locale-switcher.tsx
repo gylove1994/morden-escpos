@@ -4,8 +4,8 @@
  */
 'use client';
 
-import { useConsoleI18n } from '../../lib/i18n/client';
 import type { ConsoleLocale } from '../../lib/i18n/locales';
+import { useConsoleI18n } from '../../lib/i18n/client';
 
 export function LocaleSwitcher() {
   const { locale, messages, setLocale } = useConsoleI18n();

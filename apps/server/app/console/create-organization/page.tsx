@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { redirect } from 'next/navigation';
-import { CreateOrganizationForm } from '../../components/auth-forms';
 import { getConsoleSession } from '../../../lib/console-auth';
 import { getConsoleMessages } from '../../../lib/i18n/server';
+import { CreateOrganizationForm } from '../../components/auth-forms';
 
 export default async function CreateOrganizationPage() {
   const session = await getConsoleSession();
