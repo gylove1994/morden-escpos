@@ -60,6 +60,9 @@ const EnvSchema = z.object({
     .refine(v => v >= 1_000 && v <= 600_000, {
       message: 'JOB_LEASE_MS must be between 1000 and 600000',
     }),
+
+  // Platform tenant-ops (cloud). Bearer secret for /api/platform/* — unused on self-hosted.
+  PLATFORM_ADMIN_SECRET: z.string().min(32).optional(),
 }).superRefine((data, ctx) => {
   if (data.EDITION !== 'cloud') {
     return;
@@ -69,6 +72,7 @@ const EnvSchema = z.object({
     'STRIPE_WEBHOOK_SECRET',
     'STRIPE_PRICE_PERSONAL',
     'STRIPE_PRICE_BUSINESS',
+    'PLATFORM_ADMIN_SECRET',
   ] as const) {
     if (!data[key]) {
       ctx.addIssue({

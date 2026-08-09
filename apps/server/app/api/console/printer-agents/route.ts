@@ -13,6 +13,7 @@ import {
   createPrinterAgent,
   listPrinterAgents,
 } from '../../../../lib/printer-agents';
+import { organizationStatusBlockResponse } from '../../../../lib/platform/org-guard';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -73,6 +74,13 @@ export async function POST(request: Request) {
       },
       { status: 403 },
     );
+  }
+
+  const inactive = await organizationStatusBlockResponse(
+    consoleSession.organization.id,
+  );
+  if (inactive) {
+    return inactive;
   }
 
   let body: unknown;

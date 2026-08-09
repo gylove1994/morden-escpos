@@ -13,16 +13,18 @@ BSL SaaS print-queue control plane. See [`CONTEXT.md`](./CONTEXT.md).
 | Command | Purpose |
 | ------- | ------- |
 | `pnpm --filter @workspace/server dev` | Next.js dev server (port 43128) via dotenvx + `env.example.dev` |
-| `pnpm --filter @workspace/server build` | Production build |
+| `pnpm --filter @workspace/server build` | Production cloud build (`env.example.server`) |
+| `pnpm --filter @workspace/server build:self-hosted` | Production self-hosted build (omits cloud-only routes) |
 | `pnpm --filter @workspace/server db:generate` | Generate Drizzle migrations from `lib/db/schema.ts` |
 | `pnpm --filter @workspace/server db:migrate` | Apply migrations |
-| `pnpm --filter @workspace/server test` | Vitest (health, auth, tokens, billing/plan limits, enqueue/lease/report) |
+| `pnpm --filter @workspace/server test` | Vitest (health, auth, tokens, billing, queue, platform, compile-out) |
 | `pnpm --filter @workspace/server typecheck` | `tsc --noEmit` |
 
 ## Configuration
 
 Development uses `APP_*` keys in `env.example.dev`. Non-development uses
-unprefixed keys in `env.example.server`. Required auth secret:
+unprefixed keys in `env.example.server` (cloud) or `env.example.self-hosted`.
+Required auth secret:
 
 - Dev: `APP_AUTH_SECRET` (min 32 chars)
 - Server: `AUTH_SECRET` (min 32 chars)
@@ -41,9 +43,10 @@ When `EDITION=cloud`, these are required (use [Stripe test mode](https://docs.st
 | `STRIPE_PRICE_PERSONAL` | `APP_STRIPE_PRICE_PERSONAL` | Personal plan Price id |
 | `STRIPE_PRICE_BUSINESS` | `APP_STRIPE_PRICE_BUSINESS` | Business plan Price id |
 | `BILLING_RESELLER_CONTACT_URL` | `APP_BILLING_RESELLER_CONTACT_URL` | Reseller contact CTA (default mailto) |
+| `PLATFORM_ADMIN_SECRET` | `APP_PLATFORM_ADMIN_SECRET` | Bearer secret for platform tenant-ops (min 32 chars) |
 
-Self-hosted builds do not require Stripe variables. Point Stripe webhooks at
-`POST /api/billing/webhook`.
+Self-hosted builds do not require Stripe or platform-admin variables. Point Stripe
+webhooks at `POST /api/billing/webhook` on cloud deployments only.
 
 Optional lease duration:
 
@@ -107,11 +110,32 @@ Optional lease duration:
 - Locale switcher in auth pages and the console shell
 - Message catalogs live under `lib/i18n/`
 
-## Edition stub
+## Platform tenant ops (cloud)
 
-Set `EDITION=cloud` (default) or `EDITION=self-hosted` for the compile/build stub.
-`next.config.ts` inlines the value; `lib/edition.ts` exposes helpers. Route
-trimming is deferred.
+- Lookup: `GET /api/platform/organizations?q=<id|slug|name>`
+- Ban / suspend / restore: `PATCH /api/platform/organizations/:id/status`
+  with `{ "status": "active" | "suspended" | "banned" }`
+- Auth header: `Authorization: Bearer <PLATFORM_ADMIN_SECRET>`
+- Console UI: `/console/platform`
+- Suspended/banned Organizations receive `403 organization_inactive` on console mutations
+
+## Edition compile-out
+
+Set `EDITION=cloud` (default) or `EDITION=self-hosted`.
+
+`next.config.ts` inlines the value and sets `pageExtensions`:
+
+- Cloud: includes `cloud.ts` / `cloud.tsx` so `route.cloud.ts` / `page.cloud.tsx` ship
+- Self-hosted: default extensions only — `*.cloud.ts(x)` App Router entries are **absent**
+
+Cloud-only surfaces today:
+
+- `/api/billing/*`, `/console/billing`
+- `/api/platform/*`, `/console/platform`
+
+Self-hosted keeps org users, Printer Agents, printers, jobs, and templates paths.
+Acceptance tests assert both filesystem discovery and the self-hosted
+`.next/server/app-paths-manifest.json` omit cloud-only routes.
 
 ## Print Queue Agent Protocol
 

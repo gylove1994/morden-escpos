@@ -57,6 +57,13 @@
       "when": 1786246490000,
       "tag": "0007_whole_wallflower",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786246500000,
+      "tag": "0008_shallow_thaddeus_ross",
+      "breakpoints": true
     }
   ]
 }

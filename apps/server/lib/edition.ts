@@ -3,15 +3,23 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { SERVER_CONFIG } from './config';
+import type { Edition } from './edition-build';
 
-export type Edition = 'cloud' | 'self-hosted';
+export type { Edition } from './edition-build';
+export {
+  createAppRouterLeafRegex,
+  isCloudOnlyAppEntry,
+  matchesAppRouterPageOrRoute,
+  matchesPageExtension,
+  pageExtensionsForEdition,
+} from './edition-build';
 
 /**
- * Edition compile/build stub.
+ * Edition compile/build flag (`cloud` | `self-hosted`).
  *
  * Prefer `SERVER_CONFIG.EDITION` (env) and the `EDITION` value inlined by
- * `next.config.ts`. Full route trimming for self-hosted builds is out of scope
- * for the scaffold ticket; callers SHOULD use these helpers when that lands.
+ * `next.config.ts`. Cloud-only App Router files use the `*.cloud.ts(x)` suffix
+ * and are omitted from self-hosted builds via `pageExtensions`.
  */
 export const EDITION: Edition = SERVER_CONFIG.EDITION;
 

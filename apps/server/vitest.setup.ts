@@ -16,6 +16,7 @@ const stripePricePersonal = 'price_test_personal';
 const stripePriceBusiness = 'price_test_business';
 const resellerContact
   = 'mailto:gylove1994@acgsteps.com?subject=morden-escpos%20reseller%20inquiry';
+const platformAdminSecret = 'test-only-platform-admin-secret-32chars!!';
 
 process.env.PORT = '43128';
 process.env.BASE_URL = baseUrl;
@@ -29,6 +30,7 @@ process.env.STRIPE_PRICE_PERSONAL = stripePricePersonal;
 process.env.STRIPE_PRICE_BUSINESS = stripePriceBusiness;
 process.env.BILLING_RESELLER_CONTACT_URL = resellerContact;
 process.env.JOB_LEASE_MS = '5000';
+process.env.PLATFORM_ADMIN_SECRET = platformAdminSecret;
 
 // When the harness boots Next in dev mode, Next sets NODE_ENV=development and
 // the config module reads APP_* keys — keep both shapes populated for tests.
@@ -45,3 +47,4 @@ process.env.APP_STRIPE_PRICE_PERSONAL = stripePricePersonal;
 process.env.APP_STRIPE_PRICE_BUSINESS = stripePriceBusiness;
 process.env.APP_BILLING_RESELLER_CONTACT_URL = resellerContact;
 process.env.APP_JOB_LEASE_MS = '5000';
+process.env.APP_PLATFORM_ADMIN_SECRET = platformAdminSecret;

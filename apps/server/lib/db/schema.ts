@@ -80,6 +80,13 @@ export const verification = pgTable('verification', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+/**
+ * Organization (tenant) row.
+ *
+ * `status` is a cloud platform tenant-ops field (`active` | `suspended` |
+ * `banned`). Self-hosted builds omit the platform APIs that mutate it; the
+ * column remains so a shared schema/migration applies to both editions.
+ */
 export const organization = pgTable('organization', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
@@ -87,6 +94,8 @@ export const organization = pgTable('organization', {
   logo: text('logo'),
   createdAt: timestamp('created_at').notNull(),
   metadata: text('metadata'),
+  /** active | suspended | banned — enforced on console/API for cloud abuse stop. */
+  status: text('status').default('active').notNull(),
 });
 
 export const member = pgTable('member', {
