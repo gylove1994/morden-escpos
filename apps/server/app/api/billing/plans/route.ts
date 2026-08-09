@@ -2,9 +2,9 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import { SERVER_CONFIG } from '../../../../lib/config';
 import { cloudOnlyJsonResponse } from '../../../../lib/billing/cloud-guard';
 import { listPublicPlans } from '../../../../lib/billing/plans';
+import { SERVER_CONFIG } from '../../../../lib/config';
 import { isCloudEdition } from '../../../../lib/edition';
 
 export const runtime = 'nodejs';

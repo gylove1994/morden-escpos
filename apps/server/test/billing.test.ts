@@ -2,14 +2,13 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type Stripe from 'stripe';
+import type { StripeBillingPort } from '../lib/billing/stripe-port';
+import type { BootedServer } from './harness';
 import { eq } from 'drizzle-orm';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { PLAN_CATALOG } from '../lib/billing/plans';
-import {
-  setStripeBillingPortForTests,
-  type StripeBillingPort,
-} from '../lib/billing/stripe-port';
+import { setStripeBillingPortForTests } from '../lib/billing/stripe-port';
 import {
   currentMonthlyPeriodKey,
   setOrganizationPlanForTests,
@@ -22,7 +21,6 @@ import {
   createOrganization,
   signUp,
 } from './auth-helpers';
-import type { BootedServer } from './harness';
 import { bootServer } from './harness';
 
 function fakeStripePort(): StripeBillingPort {

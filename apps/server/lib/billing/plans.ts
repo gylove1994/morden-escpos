@@ -16,13 +16,13 @@ export type CheckoutPlanId = (typeof CHECKOUT_PLANS)[number];
 export const PLAN_IDS = ['none', 'personal', 'business', 'reseller'] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
 
-export type PlanLimits = {
+export interface PlanLimits {
   maxPrinters: number
   maxPrinterAgents: number
   maxMonthlyJobs: number
-};
+}
 
-export type PlanCatalogEntry = {
+export interface PlanCatalogEntry {
   id: PlanId
   name: string
   /** Directional list price in USD per month; null for contact-only / none. */
@@ -30,7 +30,7 @@ export type PlanCatalogEntry = {
   checkoutEligible: boolean
   limits: PlanLimits
   summary: string
-};
+}
 
 const ZERO_LIMITS: PlanLimits = {
   maxPrinters: 0,

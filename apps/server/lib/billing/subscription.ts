@@ -2,6 +2,8 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { CheckoutPlanId, PlanId } from './plans';
+import type { StripeSubscriptionSnapshot } from './stripe-port';
 import { count, eq, sql } from 'drizzle-orm';
 import { SERVER_CONFIG } from '../config';
 import { db } from '../db';
@@ -10,18 +12,16 @@ import {
   printerAgent,
   printerStub,
 } from '../db/schema';
-import type { CheckoutPlanId, PlanId } from './plans';
 import { isCheckoutPlanId, isPlanId, PLAN_CATALOG, resolveEffectiveLimits } from './plans';
-import type { StripeSubscriptionSnapshot } from './stripe-port';
 
 export type OrganizationBillingRow = typeof organizationBilling.$inferSelect;
 
-export type OrganizationUsage = {
+export interface OrganizationUsage {
   printers: number
   printerAgents: number
   monthlyJobs: number
   monthlyJobPeriodKey: string
-};
+}
 
 export function currentMonthlyPeriodKey(now = new Date()): string {
   const year = now.getUTCFullYear();
@@ -132,9 +132,12 @@ export function priceIdForCheckoutPlan(plan: CheckoutPlanId): string {
 }
 
 export function planFromPriceId(priceId: string | null | undefined): CheckoutPlanId | null {
-  if (!priceId) return null;
-  if (priceId === SERVER_CONFIG.STRIPE_PRICE_PERSONAL) return 'personal';
-  if (priceId === SERVER_CONFIG.STRIPE_PRICE_BUSINESS) return 'business';
+  if (!priceId)
+    return null;
+  if (priceId === SERVER_CONFIG.STRIPE_PRICE_PERSONAL)
+    return 'personal';
+  if (priceId === SERVER_CONFIG.STRIPE_PRICE_BUSINESS)
+    return 'business';
   return null;
 }
 

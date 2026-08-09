@@ -2,11 +2,12 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { Buffer } from 'node:buffer';
+import type { CheckoutPlanId } from './plans';
 import Stripe from 'stripe';
 import { SERVER_CONFIG } from '../config';
-import type { CheckoutPlanId } from './plans';
 
-export type CreateCheckoutSessionInput = {
+export interface CreateCheckoutSessionInput {
   organizationId: string
   plan: CheckoutPlanId
   priceId: string
@@ -14,37 +15,37 @@ export type CreateCheckoutSessionInput = {
   customerEmail: string
   successUrl: string
   cancelUrl: string
-};
+}
 
-export type CreateCheckoutSessionResult = {
+export interface CreateCheckoutSessionResult {
   id: string
   url: string
   customerId: string | null
-};
+}
 
-export type CreatePortalSessionInput = {
+export interface CreatePortalSessionInput {
   customerId: string
   returnUrl: string
-};
+}
 
-export type CreatePortalSessionResult = {
+export interface CreatePortalSessionResult {
   url: string
-};
+}
 
-export type StripeSubscriptionSnapshot = {
+export interface StripeSubscriptionSnapshot {
   id: string
   customerId: string
   status: string
   priceId: string | null
   currentPeriodStart: Date | null
   currentPeriodEnd: Date | null
-};
+}
 
 /**
  * Stripe boundary used by billing routes.
  * Tests inject a fake adapter; production uses the Stripe SDK (test-mode keys).
  */
-export type StripeBillingPort = {
+export interface StripeBillingPort {
   createCheckoutSession: (
     input: CreateCheckoutSessionInput,
   ) => Promise<CreateCheckoutSessionResult>
@@ -56,7 +57,7 @@ export type StripeBillingPort = {
     signature: string,
   ) => Stripe.Event
   retrieveSubscription: (subscriptionId: string) => Promise<StripeSubscriptionSnapshot>
-};
+}
 
 function requireStripeSecret(): string {
   const key = SERVER_CONFIG.STRIPE_SECRET_KEY;
@@ -75,7 +76,8 @@ function requireWebhookSecret(): string {
 }
 
 function toDate(seconds: number | null | undefined): Date | null {
-  if (seconds == null) return null;
+  if (seconds == null)
+    return null;
   return new Date(seconds * 1000);
 }
 
