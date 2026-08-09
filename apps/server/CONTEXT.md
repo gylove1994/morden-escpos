@@ -17,7 +17,9 @@ those surfaces out via the `EDITION` stub (`cloud` | `self-hosted`).
 | ---- | ------- |
 | **Printer Agent** | On-site print client process (Node or Go). MUST NOT be called a bare “Agent”. |
 | **printerAgentId** | Stable identifier for a Printer Agent registration. |
-| **device token** | Secret Bearer credential for Printer Agent protocol auth. Shown once on create/rotate; stored hashed at rest. MUST stay distinct from human sessions and future integrator API keys. |
+| **device token** | Secret Bearer credential for Printer Agent protocol auth (`pa_…`). Shown once on create/rotate; stored hashed at rest. MUST stay distinct from human sessions, integrator API keys, and webhook secrets. |
+| **integrator API key** | Secret Bearer credential for integrator REST enqueue (`ik_…`). Shown once on create; stored hashed at rest. MUST NOT authenticate the Print Queue Agent Protocol. |
+| **webhook signing secret** | Secret for webhook enqueue (`whsec_…`). Auth via shared-secret header or HMAC-signed request. Shown once on create; stored hashed (+ encrypted for signature verify). MUST NOT authenticate device-token or API-key surfaces. |
 | **Printer** | Confirmed physical device under exactly one Printer Agent. Jobs target a Printer (or later a Printer Group), never a bare Printer Agent. |
 | **connection hints** | Transport + endpoint metadata (TCP / USB / Serial) stored on the Printer and copied onto leased job payloads. |
 | **Print Queue Agent Protocol** | HTTP contract between the server and Printer Agents (OpenAPI under `contracts/`). Primary test seam. |
@@ -40,11 +42,19 @@ those surfaces out via the `EDITION` stub (`cloud` | `self-hosted`).
 - At least one protected console/API action (Organization settings update) is
   gated so **owner/admin** MAY and **member** MUST NOT.
 - **Printer Agent device tokens** authenticate the Print Queue Agent Protocol
-  (`Authorization: Bearer …`). They MUST NOT reuse session cookies.
+  (`Authorization: Bearer pa_…`). They MUST NOT reuse session cookies, integrator
+  API keys, or webhook secrets.
 - Device tokens are stored as SHA-256 hashes; plaintext is returned only once on
   create or rotate. Revoked/rotated tokens MUST fail protocol auth.
+- **Integrator API keys** authenticate `POST /api/integrator/v1/jobs`
+  (`Authorization: Bearer ik_…`). owner/admin create/revoke; members MAY list.
+- **Webhook signing secrets** authenticate `POST /api/webhooks/v1/jobs` via
+  `X-Webhook-Secret` (shared secret) or `X-Webhook-Id` + `X-Webhook-Timestamp` +
+  `X-Webhook-Signature: sha256=…` (HMAC over `${timestamp}.${rawBody}`).
+- Integrator API keys / webhook secrets MUST NOT authenticate as device tokens
+  (and vice versa). Unauthenticated or bad-signature enqueue is rejected (401).
 - Members MAY enqueue raw jobs and list job history; only owner/admin MAY create
-  Printers and manage Printer Agent tokens.
+  Printers and manage Printer Agent tokens / integrator credentials.
 
 ## Billing boundaries (cloud)
 
@@ -67,6 +77,10 @@ This package currently provides:
   list / revoke / rotate and cloud plan limits on create
 - Printer console management (`/console/printers`) with connection hints
 - Raw job enqueue + minimal job history (`/console/jobs`)
+- Integrator auth console (`/console/integrator-auth`) for API keys + webhook secrets
+- Integrator enqueue surfaces:
+  - `POST /api/integrator/v1/jobs` (API key)
+  - `POST /api/webhooks/v1/jobs` (shared secret or signed request)
 - Device-token auth on Print Queue Agent Protocol:
   - `POST /api/protocol/v1/printer-agents/heartbeat`
   - `POST /api/protocol/v1/jobs/lease`
@@ -82,6 +96,6 @@ This package currently provides:
 - Vitest harness covering health, human-session auth, device-token lifecycle,
   billing HTTP boundaries, and in-process fake Printer Agent queue tests
 
-Out of scope here: Printer Groups, templates, discovery, integrator API keys,
-landing, self-hosted compile-out. Go/Node Printer Agent binaries live in
+Out of scope here: Printer Groups, templates, discovery, landing,
+self-hosted compile-out. Go/Node Printer Agent binaries live in
 `apps/client-go` (#12) / `apps/client-node` (#6).

@@ -16,7 +16,7 @@ BSL SaaS print-queue control plane. See [`CONTEXT.md`](./CONTEXT.md).
 | `pnpm --filter @workspace/server build` | Production build |
 | `pnpm --filter @workspace/server db:generate` | Generate Drizzle migrations from `lib/db/schema.ts` |
 | `pnpm --filter @workspace/server db:migrate` | Apply migrations |
-| `pnpm --filter @workspace/server test` | Vitest (health, auth, tokens, billing/plan limits, enqueue/lease/report) |
+| `pnpm --filter @workspace/server test` | Vitest (health, auth, tokens, billing/plan limits, queue, integrator auth) |
 | `pnpm --filter @workspace/server typecheck` | `tsc --noEmit` |
 
 ## Configuration
@@ -95,6 +95,23 @@ Optional lease duration:
 - Expired leases return to `queued`
 - Leased payloads include `payloadBase64`, `payloadByteLength`, and
   `connectionHints`
+
+## Integrator API keys + webhook auth
+
+- Console: `/console/integrator-auth` (create / list / revoke)
+- APIs:
+  - `GET|POST /api/console/api-keys`,
+    `POST /api/console/api-keys/:apiKeyId/revoke`
+  - `GET|POST /api/console/webhook-secrets`,
+    `POST /api/console/webhook-secrets/:webhookSecretId/revoke`
+- Enqueue surfaces (not human session cookies):
+  - `POST /api/integrator/v1/jobs` with `Authorization: Bearer ik_…`
+  - `POST /api/webhooks/v1/jobs` with `X-Webhook-Secret: whsec_…`
+    **or** signed headers `X-Webhook-Id`, `X-Webhook-Timestamp`,
+    `X-Webhook-Signature: sha256=<hmac>` over `${timestamp}.${rawBody}`
+- owner/admin manage credentials; member may list only
+- Credentials are kind-separated from Printer Agent device tokens (`pa_…`):
+  cross-use is rejected with 401
 
 ## Edition stub
 

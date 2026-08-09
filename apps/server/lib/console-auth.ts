@@ -110,3 +110,13 @@ export function canManagePrinters(
 ): boolean {
   return role === 'owner' || role === 'admin';
 }
+
+/**
+ * Whether the role may create / revoke integrator API keys and webhook secrets.
+ * owner and admin MAY; member MUST NOT.
+ */
+export function canManageIntegratorAuth(
+  role: ConsoleSession['role'],
+): boolean {
+  return role === 'owner' || role === 'admin';
+}

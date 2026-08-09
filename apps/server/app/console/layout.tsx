@@ -49,6 +49,7 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
                 <a href="/console/billing">Billing</a>
                 <a href="/console/printers">Printers</a>
                 <a href="/console/jobs">Jobs</a>
+                <a href="/console/integrator-auth">Integrator auth</a>
               </>
             )
           : <a href="/console/create-organization">Create Organization</a>}

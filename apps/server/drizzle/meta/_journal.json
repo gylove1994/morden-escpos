@@ -26,15 +26,22 @@
     {
       "idx": 3,
       "version": "7",
-      "when": 1786245881366,
-      "tag": "0003_billing_plan_limits",
+      "when": 1786246065154,
+      "tag": "0003_nappy_morph",
       "breakpoints": true
     },
     {
       "idx": 4,
       "version": "7",
-      "when": 1786246065154,
-      "tag": "0004_nappy_morph",
+      "when": 1786246465797,
+      "tag": "0004_job_history_meta",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786246479241,
+      "tag": "0005_naive_eddie_brock",
       "breakpoints": true
     }
   ]
