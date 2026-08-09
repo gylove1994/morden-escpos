@@ -23,6 +23,13 @@ import {
 } from './auth-helpers';
 import { bootServer } from './harness';
 
+const TEST_TCP_HINTS = {
+  transport: 'tcp' as const,
+  address: '127.0.0.1',
+  port: 9100,
+};
+const TEST_PAYLOAD_BASE64 = Buffer.from([0x1b, 0x40]).toString('base64');
+
 function fakeStripePort(): StripeBillingPort {
   return {
     async createCheckoutSession(input) {
@@ -223,6 +230,7 @@ describe('cloud billing Stripe + plan limits', () => {
 
     const { maxPrinters, maxPrinterAgents, maxMonthlyJobs } = PLAN_CATALOG.personal.limits;
 
+    let quotaAgentId = '';
     for (let i = 0; i < maxPrinterAgents; i += 1) {
       const created = await fetch(`${booted.baseUrl}/api/console/printer-agents`, {
         method: 'POST',
@@ -230,6 +238,8 @@ describe('cloud billing Stripe + plan limits', () => {
         body: JSON.stringify({ name: `Agent ${i}` }),
       });
       expect(created.status).toBe(201);
+      const body = await created.json() as { printerAgent: { id: string } };
+      quotaAgentId = body.printerAgent.id;
     }
 
     const overAgent = await fetch(`${booted.baseUrl}/api/console/printer-agents`, {
@@ -251,7 +261,11 @@ describe('cloud billing Stripe + plan limits', () => {
       const created = await fetch(`${booted.baseUrl}/api/console/printers`, {
         method: 'POST',
         headers: authOriginHeaders({ Cookie: cookie }),
-        body: JSON.stringify({ name: `Printer ${i}` }),
+        body: JSON.stringify({
+          printerAgentId: quotaAgentId,
+          name: `Printer ${i}`,
+          connectionHints: TEST_TCP_HINTS,
+        }),
       });
       expect(created.status).toBe(201);
     }
@@ -259,7 +273,11 @@ describe('cloud billing Stripe + plan limits', () => {
     const overPrinter = await fetch(`${booted.baseUrl}/api/console/printers`, {
       method: 'POST',
       headers: authOriginHeaders({ Cookie: cookie }),
-      body: JSON.stringify({ name: 'Printer over quota' }),
+      body: JSON.stringify({
+        printerAgentId: quotaAgentId,
+        name: 'Printer over quota',
+        connectionHints: TEST_TCP_HINTS,
+      }),
     });
     expect(overPrinter.status).toBe(403);
     const overPrinterBody = await overPrinter.json() as {
@@ -268,6 +286,16 @@ describe('cloud billing Stripe + plan limits', () => {
     };
     expect(overPrinterBody.error).toBe('plan_limit_exceeded');
     expect(overPrinterBody.resource).toBe('printer');
+
+    const printerList = await fetch(`${booted.baseUrl}/api/console/printers`, {
+      headers: { Cookie: cookie },
+    });
+    expect(printerList.status).toBe(200);
+    const printerListBody = await printerList.json() as {
+      printers: Array<{ id: string }>
+    };
+    const quotaPrinterId = printerListBody.printers[0]?.id;
+    expect(quotaPrinterId).toBeTruthy();
 
     // Seed near the monthly quota, then prove one more enqueue is accepted and
     // the next is rejected at the HTTP boundary (avoid 100 round-trips).
@@ -283,14 +311,20 @@ describe('cloud billing Stripe + plan limits', () => {
     const lastAllowed = await fetch(`${booted.baseUrl}/api/console/jobs`, {
       method: 'POST',
       headers: authOriginHeaders({ Cookie: cookie }),
-      body: JSON.stringify({ target: 'printer', name: 'Job at limit' }),
+      body: JSON.stringify({
+        printerId: quotaPrinterId,
+        payloadBase64: TEST_PAYLOAD_BASE64,
+      }),
     });
     expect(lastAllowed.status).toBe(201);
 
     const overJob = await fetch(`${booted.baseUrl}/api/console/jobs`, {
       method: 'POST',
       headers: authOriginHeaders({ Cookie: cookie }),
-      body: JSON.stringify({ target: 'printer', name: 'Job over quota' }),
+      body: JSON.stringify({
+        printerId: quotaPrinterId,
+        payloadBase64: TEST_PAYLOAD_BASE64,
+      }),
     });
     expect(overJob.status).toBe(403);
     const overJobBody = await overJob.json() as {

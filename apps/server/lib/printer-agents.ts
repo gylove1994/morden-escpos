@@ -6,10 +6,7 @@ import type { PrinterAgentRow, PrinterAgentStatus } from './db/schema';
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
 import { db } from './db';
-import {
-  printerAgent,
-
-} from './db/schema';
+import { printerAgent } from './db/schema';
 import {
   deviceTokenPrefix,
   generateDeviceToken,

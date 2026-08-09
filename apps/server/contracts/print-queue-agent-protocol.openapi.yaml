@@ -4,8 +4,8 @@ info:
   description: |
     HTTP contract between the morden-escpos SaaS control plane and on-site
     Printer Agents. Device-token authentication is required for Printer Agent
-    operations. Job lease/report schemas land with later tickets.
-  version: 0.1.0-agent-tokens
+    operations. Job lease and report cover the single-Printer raw enqueue path.
+  version: 0.2.0-queue
   license:
     name: BUSL-1.1
 servers:
@@ -60,19 +60,38 @@ paths:
     post:
       tags: [Jobs]
       operationId: postJobLease
-      summary: Lease the next printable job (stub)
-      description: Not implemented yet. See job enqueue/lease/report tickets.
+      summary: Lease the next printable job
+      description: |
+        Short-poll for the next queued raw job owned by this Printer Agent.
+        On success the job is leased exclusively until leaseExpiresAt. Expired
+        leases are returned to queued before selection. When no work is
+        available the server responds with 204.
       security:
         - printerAgentDeviceToken: []
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: A job was leased exclusively to this Printer Agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobLeaseResponse'
+        '204':
+          description: No leasable job available
+        '401':
+          description: Missing, invalid, or revoked device token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolError'
   /jobs/{jobId}/report:
     post:
       tags: [Jobs]
       operationId: postJobReport
-      summary: Report job printing / succeeded / failed (stub)
-      description: Not implemented yet. See job enqueue/lease/report tickets.
+      summary: Report job printing / succeeded / failed
+      description: |
+        Advance a leased job through printing → succeeded | failed.
+        failed reports MUST include errorMessage. Reports for unknown jobs,
+        jobs owned by another Printer Agent, or illegal transitions return 409.
       security:
         - printerAgentDeviceToken: []
       parameters:
@@ -81,9 +100,37 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobReportRequest'
       responses:
-        '501':
-          description: Not implemented
+        '200':
+          description: Job status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobReportResponse'
+        '400':
+          description: Invalid body (including missing errorMessage on failed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolError'
+        '401':
+          description: Missing, invalid, or revoked device token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolError'
+        '409':
+          description: Illegal transition or job not leased to this Printer Agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolError'
 components:
   schemas:
     ProtocolHealthResponse:
@@ -118,6 +165,152 @@ components:
           type: string
         message:
           type: string
+    ConnectionHints:
+      oneOf:
+        - type: object
+          required: [transport, address, port]
+          properties:
+            transport:
+              type: string
+              const: tcp
+            address:
+              type: string
+            port:
+              type: integer
+              minimum: 1
+              maximum: 65535
+        - type: object
+          required: [transport, path]
+          properties:
+            transport:
+              type: string
+              const: usb
+            path:
+              type: string
+        - type: object
+          required: [transport, path]
+          properties:
+            transport:
+              type: string
+              const: serial
+            path:
+              type: string
+            baudRate:
+              type: integer
+    LeasedJob:
+      type: object
+      required:
+        - id
+        - printerId
+        - printerAgentId
+        - status
+        - payloadBase64
+        - payloadByteLength
+        - connectionHints
+        - leaseExpiresAt
+        - createdAt
+      properties:
+        id:
+          type: string
+        printerId:
+          type: string
+        printerAgentId:
+          type: string
+        status:
+          type: string
+          const: leased
+        payloadBase64:
+          type: string
+          description: Raw ESC/POS bytes encoded as standard base64
+        payloadByteLength:
+          type: integer
+          minimum: 1
+        connectionHints:
+          $ref: '#/components/schemas/ConnectionHints'
+        leaseExpiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    JobLeaseResponse:
+      type: object
+      required: [job]
+      properties:
+        job:
+          $ref: '#/components/schemas/LeasedJob'
+    JobReportRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [printing, succeeded, failed]
+        errorMessage:
+          type: string
+          description: Required when status is failed
+    JobPublic:
+      type: object
+      required:
+        - id
+        - organizationId
+        - printerId
+        - printerAgentId
+        - status
+        - payloadBase64
+        - payloadByteLength
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        organizationId:
+          type: string
+        printerId:
+          type: string
+        printerAgentId:
+          type: string
+        status:
+          type: string
+          enum: [queued, leased, printing, succeeded, failed]
+        payloadBase64:
+          type: string
+        payloadByteLength:
+          type: integer
+        idempotencyKey:
+          type: string
+          nullable: true
+        leaseExpiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        leasedAt:
+          type: string
+          format: date-time
+          nullable: true
+        printingAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+    JobReportResponse:
+      type: object
+      required: [job]
+      properties:
+        job:
+          $ref: '#/components/schemas/JobPublic'
   securitySchemes:
     printerAgentDeviceToken:
       type: http

@@ -10,7 +10,7 @@ import { db } from '../db';
 import {
   organizationBilling,
   printerAgent,
-  printerStub,
+  printer,
 } from '../db/schema';
 import { isCheckoutPlanId, isPlanId, PLAN_CATALOG, resolveEffectiveLimits } from './plans';
 
@@ -84,8 +84,8 @@ export async function getOrganizationUsage(
 
   const [printersRow] = await db
     .select({ value: count() })
-    .from(printerStub)
-    .where(eq(printerStub.organizationId, organizationId));
+    .from(printer)
+    .where(eq(printer.organizationId, organizationId));
 
   return {
     printers: Number(printersRow?.value ?? 0),
