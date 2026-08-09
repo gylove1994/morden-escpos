@@ -16,7 +16,7 @@ BSL SaaS print-queue control plane. See [`CONTEXT.md`](./CONTEXT.md).
 | `pnpm --filter @workspace/server build` | Production build |
 | `pnpm --filter @workspace/server db:generate` | Generate Drizzle migrations from `lib/db/schema.ts` |
 | `pnpm --filter @workspace/server db:migrate` | Apply migrations |
-| `pnpm --filter @workspace/server test` | Vitest (health, OpenAPI, auth, Printer Agent tokens) |
+| `pnpm --filter @workspace/server test` | Vitest (health, OpenAPI, auth, Printer Agent tokens, billing/plan limits) |
 | `pnpm --filter @workspace/server typecheck` | `tsc --noEmit` |
 
 ## Configuration
@@ -29,6 +29,21 @@ unprefixed keys in `env.example.server`. Required auth secret:
 
 `AUTH_SECRET` signs **human session** cookies (Better Auth). It is not a
 Printer Agent device token.
+
+### Stripe (cloud edition)
+
+When `EDITION=cloud`, these are required (use [Stripe test mode](https://docs.stripe.com/test-mode) locally):
+
+| Schema key | Dev (`APP_*`) | Purpose |
+| ---------- | ------------- | ------- |
+| `STRIPE_SECRET_KEY` | `APP_STRIPE_SECRET_KEY` | Stripe secret (`sk_test_…`) |
+| `STRIPE_WEBHOOK_SECRET` | `APP_STRIPE_WEBHOOK_SECRET` | Webhook signing secret (`whsec_…`) |
+| `STRIPE_PRICE_PERSONAL` | `APP_STRIPE_PRICE_PERSONAL` | Personal plan Price id |
+| `STRIPE_PRICE_BUSINESS` | `APP_STRIPE_PRICE_BUSINESS` | Business plan Price id |
+| `BILLING_RESELLER_CONTACT_URL` | `APP_BILLING_RESELLER_CONTACT_URL` | Reseller contact CTA (default mailto) |
+
+Self-hosted builds do not require Stripe variables. Point Stripe webhooks at
+`POST /api/billing/webhook`.
 
 ## Human session auth + Organization RBAC
 
@@ -45,9 +60,24 @@ Printer Agent device token.
 - APIs: `GET|POST /api/console/printer-agents`,
   `POST /api/console/printer-agents/:printerAgentId/revoke|rotate`
 - Create and rotate return the plaintext device token **once**; DB stores SHA-256
+- Cloud plan limits apply on create (`403` with `plan_limit_exceeded` when over quota)
 - Protocol auth: `POST /api/protocol/v1/printer-agents/heartbeat` with
   `Authorization: Bearer <device-token>` (401 for missing/invalid/revoked)
 - owner/admin manage tokens; member may list only
+
+## Cloud billing + plan limits
+
+- Catalog: `GET /api/billing/plans` (Personal/Business checkoutable; Reseller contact-only)
+- Checkout: `POST /api/billing/checkout` `{ "plan": "personal" | "business" }`
+- Portal: `POST /api/billing/portal`
+- Webhook sync: `POST /api/billing/webhook`
+- Subscription summary: `GET /api/billing/subscription`
+- Console UI: `/console/billing`
+- Directional Personal quotas: 2 printers / 1 Printer Agent / 100 monthly jobs
+- Directional Business quotas: 25 printers / 5 Printer Agents / 5000 monthly jobs
+- Over-quota create/enqueue returns `403` with `error: "plan_limit_exceeded"`
+
+Stub seams (for #5 to replace): `POST /api/console/printers`, `POST /api/console/jobs`.
 
 ## Edition stub
 

@@ -43,7 +43,12 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
       <nav className="shell-nav" aria-label="Console">
         <a href="/console">Overview</a>
         {session.organization
-          ? <a href="/console/printer-agents">Printer Agents</a>
+          ? (
+              <>
+                <a href="/console/printer-agents">Printer Agents</a>
+                <a href="/console/billing">Billing</a>
+              </>
+            )
           : <a href="/console/create-organization">Create Organization</a>}
       </nav>
       <div className="shell-body">{children}</div>

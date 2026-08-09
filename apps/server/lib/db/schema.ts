@@ -5,6 +5,7 @@
 import { relations } from 'drizzle-orm';
 import {
   boolean,
+  integer,
   pgTable,
   serial,
   text,
@@ -134,6 +135,43 @@ export const printerAgent = pgTable('printer_agent', {
   lastAuthenticatedAt: timestamp('last_authenticated_at', { withTimezone: true }),
 });
 
+/**
+ * Cloud billing state for an Organization (Stripe customer + plan entitlements).
+ * Self-hosted edition does not use this table for enforcement paths.
+ */
+export const organizationBilling = pgTable('organization_billing', {
+  organizationId: text('organization_id')
+    .primaryKey()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  /** none | personal | business | reseller */
+  plan: text('plan').default('none').notNull(),
+  /** none | active | trialing | past_due | canceled | unpaid | incomplete … */
+  status: text('status').default('none').notNull(),
+  stripeCustomerId: text('stripe_customer_id').unique(),
+  stripeSubscriptionId: text('stripe_subscription_id').unique(),
+  stripePriceId: text('stripe_price_id'),
+  currentPeriodStart: timestamp('current_period_start', { withTimezone: true }),
+  currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }),
+  monthlyJobCount: integer('monthly_job_count').default(0).notNull(),
+  /** UTC calendar month key `YYYY-MM` for monthly job quota window. */
+  monthlyJobPeriodKey: text('monthly_job_period_key').default('').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+/**
+ * Minimal Printer stub for plan-limit HTTP seams until #5 owns the model.
+ * #5 MUST replace or extend this — not a full printer inventory.
+ */
+export const printerStub = pgTable('printer_stub', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id')
+    .notNull()
+    .references(() => organization.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
@@ -189,6 +227,16 @@ export const printerAgentRelations = relations(printerAgent, ({ one }) => ({
     references: [organization.id],
   }),
 }));
+
+export const organizationBillingRelations = relations(
+  organizationBilling,
+  ({ one }) => ({
+    organization: one(organization, {
+      fields: [organizationBilling.organizationId],
+      references: [organization.id],
+    }),
+  }),
+);
 
 export type PrinterAgentRow = typeof printerAgent.$inferSelect;
 export type PrinterAgentStatus = 'active' | 'revoked';
