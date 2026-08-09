@@ -2,14 +2,11 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { IntegratorApiKeyRow, IntegratorApiKeyStatus } from './db/schema';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
 import { db } from './db';
-import {
-  integratorApiKey,
-  type IntegratorApiKeyRow,
-  type IntegratorApiKeyStatus,
-} from './db/schema';
+import { integratorApiKey } from './db/schema';
 
 /** Integrator API keys are distinct from device tokens (`pa_`) and webhook secrets (`whsec_`). */
 export const INTEGRATOR_API_KEY_PREFIX = 'ik_';
@@ -32,7 +29,7 @@ export function integratorApiKeyPrefix(key: string): string {
   return key.slice(0, 10);
 }
 
-export type IntegratorApiKeyPublic = {
+export interface IntegratorApiKeyPublic {
   id: string
   organizationId: string
   name: string
@@ -42,7 +39,7 @@ export type IntegratorApiKeyPublic = {
   updatedAt: string
   revokedAt: string | null
   lastAuthenticatedAt: string | null
-};
+}
 
 function toPublic(row: IntegratorApiKeyRow): IntegratorApiKeyPublic {
   const status: IntegratorApiKeyStatus = row.status === 'revoked' ? 'revoked' : 'active';

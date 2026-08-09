@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { redirect } from 'next/navigation';
-import { IntegratorAuthPanel } from '../../components/integrator-auth-panel';
 import {
   canManageIntegratorAuth,
   getConsoleSession,
 } from '../../../lib/console-auth';
 import { listIntegratorApiKeys } from '../../../lib/integrator-api-key';
 import { listWebhookSigningSecrets } from '../../../lib/webhook-secret';
+import { IntegratorAuthPanel } from '../../components/integrator-auth-panel';
 
 export default async function IntegratorAuthPage() {
   const session = await getConsoleSession();

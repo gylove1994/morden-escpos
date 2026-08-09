@@ -11,9 +11,9 @@ import { revokeWebhookSigningSecret } from '../../../../../../lib/webhook-secret
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-type RouteContext = {
+interface RouteContext {
   params: Promise<{ webhookSecretId: string }>
-};
+}
 
 /**
  * Revoke a webhook signing secret. Shared-secret and signed auth stop working.

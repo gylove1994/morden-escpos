@@ -2,6 +2,8 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { WebhookSigningSecretRow, WebhookSigningSecretStatus } from './db/schema';
+import { Buffer } from 'node:buffer';
 import {
   createHash,
   createHmac,
@@ -11,11 +13,7 @@ import {
 } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
 import { db } from './db';
-import {
-  webhookSigningSecret,
-  type WebhookSigningSecretRow,
-  type WebhookSigningSecretStatus,
-} from './db/schema';
+import { webhookSigningSecret } from './db/schema';
 import { decryptSecret, encryptSecret } from './secret-crypto';
 
 /** Webhook secrets are distinct from device tokens (`pa_`) and API keys (`ik_`). */
@@ -70,7 +68,7 @@ export function timingSafeEqualHex(a: string, b: string): boolean {
   }
 }
 
-export type WebhookSigningSecretPublic = {
+export interface WebhookSigningSecretPublic {
   id: string
   organizationId: string
   name: string
@@ -80,7 +78,7 @@ export type WebhookSigningSecretPublic = {
   updatedAt: string
   revokedAt: string | null
   lastAuthenticatedAt: string | null
-};
+}
 
 function toPublic(row: WebhookSigningSecretRow): WebhookSigningSecretPublic {
   const status: WebhookSigningSecretStatus = row.status === 'revoked' ? 'revoked' : 'active';

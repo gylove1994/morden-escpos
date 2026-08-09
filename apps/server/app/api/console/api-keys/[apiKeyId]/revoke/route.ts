@@ -11,9 +11,9 @@ import { revokeIntegratorApiKey } from '../../../../../../lib/integrator-api-key
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-type RouteContext = {
+interface RouteContext {
   params: Promise<{ apiKeyId: string }>
-};
+}
 
 /**
  * Revoke an integrator API key. The old key stops authenticating.

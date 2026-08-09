@@ -2,10 +2,10 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { WebhookSigningSecretPublic } from './webhook-secret';
 import {
   authenticateWebhookSharedSecret,
   authenticateWebhookSignedRequest,
-  type WebhookSigningSecretPublic,
 } from './webhook-secret';
 
 export type WebhookAuthResult

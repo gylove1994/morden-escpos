@@ -4,32 +4,33 @@
  */
 'use client';
 
+import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 
-export type ApiKeyListItem = {
+export interface ApiKeyListItem {
   id: string
   name: string
   status: 'active' | 'revoked'
   keyPrefix: string | null
   createdAt: string
   revokedAt: string | null
-};
+}
 
-export type WebhookSecretListItem = {
+export interface WebhookSecretListItem {
   id: string
   name: string
   status: 'active' | 'revoked'
   secretPrefix: string | null
   createdAt: string
   revokedAt: string | null
-};
+}
 
-type Props = {
+interface Props {
   initialApiKeys: ApiKeyListItem[]
   initialWebhookSecrets: WebhookSecretListItem[]
   canManage: boolean
-};
+}
 
 export function IntegratorAuthPanel({
   initialApiKeys,
@@ -73,7 +74,8 @@ export function IntegratorAuthPanel({
 
   async function onCreateApiKey(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canManage) return;
+    if (!canManage)
+      return;
     setPending('api');
     setError(null);
     setRevealedApiKey(null);
@@ -105,7 +107,8 @@ export function IntegratorAuthPanel({
   }
 
   async function onRevokeApiKey(apiKeyId: string) {
-    if (!canManage) return;
+    if (!canManage)
+      return;
     setActionId(apiKeyId);
     setError(null);
     const response = await fetch(`/api/console/api-keys/${apiKeyId}/revoke`, {
@@ -125,7 +128,8 @@ export function IntegratorAuthPanel({
 
   async function onCreateWebhookSecret(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canManage) return;
+    if (!canManage)
+      return;
     setPending('webhook');
     setError(null);
     setRevealedWebhookSecret(null);
@@ -157,7 +161,8 @@ export function IntegratorAuthPanel({
   }
 
   async function onRevokeWebhookSecret(webhookSecretId: string) {
-    if (!canManage) return;
+    if (!canManage)
+      return;
     setActionId(webhookSecretId);
     setError(null);
     const response = await fetch(

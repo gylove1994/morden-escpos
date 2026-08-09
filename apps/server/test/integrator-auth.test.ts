@@ -2,6 +2,8 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { BootedServer } from './harness';
+import { Buffer } from 'node:buffer';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { auth } from '../lib/auth';
 import { signWebhookPayload } from '../lib/webhook-secret';
@@ -12,13 +14,12 @@ import {
   signIn,
   signUp,
 } from './auth-helpers';
-import type { BootedServer } from './harness';
 import { bootServer } from './harness';
 
-const ESC_POS_BYTES = Buffer.from([0x1b, 0x40, 0x48, 0x69, 0x0a]);
+const ESC_POS_BYTES = Buffer.from([0x1B, 0x40, 0x48, 0x69, 0x0A]); // ESC @ Hi LF
 const ESC_POS_BASE64 = ESC_POS_BYTES.toString('base64');
 
-describe('Integrator enqueue: API keys + webhook auth', () => {
+describe('integrator enqueue: API keys + webhook auth', () => {
   let booted: BootedServer;
   const suffix = Date.now().toString(36);
 
@@ -151,7 +152,7 @@ describe('Integrator enqueue: API keys + webhook auth', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${created.token}`,
+        'Authorization': `Bearer ${created.token}`,
       },
       body: JSON.stringify(enqueueBody),
     });
@@ -175,7 +176,7 @@ describe('Integrator enqueue: API keys + webhook auth', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ik_not-a-real-key',
+        'Authorization': 'Bearer ik_not-a-real-key',
       },
       body: JSON.stringify(enqueueBody),
     });
@@ -191,7 +192,7 @@ describe('Integrator enqueue: API keys + webhook auth', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${created.token}`,
+        'Authorization': `Bearer ${created.token}`,
       },
       body: JSON.stringify({
         ...enqueueBody,
@@ -309,7 +310,7 @@ describe('Integrator enqueue: API keys + webhook auth', () => {
     expect(afterRevoke.status).toBe(401);
   });
 
-  it('API key / webhook secret cannot authenticate as device token (and vice versa)', async () => {
+  it('aPI key / webhook secret cannot authenticate as device token (and vice versa)', async () => {
     const ctx = await bootstrapOrg('cross-auth');
 
     const createKey = await fetch(`${booted.baseUrl}/api/console/api-keys`, {
@@ -342,7 +343,7 @@ describe('Integrator enqueue: API keys + webhook auth', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${keyBody.token}`,
+          'Authorization': `Bearer ${keyBody.token}`,
         },
       },
     );
@@ -355,7 +356,7 @@ describe('Integrator enqueue: API keys + webhook auth', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${secretBody.secret}`,
+          'Authorization': `Bearer ${secretBody.secret}`,
         },
       },
     );
@@ -366,7 +367,7 @@ describe('Integrator enqueue: API keys + webhook auth', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${ctx.deviceToken}`,
+        'Authorization': `Bearer ${ctx.deviceToken}`,
       },
       body: enqueuePayload,
     });
@@ -377,7 +378,7 @@ describe('Integrator enqueue: API keys + webhook auth', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${secretBody.secret}`,
+        'Authorization': `Bearer ${secretBody.secret}`,
       },
       body: enqueuePayload,
     });
