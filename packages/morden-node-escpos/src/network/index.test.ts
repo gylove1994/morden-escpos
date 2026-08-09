@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: MIT
  */
 import type { AddressInfo } from 'node:net';
+import { Buffer } from 'node:buffer';
 import { createServer } from 'node:net';
 import { afterEach, describe, expect, it } from 'vitest';
 import NetworkAdapter from './index';
@@ -54,7 +55,7 @@ function closeAdapter(adapter: NetworkAdapter): Promise<void> {
   });
 }
 
-describe('NetworkAdapter', () => {
+describe('networkAdapter', () => {
   let server: ReturnType<typeof createServer> | null = null;
 
   afterEach(async () => {

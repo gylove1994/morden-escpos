@@ -2,8 +2,9 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import { NetworkAdapter, Printer } from 'morden-node-escpos';
+import type { Buffer } from 'node:buffer';
 import type { LeasedJob, TcpConnectionHints } from './protocol/types';
+import { NetworkAdapter, Printer } from 'morden-node-escpos';
 import { decodeJobPayload } from './protocol/codec';
 
 function openAdapter(adapter: NetworkAdapter): Promise<void> {

@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { IdleBackoff } from '../src/backoff';
 
-describe('IdleBackoff', () => {
+describe('idleBackoff', () => {
   it('grows exponentially up to max and resets after work', () => {
     const backoff = new IdleBackoff({
       initialMs: 1000,

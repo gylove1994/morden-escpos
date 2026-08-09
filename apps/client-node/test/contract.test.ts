@@ -2,6 +2,8 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { JobStatus, ReportStatus } from '../src/protocol/types';
+import { Buffer } from 'node:buffer';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { protocolFixturePath } from '../src/fixtures-path';
@@ -12,13 +14,12 @@ import {
   encodeJobReportRequest,
 } from '../src/protocol/codec';
 import { isAllowedJobTransition } from '../src/protocol/transitions';
-import type { JobStatus, ReportStatus } from '../src/protocol/types';
 
 function readFixture<T>(name: string): T {
   return JSON.parse(readFileSync(protocolFixturePath(name), 'utf8')) as T;
 }
 
-describe('Print Queue Agent Protocol contract (Node Printer Agent)', () => {
+describe('print Queue Agent Protocol contract (Node Printer Agent)', () => {
   it('decodes shared lease-response fixture including printerAgentId and TCP hints', () => {
     const fixture = readFixture<unknown>('lease-response.example.json');
     const job = decodeLeaseResponse(fixture);

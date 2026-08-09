@@ -2,13 +2,13 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { HeartbeatResponse, JobPublic, LeasedJob, ReportStatus } from './types';
 import {
   decodeHeartbeatResponse,
   decodeLeaseResponse,
   decodeReportResponse,
   encodeJobReportRequest,
 } from './codec';
-import type { HeartbeatResponse, JobPublic, LeasedJob, ReportStatus } from './types';
 import { ProtocolErrorSchema } from './types';
 
 export class ProtocolClientError extends Error {
@@ -22,11 +22,11 @@ export class ProtocolClientError extends Error {
   }
 }
 
-export type ProtocolClientOptions = {
+export interface ProtocolClientOptions {
   serverUrl: string
   deviceToken: string
   fetchImpl?: typeof fetch
-};
+}
 
 /**
  * HTTP client for the Print Queue Agent Protocol.

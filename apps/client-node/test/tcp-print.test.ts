@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import type { AddressInfo } from 'node:net';
+import type { LeasedJob } from '../src/protocol/types';
+import { Buffer } from 'node:buffer';
 import { createServer } from 'node:net';
 import { afterEach, describe, expect, it } from 'vitest';
-import type { LeasedJob } from '../src/protocol/types';
 import { printLeasedJobOverTcp } from '../src/tcp-print';
 
 describe('printLeasedJobOverTcp', () => {

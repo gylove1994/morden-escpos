@@ -2,13 +2,14 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import { IdleBackoff, sleep } from './backoff';
+import type { IdleBackoff } from './backoff';
 import type { ProtocolClient } from './protocol/client';
-import { assertAllowedJobTransition } from './protocol/transitions';
 import type { LeasedJob } from './protocol/types';
+import { sleep } from './backoff';
+import { assertAllowedJobTransition } from './protocol/transitions';
 import { printLeasedJobOverTcp } from './tcp-print';
 
-export type PrinterAgentLoopOptions = {
+export interface PrinterAgentLoopOptions {
   client: ProtocolClient
   backoff: IdleBackoff
   afterWorkMs: number
@@ -20,12 +21,39 @@ export type PrinterAgentLoopOptions = {
     warn: (message: string, meta?: Record<string, unknown>) => void
     error: (message: string, meta?: Record<string, unknown>) => void
   }
-};
+}
 
 export type DrainResult
   = | { kind: 'idle' }
     | { kind: 'printed', jobId: string, printerAgentId: string }
     | { kind: 'failed', jobId: string, printerAgentId: string, errorMessage: string };
+
+const defaultLogger = {
+  info(message: string, meta?: Record<string, unknown>) {
+    if (meta) {
+      console.info(`[printer-agent] ${message}`, meta);
+    }
+    else {
+      console.info(`[printer-agent] ${message}`);
+    }
+  },
+  warn(message: string, meta?: Record<string, unknown>) {
+    if (meta) {
+      console.warn(`[printer-agent] ${message}`, meta);
+    }
+    else {
+      console.warn(`[printer-agent] ${message}`);
+    }
+  },
+  error(message: string, meta?: Record<string, unknown>) {
+    if (meta) {
+      console.error(`[printer-agent] ${message}`, meta);
+    }
+    else {
+      console.error(`[printer-agent] ${message}`);
+    }
+  },
+};
 
 /**
  * Lease one job (if any), report printing, print over TCP, report outcome.
@@ -112,30 +140,3 @@ export async function runPrinterAgentLoop(options: PrinterAgentLoopOptions): Pro
     }
   }
 }
-
-const defaultLogger = {
-  info(message: string, meta?: Record<string, unknown>) {
-    if (meta) {
-      console.info(`[printer-agent] ${message}`, meta);
-    }
-    else {
-      console.info(`[printer-agent] ${message}`);
-    }
-  },
-  warn(message: string, meta?: Record<string, unknown>) {
-    if (meta) {
-      console.warn(`[printer-agent] ${message}`, meta);
-    }
-    else {
-      console.warn(`[printer-agent] ${message}`);
-    }
-  },
-  error(message: string, meta?: Record<string, unknown>) {
-    if (meta) {
-      console.error(`[printer-agent] ${message}`, meta);
-    }
-    else {
-      console.error(`[printer-agent] ${message}`);
-    }
-  },
-};

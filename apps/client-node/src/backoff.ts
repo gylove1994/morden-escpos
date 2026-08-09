@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 
-export type IdleBackoffOptions = {
+export interface IdleBackoffOptions {
   initialMs: number
   maxMs: number
   multiplier: number
-};
+}
 
 /**
  * Exponential idle backoff for short-poll loops when no work is available.
@@ -53,14 +53,15 @@ export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
       reject(signal.reason ?? new Error('aborted'));
       return;
     }
-    const timer = setTimeout(() => {
-      signal?.removeEventListener('abort', onAbort);
-      resolve();
-    }, ms);
+    let timer: ReturnType<typeof setTimeout>;
     const onAbort = () => {
       clearTimeout(timer);
       reject(signal?.reason ?? new Error('aborted'));
     };
+    timer = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort);
+      resolve();
+    }, ms);
     signal?.addEventListener('abort', onAbort, { once: true });
   });
 }

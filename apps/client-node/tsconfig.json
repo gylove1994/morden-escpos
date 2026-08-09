@@ -1,16 +1,16 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "lib": ["ES2023"],
     "rootDir": ".",
-    "outDir": "dist",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2023"],
-    "types": ["node"],
     "resolveJsonModule": true,
+    "types": ["node"],
     "declaration": false,
     "declarationMap": false,
     "noEmit": true,
+    "outDir": "dist",
     "esModuleInterop": true
   },
   "include": [

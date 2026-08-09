@@ -1,9 +1,9 @@
 {
   "name": "@workspace/client-node",
+  "type": "module",
   "version": "0.1.0",
   "private": true,
   "license": "BUSL-1.1",
-  "type": "module",
   "bin": {
     "morden-printer-agent": "./src/index.ts"
   },

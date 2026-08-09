@@ -2,21 +2,19 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import type { ReportStatus } from './types';
+import type { HeartbeatResponse, JobPublic, LeasedJob, ReportStatus } from './types';
+import { Buffer } from 'node:buffer';
 import {
   HeartbeatResponseSchema,
   JobLeaseResponseSchema,
   JobReportResponseSchema,
   LeasedJobSchema,
-  type HeartbeatResponse,
-  type JobPublic,
-  type LeasedJob,
 } from './types';
 
-export type JobReportRequestBody = {
+export interface JobReportRequestBody {
   status: ReportStatus
   errorMessage?: string
-};
+}
 
 /**
  * Encode a job report request body per the Print Queue Agent Protocol.

@@ -2,11 +2,11 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { ProtocolClient } from '../src/protocol/client';
+import type { LeasedJob } from '../src/protocol/types';
 import { describe, expect, it, vi } from 'vitest';
 import { IdleBackoff } from '../src/backoff';
 import { drainOnce, runPrinterAgentLoop } from '../src/loop';
-import type { ProtocolClient } from '../src/protocol/client';
-import type { LeasedJob } from '../src/protocol/types';
 
 function leasedJob(overrides: Partial<LeasedJob> = {}): LeasedJob {
   return {
@@ -27,7 +27,7 @@ function leasedJob(overrides: Partial<LeasedJob> = {}): LeasedJob {
   };
 }
 
-describe('Printer Agent drain / poll loop', () => {
+describe('printer Agent drain / poll loop', () => {
   it('reports printing → succeeded when TCP print works', async () => {
     const job = leasedJob();
     const reports: Array<{ status: string, errorMessage?: string }> = [];
