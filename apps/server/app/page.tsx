@@ -2,27 +2,29 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import { redirect } from 'next/navigation';
+import { getConsoleSession } from '../lib/console-auth';
 import { EDITION } from '../lib/edition';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await getConsoleSession();
+  if (session) {
+    redirect('/console');
+  }
+
   return (
-    <main>
+    <main className="auth-panel">
       <h1>morden-escpos</h1>
-      <p>
-        BSL SaaS print-queue server scaffold (
+      <p className="muted">
+        Print-queue control plane (
         {EDITION}
         {' '}
-        edition).
+        edition). Sign in to open your Organization console.
       </p>
       <p>
-        Operators: use
+        <a className="button" href="/signup">Sign up</a>
         {' '}
-        <a href="/api/health">/api/health</a>
-        .
-        Contributors: Print Queue Agent Protocol OpenAPI at
-        {' '}
-        <a href="/api/protocol/openapi">/api/protocol/openapi</a>
-        .
+        <a className="button secondary" href="/login">Sign in</a>
       </p>
     </main>
   );

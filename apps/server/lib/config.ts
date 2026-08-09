@@ -36,6 +36,8 @@ const EnvSchema = z.object({
   DATABASE_URL: z.string().min(1),
   BASE_URL: z.url().default('http://127.0.0.1:43128'),
   EDITION: z.enum(['cloud', 'self-hosted']).default('cloud'),
+  // Better Auth human-session signing secret (NOT Printer Agent device tokens).
+  AUTH_SECRET: z.string().min(32, { message: 'AUTH_SECRET must be at least 32 characters' }),
 });
 
 const parsed = EnvSchema.safeParse(envForParse);
