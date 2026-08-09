@@ -4,11 +4,11 @@
  */
 'use client';
 
-import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
+import { useConsoleI18n } from '../../lib/i18n/client';
 
-export interface PrinterListItem {
+export type PrinterListItem = {
   id: string
   printerAgentId: string
   name: string
@@ -21,19 +21,19 @@ export interface PrinterListItem {
     baudRate?: number
   }
   createdAt: string
-}
+};
 
-export interface PrinterAgentOption {
+export type PrinterAgentOption = {
   id: string
   name: string
   status: string
-}
+};
 
-interface Props {
+type Props = {
   initialPrinters: PrinterListItem[]
   printerAgents: PrinterAgentOption[]
   canManage: boolean
-}
+};
 
 function formatHints(hints: PrinterListItem['connectionHints']): string {
   if (hints.transport === 'tcp') {
@@ -53,6 +53,7 @@ export function PrintersPanel({
   canManage,
 }: Props) {
   const router = useRouter();
+  const { messages } = useConsoleI18n();
   const [printers, setPrinters] = useState(initialPrinters);
   const [printerAgentId, setPrinterAgentId] = useState(
     printerAgents.find(a => a.status === 'active')?.id ?? '',
@@ -67,8 +68,7 @@ export function PrintersPanel({
 
   async function refreshList() {
     const response = await fetch('/api/console/printers');
-    if (!response.ok)
-      return;
+    if (!response.ok) return;
     const body = await response.json() as { printers: PrinterListItem[] };
     setPrinters(body.printers);
     router.refresh();
@@ -76,8 +76,7 @@ export function PrintersPanel({
 
   async function onCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canManage)
-      return;
+    if (!canManage) return;
     setPending(true);
     setError(null);
 
@@ -105,7 +104,7 @@ export function PrintersPanel({
     setPending(false);
     if (!response.ok) {
       const body = await response.json().catch(() => ({})) as { message?: string };
-      setError(body.message ?? 'Could not create Printer');
+      setError(body.message ?? messages.printers.createFailed);
       return;
     }
 
@@ -121,7 +120,7 @@ export function PrintersPanel({
         ? (
             <form className="org-form" onSubmit={onCreate}>
               <label>
-                Printer Agent
+                {messages.printers.agentLabel}
                 <select
                   value={printerAgentId}
                   onChange={event => setPrinterAgentId(event.target.value)}
@@ -129,7 +128,7 @@ export function PrintersPanel({
                   disabled={activeAgents.length === 0}
                 >
                   {activeAgents.length === 0
-                    ? <option value="">No active Printer Agents</option>
+                    ? <option value="">{messages.printers.noAgents}</option>
                     : activeAgents.map(agent => (
                         <option key={agent.id} value={agent.id}>
                           {agent.name}
@@ -138,18 +137,17 @@ export function PrintersPanel({
                 </select>
               </label>
               <label>
-                Printer name
+                {messages.printers.nameLabel}
                 <input
                   value={name}
                   onChange={event => setName(event.target.value)}
                   required
                   minLength={1}
                   maxLength={120}
-                  placeholder="Kitchen receipt"
                 />
               </label>
               <label>
-                Transport
+                {messages.printers.transportLabel}
                 <select
                   value={transport}
                   onChange={event => setTransport(event.target.value as typeof transport)}
@@ -163,7 +161,7 @@ export function PrintersPanel({
                 ? (
                     <>
                       <label>
-                        Address
+                        {messages.printers.addressLabel}
                         <input
                           value={address}
                           onChange={event => setAddress(event.target.value)}
@@ -171,7 +169,7 @@ export function PrintersPanel({
                         />
                       </label>
                       <label>
-                        Port
+                        {messages.printers.portLabel}
                         <input
                           value={port}
                           onChange={event => setPort(event.target.value)}
@@ -183,7 +181,7 @@ export function PrintersPanel({
                   )
                 : (
                     <label>
-                      Path
+                      {messages.printers.pathLabel}
                       <input
                         value={path}
                         onChange={event => setPath(event.target.value)}
@@ -200,20 +198,23 @@ export function PrintersPanel({
                   || activeAgents.length === 0
                 }
               >
-                {pending ? 'Creating…' : 'Create Printer'}
+                {pending ? messages.printers.creating : messages.printers.create}
               </button>
             </form>
           )
         : (
-            <p className="muted">
-              Viewing only. owner or admin can create Printers under a Printer Agent.
-            </p>
+            <p className="muted">{messages.printers.membersReadOnly}</p>
           )}
 
       <div className="stack">
-        <h2>Printers</h2>
+        <div className="agent-actions">
+          <h2>{messages.printers.title}</h2>
+          <button type="button" className="secondary" onClick={() => void refreshList()}>
+            {messages.printers.refresh}
+          </button>
+        </div>
         {printers.length === 0
-          ? <p className="muted">No Printers yet. Create one under a Printer Agent.</p>
+          ? <p className="muted">{messages.printers.empty}</p>
           : (
               <ul className="agent-list">
                 {printers.map(item => (
@@ -222,9 +223,9 @@ export function PrintersPanel({
                       <div className="agent-name">{item.name}</div>
                       <div className="muted agent-meta">
                         <span>
-                          Status:
-                          {' '}
-                          {item.status}
+                          {item.status === 'active'
+                            ? messages.printers.statusActive
+                            : messages.printers.statusDisabled}
                         </span>
                         <span>{formatHints(item.connectionHints)}</span>
                         <span className="agent-id">

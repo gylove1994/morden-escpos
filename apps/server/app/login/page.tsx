@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { redirect } from 'next/navigation';
-import { getConsoleSession } from '../../lib/console-auth';
 import { SignInForm } from '../components/auth-forms';
+import { LocaleSwitcher } from '../components/locale-switcher';
+import { getConsoleSession } from '../../lib/console-auth';
+import { getConsoleMessages } from '../../lib/i18n/server';
 
 export default async function LoginPage() {
   const session = await getConsoleSession();
@@ -12,15 +14,17 @@ export default async function LoginPage() {
     redirect('/console');
   }
 
+  const { messages } = await getConsoleMessages();
+
   return (
     <main className="auth-panel">
-      <h1>Sign in</h1>
-      <p className="muted">Human session auth — separate from Printer Agent device tokens.</p>
+      <div className="auth-toolbar">
+        <LocaleSwitcher />
+      </div>
+      <h1>{messages.auth.signInTitle}</h1>
       <SignInForm />
       <p className="muted">
-        New here?
-        {' '}
-        <a href="/signup">Create an account</a>
+        <a href="/signup">{messages.auth.needAccount}</a>
       </p>
     </main>
   );

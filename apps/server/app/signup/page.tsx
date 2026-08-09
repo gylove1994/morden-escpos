@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { redirect } from 'next/navigation';
-import { getConsoleSession } from '../../lib/console-auth';
 import { SignUpForm } from '../components/auth-forms';
+import { LocaleSwitcher } from '../components/locale-switcher';
+import { getConsoleSession } from '../../lib/console-auth';
+import { getConsoleMessages } from '../../lib/i18n/server';
 
 export default async function SignUpPage() {
   const session = await getConsoleSession();
@@ -12,15 +14,17 @@ export default async function SignUpPage() {
     redirect('/console');
   }
 
+  const { messages } = await getConsoleMessages();
+
   return (
     <main className="auth-panel">
-      <h1>Create your account</h1>
-      <p className="muted">Email/password signup via Better Auth (human session).</p>
+      <div className="auth-toolbar">
+        <LocaleSwitcher />
+      </div>
+      <h1>{messages.auth.signUpTitle}</h1>
       <SignUpForm />
       <p className="muted">
-        Already have an account?
-        {' '}
-        <a href="/login">Sign in</a>
+        <a href="/login">{messages.auth.haveAccount}</a>
       </p>
     </main>
   );

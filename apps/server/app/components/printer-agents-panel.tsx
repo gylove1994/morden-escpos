@@ -4,26 +4,27 @@
  */
 'use client';
 
-import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
+import { useConsoleI18n } from '../../lib/i18n/client';
 
-export interface PrinterAgentListItem {
+export type PrinterAgentListItem = {
   id: string
   name: string
   status: 'active' | 'revoked'
   deviceTokenPrefix: string | null
   createdAt: string
   revokedAt: string | null
-}
+};
 
-interface Props {
+type Props = {
   initialPrinterAgents: PrinterAgentListItem[]
   canManage: boolean
-}
+};
 
 export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
   const router = useRouter();
+  const { messages, locale } = useConsoleI18n();
   const [printerAgents, setPrinterAgents] = useState(initialPrinterAgents);
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -48,8 +49,7 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
 
   async function onCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canManage)
-      return;
+    if (!canManage) return;
     setPending(true);
     setError(null);
     setRevealedToken(null);
@@ -63,7 +63,7 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
     setPending(false);
     if (!response.ok) {
       const body = await response.json().catch(() => ({})) as { message?: string };
-      setError(body.message ?? 'Could not create Printer Agent');
+      setError(body.message ?? messages.printerAgents.createFailed);
       return;
     }
 
@@ -82,8 +82,7 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
   }
 
   async function onRevoke(printerAgentId: string) {
-    if (!canManage)
-      return;
+    if (!canManage) return;
     setActionId(printerAgentId);
     setError(null);
     const response = await fetch(
@@ -93,7 +92,7 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
     setActionId(null);
     if (!response.ok) {
       const body = await response.json().catch(() => ({})) as { message?: string };
-      setError(body.message ?? 'Could not revoke device token');
+      setError(body.message ?? messages.printerAgents.createFailed);
       return;
     }
     if (revealedToken?.printerAgentId === printerAgentId) {
@@ -103,8 +102,7 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
   }
 
   async function onRotate(printerAgentId: string, agentName: string) {
-    if (!canManage)
-      return;
+    if (!canManage) return;
     setActionId(printerAgentId);
     setError(null);
     const response = await fetch(
@@ -114,7 +112,7 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
     setActionId(null);
     if (!response.ok) {
       const body = await response.json().catch(() => ({})) as { message?: string };
-      setError(body.message ?? 'Could not rotate device token');
+      setError(body.message ?? messages.printerAgents.createFailed);
       return;
     }
     const body = await response.json() as {
@@ -136,16 +134,14 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
         ? (
             <div className="token-reveal" role="status">
               <h2>
-                Device token
-                {' '}
-                {revealedToken.reason === 'created' ? 'created' : 'rotated'}
+                {revealedToken.reason === 'created'
+                  ? messages.printerAgents.tokenCreated
+                  : messages.printerAgents.tokenRotated}
               </h2>
               <p>
-                Copy the token for
+                {messages.printerAgents.copyHint}
                 {' '}
                 <strong>{revealedToken.name}</strong>
-                {' '}
-                now. It will not be shown again.
               </p>
               <code className="token-value">{revealedToken.deviceToken}</code>
               <button
@@ -153,7 +149,7 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
                 className="secondary"
                 onClick={() => setRevealedToken(null)}
               >
-                Dismiss
+                OK
               </button>
             </div>
           )
@@ -163,7 +159,7 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
         ? (
             <form className="org-form" onSubmit={onCreate}>
               <label>
-                Printer Agent name
+                {messages.printerAgents.nameLabel}
                 <input
                   name="name"
                   value={name}
@@ -171,27 +167,29 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
                   required
                   minLength={1}
                   maxLength={120}
-                  placeholder="Store front desk"
                 />
               </label>
               {error ? <p className="error" role="alert">{error}</p> : null}
               <button type="submit" disabled={pending || name.trim().length === 0}>
-                {pending ? 'Creating…' : 'Create Printer Agent'}
+                {pending ? messages.printerAgents.creating : messages.printerAgents.create}
               </button>
             </form>
           )
         : (
-            <p className="muted">
-              Viewing only. owner or admin can create, revoke, or rotate device tokens.
-            </p>
+            <p className="muted">{messages.printerAgents.membersReadOnly}</p>
           )}
 
       {!canManage && error ? <p className="error" role="alert">{error}</p> : null}
 
       <div className="stack">
-        <h2>Registered Printer Agents</h2>
+        <div className="agent-actions">
+          <h2>{messages.printerAgents.title}</h2>
+          <button type="button" className="secondary" onClick={() => void refreshList()}>
+            {messages.printerAgents.refresh}
+          </button>
+        </div>
         {printerAgents.length === 0
-          ? <p className="muted">No Printer Agents yet. Create one to receive a device token.</p>
+          ? <p className="muted">{messages.printerAgents.empty}</p>
           : (
               <ul className="agent-list">
                 {printerAgents.map(agent => (
@@ -200,19 +198,26 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
                       <div className="agent-name">{agent.name}</div>
                       <div className="muted agent-meta">
                         <span>
-                          Status:
-                          {' '}
-                          {agent.status}
+                          {agent.status === 'active'
+                            ? messages.printerAgents.statusActive
+                            : messages.printerAgents.statusRevoked}
                         </span>
                         <span>
-                          Token:
+                          {messages.printerAgents.tokenPrefix}
+                          :
                           {' '}
-                          {agent.deviceTokenPrefix ? `${agent.deviceTokenPrefix}…` : 'none'}
+                          {agent.deviceTokenPrefix ? `${agent.deviceTokenPrefix}…` : '—'}
                         </span>
                         <span className="agent-id">
                           printerAgentId:
                           {' '}
                           {agent.id}
+                        </span>
+                        <span>
+                          {messages.printerAgents.created}
+                          :
+                          {' '}
+                          {new Date(agent.createdAt).toLocaleString(locale)}
                         </span>
                       </div>
                     </div>
@@ -225,7 +230,7 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
                               disabled={actionId === agent.id}
                               onClick={() => onRotate(agent.id, agent.name)}
                             >
-                              Rotate token
+                              {messages.printerAgents.rotate}
                             </button>
                             <button
                               type="button"
@@ -233,7 +238,7 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
                               disabled={actionId === agent.id || agent.status === 'revoked'}
                               onClick={() => onRevoke(agent.id)}
                             >
-                              Revoke
+                              {messages.printerAgents.revoke}
                             </button>
                           </div>
                         )
