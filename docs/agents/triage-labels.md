@@ -39,7 +39,7 @@ Area labels are **orthogonal** to state and category. They mark which package or
 | `area:ui`                      | `packages/ui`                                      | Shared UI package                          |
 | `area:template-editor`         | `apps/template-editor`                             | MIT template editor app                    |
 | `area:server`                  | `apps/server`                                      | Planned BSL SaaS API / print-queue backend |
-| `area:client-node`             | `apps/client-node`                                 | Planned BSL Node client                    |
+| `area:client-node`             | `apps/client-node`                                 | BSL Node Printer Agent                     |
 | `area:client-go`               | `apps/client-go`                                   | Planned BSL Go client                      |
 | `area:landing`                 | `apps/landing`                                     | BSL marketing landing site                 |
 

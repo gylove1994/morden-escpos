@@ -106,7 +106,10 @@ trimming is deferred.
 
 OpenAPI: `contracts/print-queue-agent-protocol.openapi.yaml`.
 
-The server references and serves it at `GET /api/protocol/openapi`.
+Shared JSON fixtures for Printer Agent contract tests:
+`contracts/fixtures/` (consumed by `apps/client-node`, later Go).
+
+The server references and serves OpenAPI at `GET /api/protocol/openapi`.
 Integration tests drive lease/report with an in-process fake Printer Agent.
 
 ## Health

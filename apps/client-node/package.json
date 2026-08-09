@@ -1,0 +1,29 @@
+{
+  "name": "@workspace/client-node",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "license": "BUSL-1.1",
+  "bin": {
+    "morden-printer-agent": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "dotenvx run -f ./env.example.dev -- tsx src/index.ts",
+    "start": "dotenvx run -f ./env.example.server -- tsx src/index.ts",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "morden-node-escpos": "workspace:*",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@dotenvx/dotenvx": "^1.49.0",
+    "@types/node": "^24.9.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
+  }
+}
