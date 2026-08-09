@@ -19,6 +19,8 @@ status transitions against them.
 | `v1/*.response.json` | HTTP response bodies |
 | `v1/*.request.json` | HTTP request bodies |
 | `v1/*.meta.json` | Non-body metadata (e.g. HTTP 204 empty lease) |
+| `v1/discovery-report.request.json` | Discovery report request body |
+| `v1/discovery-report.response.json` | Successful discovery report response |
 
 Placeholders:
 

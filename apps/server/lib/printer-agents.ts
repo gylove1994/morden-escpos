@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import type { PrinterAgentRow, PrinterAgentStatus } from './db/schema';
+import type { PresenceStatus } from './presence';
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
 import { db } from './db';
@@ -12,12 +13,14 @@ import {
   generateDeviceToken,
   hashDeviceToken,
 } from './device-token';
+import { presenceFromLastSeen } from './presence';
 
 export interface PrinterAgentPublic {
   id: string
   organizationId: string
   name: string
   status: PrinterAgentStatus
+  presence: PresenceStatus
   deviceTokenPrefix: string | null
   createdAt: string
   updatedAt: string
@@ -32,6 +35,7 @@ function toPublic(row: PrinterAgentRow): PrinterAgentPublic {
     organizationId: row.organizationId,
     name: row.name,
     status,
+    presence: presenceFromLastSeen(row.lastAuthenticatedAt),
     deviceTokenPrefix: row.deviceTokenPrefix,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

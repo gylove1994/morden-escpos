@@ -19,12 +19,14 @@ implementation.
 | **device token** | Bearer credential for protocol auth (`Authorization: Bearer …`). |
 | **lease** | Exclusive claim on a job until completion or `leaseExpiresAt`. |
 | **connection hints** | Transport + endpoint metadata on the leased job (`tcp` / `usb` / `serial`). |
+| **discovery** | Reporting local endpoints so the console can confirm/name Printers. |
 | **idle backoff** | Exponential delay applied when lease returns 204 (no work). |
 
-## Current slice (#13 transports on top of #6)
+## Current slice (#6 + #7 + #13 transports)
 
 - Configurable `SERVER_URL` + `DEVICE_TOKEN` via env and optional JSON config file
 - Heartbeat, short-poll lease, report (`printing` → `succeeded` \| `failed`)
+- Optional TCP discovery report via `DISCOVER_TCP_ENDPOINTS` at startup
 - Idle backoff when no work
 - TCP / USB / Serial print of leased raw bytes via MIT adapters
   (`NetworkAdapter`, `DevicePathAdapter`, `SerialAdapter`)
@@ -35,4 +37,4 @@ implementation.
 
 ## Out of scope here
 
-Discovery UI (#7), groups/templates.
+Discovery console UI (server), groups/templates admin, Go client parity details.

@@ -12,6 +12,9 @@ import { useConsoleI18n } from '../../lib/i18n/client';
 export interface PrinterListItem {
   id: string
   printerAgentId: string
+  printerAgentName: string
+  printerAgentPresence: 'online' | 'offline'
+  printerAgentLastAuthenticatedAt: string | null
   name: string
   status: 'active' | 'disabled'
   connectionHints: {
@@ -28,10 +31,22 @@ export interface PrinterAgentOption {
   id: string
   name: string
   status: string
+  presence?: 'online' | 'offline'
+}
+
+export interface DiscoveryListItem {
+  id: string
+  printerAgentId: string
+  endpointKey: string
+  suggestedName: string | null
+  connectionHints: PrinterListItem['connectionHints']
+  lastSeenAt: string
+  confirmedPrinterId: string | null
 }
 
 interface Props {
   initialPrinters: PrinterListItem[]
+  initialDiscoveries: DiscoveryListItem[]
   printerAgents: PrinterAgentOption[]
   canManage: boolean
 }
@@ -48,14 +63,24 @@ function formatHints(hints: PrinterListItem['connectionHints']): string {
   return `usb://${hints.path}`;
 }
 
+function agentLabel(
+  printerAgents: PrinterAgentOption[],
+  printerAgentId: string,
+): string {
+  return printerAgents.find(agent => agent.id === printerAgentId)?.name
+    ?? printerAgentId;
+}
+
 export function PrintersPanel({
   initialPrinters,
+  initialDiscoveries,
   printerAgents,
   canManage,
 }: Props) {
   const router = useRouter();
   const { messages } = useConsoleI18n();
   const [printers, setPrinters] = useState(initialPrinters);
+  const [discoveries, setDiscoveries] = useState(initialDiscoveries);
   const [printerAgentId, setPrinterAgentId] = useState(
     printerAgents.find(a => a.status === 'active')?.id ?? '',
   );
@@ -64,15 +89,26 @@ export function PrintersPanel({
   const [address, setAddress] = useState('127.0.0.1');
   const [port, setPort] = useState('9100');
   const [path, setPath] = useState('/dev/usb/lp0');
+  const [confirmNames, setConfirmNames] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [actionId, setActionId] = useState<string | null>(null);
 
-  async function refreshList() {
-    const response = await fetch('/api/console/printers');
-    if (!response.ok)
-      return;
-    const body = await response.json() as { printers: PrinterListItem[] };
-    setPrinters(body.printers);
+  async function refreshLists() {
+    const [printersResponse, discoveriesResponse] = await Promise.all([
+      fetch('/api/console/printers'),
+      fetch('/api/console/discoveries?pending=1'),
+    ]);
+    if (printersResponse.ok) {
+      const body = await printersResponse.json() as { printers: PrinterListItem[] };
+      setPrinters(body.printers);
+    }
+    if (discoveriesResponse.ok) {
+      const body = await discoveriesResponse.json() as {
+        discoveries: DiscoveryListItem[]
+      };
+      setDiscoveries(body.discoveries);
+    }
     router.refresh();
   }
 
@@ -112,10 +148,56 @@ export function PrintersPanel({
     }
 
     setName('');
-    await refreshList();
+    await refreshLists();
+  }
+
+  async function onConfirm(discoveryId: string, suggestedName: string | null) {
+    if (!canManage)
+      return;
+    const confirmName = (confirmNames[discoveryId] ?? suggestedName ?? '').trim();
+    if (!confirmName) {
+      setError('Name is required to confirm a discovery');
+      return;
+    }
+
+    setActionId(discoveryId);
+    setError(null);
+    const response = await fetch(
+      `/api/console/discoveries/${discoveryId}/confirm`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: confirmName }),
+      },
+    );
+    setActionId(null);
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({})) as { message?: string };
+      setError(body.message ?? 'Could not confirm discovery');
+      return;
+    }
+    await refreshLists();
+  }
+
+  async function onDisable(printerId: string) {
+    if (!canManage)
+      return;
+    setActionId(printerId);
+    setError(null);
+    const response = await fetch(`/api/console/printers/${printerId}/disable`, {
+      method: 'POST',
+    });
+    setActionId(null);
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({})) as { message?: string };
+      setError(body.message ?? 'Could not disable Printer');
+      return;
+    }
+    await refreshLists();
   }
 
   const activeAgents = printerAgents.filter(a => a.status === 'active');
+  const pendingDiscoveries = discoveries.filter(d => !d.confirmedPrinterId);
 
   return (
     <div className="stack">
@@ -209,10 +291,79 @@ export function PrintersPanel({
             <p className="muted">{messages.printers.membersReadOnly}</p>
           )}
 
+      {!canManage && error ? <p className="error" role="alert">{error}</p> : null}
+
+      <div className="stack">
+        <h2>Pending discoveries</h2>
+        {pendingDiscoveries.length === 0
+          ? (
+              <p className="muted">
+                No unconfirmed endpoints. Printer Agents report discoveries over the protocol.
+              </p>
+            )
+          : (
+              <ul className="agent-list">
+                {pendingDiscoveries.map(item => (
+                  <li key={item.id} className="agent-row">
+                    <div>
+                      <div className="agent-name">{item.endpointKey}</div>
+                      <div className="muted agent-meta">
+                        <span>
+                          Printer Agent:
+                          {' '}
+                          {agentLabel(printerAgents, item.printerAgentId)}
+                        </span>
+                        <span>{formatHints(item.connectionHints)}</span>
+                        <span>
+                          Last seen:
+                          {' '}
+                          {new Date(item.lastSeenAt).toLocaleString()}
+                        </span>
+                      </div>
+                      {canManage
+                        ? (
+                            <label>
+                              Printer name
+                              <input
+                                value={
+                                  confirmNames[item.id]
+                                  ?? item.suggestedName
+                                  ?? ''
+                                }
+                                onChange={event => setConfirmNames(current => ({
+                                  ...current,
+                                  [item.id]: event.target.value,
+                                }))}
+                                maxLength={120}
+                                placeholder="Name this Printer"
+                              />
+                            </label>
+                          )
+                        : null}
+                    </div>
+                    {canManage
+                      ? (
+                          <div className="agent-actions">
+                            <button
+                              type="button"
+                              disabled={actionId === item.id}
+                              onClick={() => onConfirm(item.id, item.suggestedName)}
+                            >
+                              Confirm
+                            </button>
+                          </div>
+                        )
+                      : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+      </div>
+
       <div className="stack">
         <div className="agent-actions">
           <h2>{messages.printers.title}</h2>
-          <button type="button" className="secondary" onClick={() => void refreshList()}>
+          <button type="button" className="secondary" onClick={() => void refreshLists()}>
             {messages.printers.refresh}
           </button>
         </div>
@@ -230,6 +381,16 @@ export function PrintersPanel({
                             ? messages.printers.statusActive
                             : messages.printers.statusDisabled}
                         </span>
+                        <span>
+                          Printer Agent:
+                          {' '}
+                          {item.printerAgentName}
+                        </span>
+                        <span>
+                          Agent presence:
+                          {' '}
+                          {item.printerAgentPresence}
+                        </span>
                         <span>{formatHints(item.connectionHints)}</span>
                         <span className="agent-id">
                           printerId:
@@ -243,6 +404,20 @@ export function PrintersPanel({
                         </span>
                       </div>
                     </div>
+                    {canManage && item.status === 'active'
+                      ? (
+                          <div className="agent-actions">
+                            <button
+                              type="button"
+                              className="danger"
+                              disabled={actionId === item.id}
+                              onClick={() => onDisable(item.id)}
+                            >
+                              Disable
+                            </button>
+                          </div>
+                        )
+                      : null}
                   </li>
                 ))}
               </ul>

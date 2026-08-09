@@ -1,0 +1,23 @@
+{
+  "status": "ok",
+  "printerAgentId": "printer_agent_fixture_001",
+  "discoveries": [
+    {
+      "id": "discovery_fixture_001",
+      "organizationId": "org_fixture_001",
+      "printerAgentId": "printer_agent_fixture_001",
+      "endpointKey": "tcp://192.168.1.50:9100",
+      "connectionHints": {
+        "transport": "tcp",
+        "address": "192.168.1.50",
+        "port": 9100
+      },
+      "suggestedName": "Front counter",
+      "firstSeenAt": "2026-04-01T12:00:00.000Z",
+      "lastSeenAt": "2026-04-01T12:00:00.000Z",
+      "confirmedPrinterId": null,
+      "createdAt": "2026-04-01T12:00:00.000Z",
+      "updatedAt": "2026-04-01T12:00:00.000Z"
+    }
+  ]
+}

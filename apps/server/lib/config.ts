@@ -64,6 +64,17 @@ const EnvSchema = z.object({
    * Origin of the MIT Receipt Studio app used for console iframe embed.
    */
   TEMPLATE_EDITOR_ORIGIN: z.url().default('http://127.0.0.1:43127'),
+  /**
+   * A Printer Agent is online when lastAuthenticatedAt (heartbeat/lease/discovery)
+   * falls within this window (milliseconds).
+   */
+  PRINTER_AGENT_ONLINE_WINDOW_MS: z.string()
+    .regex(/^\d+$/)
+    .default('60000')
+    .transform(Number)
+    .refine(v => v >= 5_000 && v <= 3_600_000, {
+      message: 'PRINTER_AGENT_ONLINE_WINDOW_MS must be between 5000 and 3600000',
+    }),
 
   // Platform tenant-ops (cloud). Bearer secret for /api/platform/* — unused on self-hosted.
   PLATFORM_ADMIN_SECRET: z.string().min(32).optional(),

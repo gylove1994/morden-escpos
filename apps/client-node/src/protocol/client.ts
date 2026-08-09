@@ -2,11 +2,20 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import type { HeartbeatResponse, JobPublic, LeasedJob, ReportStatus } from './types';
+import type {
+  DiscoveryEndpoint,
+  DiscoveryReportResponse,
+  HeartbeatResponse,
+  JobPublic,
+  LeasedJob,
+  ReportStatus,
+} from './types';
 import {
+  decodeDiscoveryReportResponse,
   decodeHeartbeatResponse,
   decodeLeaseResponse,
   decodeReportResponse,
+  encodeDiscoveryReportRequest,
   encodeJobReportRequest,
 } from './codec';
 import { ProtocolErrorSchema } from './types';
@@ -81,6 +90,27 @@ export class ProtocolClient {
       await this.readError(response);
     }
     return decodeHeartbeatResponse(await response.json());
+  }
+
+  /**
+   * Report discovered local endpoints for admin confirm/name in the console.
+   */
+  async reportDiscoveries(
+    endpoints: DiscoveryEndpoint[],
+  ): Promise<DiscoveryReportResponse> {
+    const body = encodeDiscoveryReportRequest(endpoints);
+    const response = await this.fetchImpl(
+      this.protocolUrl('/printer-agents/discoveries'),
+      {
+        method: 'POST',
+        headers: this.headers(true),
+        body: JSON.stringify(body),
+      },
+    );
+    if (!response.ok) {
+      await this.readError(response);
+    }
+    return decodeDiscoveryReportResponse(await response.json());
   }
 
   /**

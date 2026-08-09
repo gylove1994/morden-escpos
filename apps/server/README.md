@@ -17,7 +17,7 @@ BSL SaaS print-queue control plane. See [`CONTEXT.md`](./CONTEXT.md).
 | `pnpm --filter @workspace/server build:self-hosted` | Production self-hosted build (omits cloud-only routes) |
 | `pnpm --filter @workspace/server db:generate` | Generate Drizzle migrations from `lib/db/schema.ts` |
 | `pnpm --filter @workspace/server db:migrate` | Apply migrations |
-| `pnpm --filter @workspace/server test` | Vitest (health, auth, tokens, billing, queue, platform, compile-out) |
+| `pnpm --filter @workspace/server test` | Vitest (health, auth, tokens, billing, queue, platform, compile-out, discovery) |
 | `pnpm --filter @workspace/server typecheck` | `tsc --noEmit` |
 
 ## Configuration
@@ -48,10 +48,12 @@ When `EDITION=cloud`, these are required (use [Stripe test mode](https://docs.st
 Self-hosted builds do not require Stripe or platform-admin variables. Point Stripe
 webhooks at `POST /api/billing/webhook` on cloud deployments only.
 
-Optional lease duration:
+Optional lease / presence:
 
 - Dev: `APP_JOB_LEASE_MS` (default `30000`)
 - Server: `JOB_LEASE_MS` (default `30000`)
+- Dev: `APP_PRINTER_AGENT_ONLINE_WINDOW_MS` (default `60000`)
+- Server: `PRINTER_AGENT_ONLINE_WINDOW_MS` (default `60000`)
 
 ## Human session auth + Organization RBAC
 
@@ -84,11 +86,17 @@ Optional lease duration:
 - Directional Business quotas: 25 printers / 5 Printer Agents / 5000 monthly jobs
 - Over-quota create/enqueue returns `403` with `error: "plan_limit_exceeded"`
 
-## Printers + raw queue
+## Printers + discovery + raw queue
 
-- Console: `/console/printers` (create under a Printer Agent with connection hints)
+- Console: `/console/printers` (confirm discoveries, create, disable; shows
+  owning Printer Agent + online/offline)
 - Console: `/console/jobs` (enqueue raw base64 ESC/POS + auditable job history)
-- APIs: `GET|POST /api/console/printers`, `GET|POST /api/console/jobs`
+- APIs: `GET|POST /api/console/printers`,
+  `POST /api/console/printers/:printerId/disable`,
+  `GET /api/console/discoveries`,
+  `POST /api/console/discoveries/:discoveryId/confirm`,
+  `GET|POST /api/console/jobs`
+- Disable keeps the Printer row and job history; new enqueue is rejected
 - Enqueue accepts optional `idempotencyKey` (dedupes per Organization)
 - Enqueue also accepts optional history hooks:
   - `kind`: `raw` (default) or `template_confirmation`
@@ -96,6 +104,7 @@ Optional lease duration:
 - History list returns truthful `status` / `errorMessage`, plus `kind`,
   `parentJobId`, `childCount`, and `relation` (`standalone` | `parent` | `child`)
 - Protocol:
+  - `POST /api/protocol/v1/printer-agents/discoveries` → upsert endpoints
   - `POST /api/protocol/v1/jobs/lease` → `200 { job }` or `204`
   - `POST /api/protocol/v1/jobs/{jobId}/report` with
     `printing` → `succeeded` | `failed` (`errorMessage` required on failure)

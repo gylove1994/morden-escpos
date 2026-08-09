@@ -13,9 +13,11 @@ export interface PrinterAgentListItem {
   id: string
   name: string
   status: 'active' | 'revoked'
+  presence: 'online' | 'offline'
   deviceTokenPrefix: string | null
   createdAt: string
   revokedAt: string | null
+  lastAuthenticatedAt: string | null
 }
 
 interface Props {
@@ -211,6 +213,20 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
                           :
                           {' '}
                           {agent.deviceTokenPrefix ? `${agent.deviceTokenPrefix}…` : '—'}
+                        </span>
+                        <span>
+                          {messages.printerAgents.presence}
+                          :
+                          {' '}
+                          {agent.presence ?? '—'}
+                        </span>
+                        <span>
+                          {messages.printerAgents.lastSeen}
+                          :
+                          {' '}
+                          {agent.lastAuthenticatedAt
+                            ? new Date(agent.lastAuthenticatedAt).toLocaleString(locale)
+                            : messages.printerAgents.never}
                         </span>
                         <span className="agent-id">
                           printerAgentId:

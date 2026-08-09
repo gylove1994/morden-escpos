@@ -51,6 +51,51 @@ export class FakePrinterAgent {
   }
 
   /**
+   * Report discovered local endpoints (TCP/USB/Serial connection hints).
+   */
+  async reportDiscoveries(endpoints: Array<{
+    connectionHints: unknown
+    suggestedName?: string | null
+  }>): Promise<{
+    response: Response
+    body: {
+      status: string
+      printerAgentId: string
+      discoveries: Array<{
+        id: string
+        endpointKey: string
+        confirmedPrinterId: string | null
+        connectionHints: unknown
+      }>
+    } | null
+  }> {
+    const response = await fetch(
+      `${this.baseUrl}/api/protocol/v1/printer-agents/discoveries`,
+      {
+        method: 'POST',
+        headers: this.headers(true),
+        body: JSON.stringify({ endpoints }),
+      },
+    );
+
+    if (!response.ok) {
+      return { response, body: null };
+    }
+
+    const body = await response.json() as {
+      status: string
+      printerAgentId: string
+      discoveries: Array<{
+        id: string
+        endpointKey: string
+        confirmedPrinterId: string | null
+        connectionHints: unknown
+      }>
+    };
+    return { response, body };
+  }
+
+  /**
    * Short-poll lease. Returns null on 204 (no work).
    */
   async lease(): Promise<{ response: Response, job: FakeLeasedJob | null }> {

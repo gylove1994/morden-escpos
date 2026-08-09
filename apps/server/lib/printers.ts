@@ -4,6 +4,7 @@
  */
 import type { ConnectionHints } from './connection-hints';
 import type { PrinterRow, PrinterStatus } from './db/schema';
+import type { PresenceStatus } from './presence';
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
 import {
@@ -12,11 +13,15 @@ import {
 } from './connection-hints';
 import { db } from './db';
 import { printer, printerAgent } from './db/schema';
+import { presenceFromLastSeen } from './presence';
 
 export interface PrinterPublic {
   id: string
   organizationId: string
   printerAgentId: string
+  printerAgentName: string
+  printerAgentPresence: PresenceStatus
+  printerAgentLastAuthenticatedAt: string | null
   name: string
   status: PrinterStatus
   connectionHints: ConnectionHints
@@ -24,12 +29,21 @@ export interface PrinterPublic {
   updatedAt: string
 }
 
-function toPublic(row: PrinterRow): PrinterPublic {
+function toPublic(
+  row: PrinterRow,
+  agent: {
+    name: string
+    lastAuthenticatedAt: Date | null
+  },
+): PrinterPublic {
   const status: PrinterStatus = row.status === 'disabled' ? 'disabled' : 'active';
   return {
     id: row.id,
     organizationId: row.organizationId,
     printerAgentId: row.printerAgentId,
+    printerAgentName: agent.name,
+    printerAgentPresence: presenceFromLastSeen(agent.lastAuthenticatedAt),
+    printerAgentLastAuthenticatedAt: agent.lastAuthenticatedAt?.toISOString() ?? null,
     name: row.name,
     status,
     connectionHints: parseConnectionHintsJson(row.connectionHintsJson),
@@ -42,11 +56,20 @@ export async function listPrinters(
   organizationId: string,
 ): Promise<PrinterPublic[]> {
   const rows = await db
-    .select()
+    .select({
+      printer,
+      agentName: printerAgent.name,
+      agentLastAuthenticatedAt: printerAgent.lastAuthenticatedAt,
+    })
     .from(printer)
+    .innerJoin(printerAgent, eq(printer.printerAgentId, printerAgent.id))
     .where(eq(printer.organizationId, organizationId))
     .orderBy(desc(printer.createdAt));
-  return rows.map(toPublic);
+
+  return rows.map(row => toPublic(row.printer, {
+    name: row.agentName,
+    lastAuthenticatedAt: row.agentLastAuthenticatedAt,
+  }));
 }
 
 export async function getPrinter(input: {
@@ -54,8 +77,13 @@ export async function getPrinter(input: {
   printerId: string
 }): Promise<PrinterPublic | null> {
   const rows = await db
-    .select()
+    .select({
+      printer,
+      agentName: printerAgent.name,
+      agentLastAuthenticatedAt: printerAgent.lastAuthenticatedAt,
+    })
     .from(printer)
+    .innerJoin(printerAgent, eq(printer.printerAgentId, printerAgent.id))
     .where(
       and(
         eq(printer.id, input.printerId),
@@ -63,7 +91,16 @@ export async function getPrinter(input: {
       ),
     )
     .limit(1);
-  return rows[0] ? toPublic(rows[0]) : null;
+
+  const row = rows[0];
+  if (!row) {
+    return null;
+  }
+
+  return toPublic(row.printer, {
+    name: row.agentName,
+    lastAuthenticatedAt: row.agentLastAuthenticatedAt,
+  });
 }
 
 /**
@@ -87,7 +124,8 @@ export async function createPrinter(input: {
     )
     .limit(1);
 
-  if (agents.length === 0) {
+  const agent = agents[0];
+  if (!agent) {
     throw new PrinterAgentNotFoundError();
   }
 
@@ -110,7 +148,54 @@ export async function createPrinter(input: {
     throw new Error('Failed to create Printer');
   }
 
-  return toPublic(row);
+  return toPublic(row, {
+    name: agent.name,
+    lastAuthenticatedAt: agent.lastAuthenticatedAt,
+  });
+}
+
+/**
+ * Disable a Printer without deleting it or its job history.
+ * Disabled Printers MUST NOT accept new enqueue.
+ */
+export async function disablePrinter(input: {
+  organizationId: string
+  printerId: string
+}): Promise<PrinterPublic | null> {
+  const existing = await getPrinter(input);
+  if (!existing) {
+    return null;
+  }
+
+  if (existing.status === 'disabled') {
+    return existing;
+  }
+
+  const now = new Date();
+  const [row] = await db
+    .update(printer)
+    .set({
+      status: 'disabled',
+      updatedAt: now,
+    })
+    .where(
+      and(
+        eq(printer.id, input.printerId),
+        eq(printer.organizationId, input.organizationId),
+      ),
+    )
+    .returning();
+
+  if (!row) {
+    return null;
+  }
+
+  return toPublic(row, {
+    name: existing.printerAgentName,
+    lastAuthenticatedAt: existing.printerAgentLastAuthenticatedAt
+      ? new Date(existing.printerAgentLastAuthenticatedAt)
+      : null,
+  });
 }
 
 export class PrinterAgentNotFoundError extends Error {

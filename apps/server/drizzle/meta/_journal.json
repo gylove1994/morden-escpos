@@ -71,6 +71,13 @@
       "when": 1786254991509,
       "tag": "0009_job_purpose_template",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786255294327,
+      "tag": "0010_printer_discovery",
+      "breakpoints": true
     }
   ]
 }

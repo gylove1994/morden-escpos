@@ -8,8 +8,9 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * Printer Agent heartbeat (auth seam for #4).
- * Requires a valid active device token; presence/online semantics land with later tickets.
+ * Printer Agent heartbeat.
+ * Requires a valid active device token. Successful auth updates lastAuthenticatedAt,
+ * which the console uses for online/offline presence.
  */
 export async function POST(request: Request) {
   const authResult = await requirePrinterAgentDeviceToken(request);

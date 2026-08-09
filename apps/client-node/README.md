@@ -34,6 +34,7 @@ unprefixed keys in `env.example.server`.
 | `POLL_IDLE_MAX_MS` | Idle backoff cap (default `30000`) |
 | `POLL_IDLE_MULTIPLIER` | Exponential multiplier (default `2`) |
 | `POLL_AFTER_WORK_MS` | Delay after handling a job (default `0`) |
+| `DISCOVER_TCP_ENDPOINTS` | Optional comma-separated `host:port` list reported at startup |
 
 Env values override keys from `CONFIG_FILE`. See `config.example.json`.
 
@@ -44,9 +45,9 @@ Uses the shared OpenAPI contract and fixtures:
 - OpenAPI: `apps/server/contracts/print-queue-agent-protocol.openapi.yaml`
 - Fixtures: `apps/server/contracts/fixtures/v1/`
 
-Flow: heartbeat → lease (`200` job / `204` idle) → report `printing` → print
-via `connectionHints.transport` (`tcp` / `usb` / `serial`) → report
-`succeeded` \| `failed`.
+Flow: optional discovery report at startup → heartbeat → lease (`200` job /
+`204` idle) → report `printing` → print via `connectionHints.transport`
+(`tcp` / `usb` / `serial`) → report `succeeded` \| `failed`.
 
 ## Transports
 

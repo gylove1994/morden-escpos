@@ -8,9 +8,11 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { protocolFixturePath } from '../src/fixtures-path';
 import {
+  decodeDiscoveryReportResponse,
   decodeHeartbeatResponse,
   decodeJobPayload,
   decodeLeaseResponse,
+  encodeDiscoveryReportRequest,
   encodeJobReportRequest,
 } from '../src/protocol/codec';
 import { isAllowedJobTransition } from '../src/protocol/transitions';
@@ -60,6 +62,22 @@ describe('print Queue Agent Protocol contract (Node Printer Agent)', () => {
     expect(body.status).toBe('ok');
     expect(body.printerAgentId).toBe('pa_fixture_001');
     expect(body.organizationId).toBe('org_fixture_001');
+  });
+
+  it('encodes and decodes shared discovery report fixtures', () => {
+    const request = readFixture<{
+      endpoints: Array<{
+        connectionHints: { transport: 'tcp', address: string, port: number }
+        suggestedName?: string
+      }>
+    }>('discovery-report.request.json');
+    expect(encodeDiscoveryReportRequest(request.endpoints)).toEqual(request);
+
+    const response = readFixture<unknown>('discovery-report.response.json');
+    const decoded = decodeDiscoveryReportResponse(response);
+    expect(decoded.status).toBe('ok');
+    expect(decoded.printerAgentId).toBe('printer_agent_fixture_001');
+    expect(decoded.discoveries[0]?.endpointKey).toBe('tcp://192.168.1.50:9100');
   });
 
   it('enforces shared job state transition table from scenarios.json', () => {
