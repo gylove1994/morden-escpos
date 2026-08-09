@@ -29,6 +29,7 @@ import { CanvasPanel } from './canvas-panel';
 import { CommandPalette } from './command-palette';
 import { EditorToolbar } from './editor-toolbar';
 import { PropertyPanel } from './property-panel';
+import { SaasEmbedBridge } from './saas-embed-bridge';
 
 const STORAGE_KEY = 'receipt-studio:draft:v1';
 
@@ -83,6 +84,12 @@ function useDraftPersistence() {
 
   useEffect(() => {
     try {
+      // SaaS iframe embed loads the org template via postMessage — skip local draft.
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('embed') === 'saas') {
+        setHydrated(true);
+        return;
+      }
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const payload: unknown = JSON.parse(raw);
@@ -265,6 +272,7 @@ export function EditorShell() {
     <TooltipProvider>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <div className="flex h-dvh min-h-160 flex-col overflow-hidden bg-background">
+          <SaasEmbedBridge />
           <EditorToolbar />
           <DesktopEditor />
           <MobileEditor />

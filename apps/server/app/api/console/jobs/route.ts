@@ -10,9 +10,10 @@ import { getConsoleSession } from '../../../../lib/console-auth';
 import {
   enqueueGroupJob,
   enqueueRawJob,
+  EnqueueTargetRequiredError,
   enqueueTemplateJob,
   InvalidPayloadError,
-  listPrintJobs,
+  listConsolePrintJobs,
   PrinterGroupNotEnqueueableError,
   PrinterNotEnqueueableError,
   TemplateNotFoundError,
@@ -23,22 +24,32 @@ import { organizationStatusBlockResponse } from '../../../../lib/platform/org-gu
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const TargetRefine = {
+  message: 'Provide exactly one of printerId or printerGroupId',
+} as const;
+
 const RawEnqueueBodySchema = z.object({
   printerId: z.string().trim().min(1).optional(),
   printerGroupId: z.string().trim().min(1).optional(),
   payloadBase64: z.string().min(1),
   idempotencyKey: z.string().trim().min(1).max(200).optional(),
+  purpose: z.enum(['standard', 'template_confirmation']).optional(),
 }).refine(
   value => Boolean(value.printerId) !== Boolean(value.printerGroupId),
-  { message: 'Provide exactly one of printerId or printerGroupId' },
+  TargetRefine,
 );
 
 const TemplateEnqueueBodySchema = z.object({
-  printerId: z.string().trim().min(1),
+  printerId: z.string().trim().min(1).optional(),
+  printerGroupId: z.string().trim().min(1).optional(),
   templateId: z.string().trim().min(1),
   inputs: z.record(z.string(), z.unknown()),
   idempotencyKey: z.string().trim().min(1).max(200).optional(),
-});
+  purpose: z.enum(['standard', 'template_confirmation']).optional(),
+}).refine(
+  value => Boolean(value.printerId) !== Boolean(value.printerGroupId),
+  TargetRefine,
+);
 
 /**
  * List recent print jobs for the active Organization.
@@ -63,7 +74,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const limitRaw = url.searchParams.get('limit');
   const limit = limitRaw ? Number(limitRaw) : 50;
-  const jobs = await listPrintJobs(
+  const jobs = await listConsolePrintJobs(
     consoleSession.organization.id,
     Number.isFinite(limit) ? limit : 50,
   );
@@ -72,7 +83,8 @@ export async function GET(request: Request) {
 
 /**
  * Enqueue a print job targeting a Printer or Printer Group.
- * Accepts raw `payloadBase64` or `templateId + inputs` (Printer only).
+ * Accepts raw `payloadBase64` or `templateId + inputs` (server-rendered).
+ * Set `purpose: "template_confirmation"` for embedded-editor confirmation prints.
  */
 export async function POST(request: Request) {
   const consoleSession = await getConsoleSession(request.headers);
@@ -144,9 +156,11 @@ export async function POST(request: Request) {
       const result = await enqueueTemplateJob({
         organizationId: consoleSession.organization.id,
         printerId: parsed.data.printerId,
+        printerGroupId: parsed.data.printerGroupId,
         templateId: parsed.data.templateId,
         inputs: parsed.data.inputs,
         idempotencyKey: parsed.data.idempotencyKey,
+        purpose: parsed.data.purpose,
       });
 
       let monthlyJobs: number | undefined;
@@ -181,12 +195,14 @@ export async function POST(request: Request) {
           printerGroupId: parsed.data.printerGroupId,
           payloadBase64: parsed.data.payloadBase64,
           idempotencyKey: parsed.data.idempotencyKey,
+          purpose: parsed.data.purpose,
         })
       : await enqueueRawJob({
           organizationId: consoleSession.organization.id,
           printerId: parsed.data.printerId!,
           payloadBase64: parsed.data.payloadBase64,
           idempotencyKey: parsed.data.idempotencyKey,
+          purpose: parsed.data.purpose,
         });
 
     let monthlyJobs: number | undefined;
@@ -230,6 +246,12 @@ export async function POST(request: Request) {
       return Response.json(
         { error: 'template_not_found', message: error.message },
         { status: 404 },
+      );
+    }
+    if (error instanceof EnqueueTargetRequiredError) {
+      return Response.json(
+        { error: 'invalid_body', message: error.message },
+        { status: 400 },
       );
     }
     if (error instanceof PrinterNotEnqueueableError) {

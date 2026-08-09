@@ -12,10 +12,10 @@ import { formatMessage } from '../../lib/i18n/messages';
 
 export interface JobListItem {
   id: string
-  printerId: string
+  printerId: string | null
   printerAgentId: string
   status: string
-  kind: 'raw' | 'template_confirmation'
+  purpose: 'standard' | 'template_confirmation'
   parentJobId: string | null
   childCount: number
   relation: 'standalone' | 'parent' | 'child'
@@ -221,13 +221,13 @@ export function JobsPanel({ initialJobs, printers }: Props) {
                       <div className="job-labels" aria-label="job labels">
                         <span
                           className={
-                            job.kind === 'template_confirmation'
+                            job.purpose === 'template_confirmation'
                               ? 'job-label job-label-confirmation'
                               : 'job-label'
                           }
-                          data-job-kind={job.kind}
+                          data-job-purpose={job.purpose}
                         >
-                          {job.kind === 'template_confirmation'
+                          {job.purpose === 'template_confirmation'
                             ? messages.jobs.kindConfirmation
                             : messages.jobs.kindRaw}
                         </span>

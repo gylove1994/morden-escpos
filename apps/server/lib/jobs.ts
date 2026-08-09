@@ -3,7 +3,12 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import type { ConnectionHints } from './connection-hints';
-import type { PrintJobKind, PrintJobRow, PrintJobStatus } from './db/schema';
+import type {
+  PrintJobKind,
+  PrintJobPurpose,
+  PrintJobRow,
+  PrintJobStatus,
+} from './db/schema';
 import { Buffer } from 'node:buffer';
 import { randomUUID } from 'node:crypto';
 import { and, asc, desc, eq, inArray, isNotNull, lt, ne } from 'drizzle-orm';
@@ -23,6 +28,8 @@ export interface PrintJobPublic {
   printerGroupId: string | null
   parentJobId: string | null
   kind: PrintJobKind
+  purpose: PrintJobPurpose
+  templateId: string | null
   status: PrintJobStatus
   payloadBase64: string
   payloadByteLength: number
@@ -59,6 +66,10 @@ function asKind(value: string): PrintJobKind {
   }
 }
 
+function asPurpose(value: string): PrintJobPurpose {
+  return value === 'template_confirmation' ? 'template_confirmation' : 'standard';
+}
+
 function asStatus(value: string): PrintJobStatus {
   switch (value) {
     case 'queued':
@@ -82,6 +93,8 @@ function toPublic(row: PrintJobRow): PrintJobPublic {
     printerGroupId: row.printerGroupId,
     parentJobId: row.parentJobId,
     kind: asKind(row.kind),
+    purpose: asPurpose(row.purpose),
+    templateId: row.templateId,
     status: asStatus(row.status),
     payloadBase64: row.payloadBase64,
     payloadByteLength: row.payloadByteLength,
@@ -150,7 +163,40 @@ export class JobRetryConflictError extends Error {
   }
 }
 
+export class EnqueueTargetRequiredError extends Error {
+  constructor(message = 'Select a Printer or Printer Group before confirmation print') {
+    super(message);
+    this.name = 'EnqueueTargetRequiredError';
+  }
+}
+
 export { TemplateNotFoundError, TemplateRenderError };
+
+export interface ConsoleJobListItem {
+  id: string
+  printerId: string | null
+  printerAgentId: string
+  status: string
+  purpose: PrintJobPurpose
+  parentJobId: string | null
+  childCount: number
+  relation: 'standalone' | 'parent' | 'child'
+  payloadByteLength: number
+  idempotencyKey: string | null
+  errorMessage: string | null
+  createdAt: string
+  completedAt: string | null
+}
+
+function jobRelation(job: PrintJobPublic): ConsoleJobListItem['relation'] {
+  if (job.kind === 'parent') {
+    return 'parent';
+  }
+  if (job.parentJobId) {
+    return 'child';
+  }
+  return 'standalone';
+}
 
 export async function listPrintJobs(
   organizationId: string,
@@ -163,6 +209,57 @@ export async function listPrintJobs(
     .orderBy(desc(printJob.createdAt))
     .limit(Math.min(Math.max(limit, 1), 200));
   return rows.map(toPublic);
+}
+
+export async function listConsolePrintJobs(
+  organizationId: string,
+  limit = 50,
+): Promise<ConsoleJobListItem[]> {
+  const jobs = await listPrintJobs(organizationId, limit);
+  const parentIds = jobs.filter(job => job.kind === 'parent').map(job => job.id);
+  const childCountByParent = new Map<string, number>();
+
+  if (parentIds.length > 0) {
+    const childRows = await db
+      .select({ parentJobId: printJob.parentJobId })
+      .from(printJob)
+      .where(
+        and(
+          eq(printJob.organizationId, organizationId),
+          inArray(printJob.parentJobId, parentIds),
+        ),
+      );
+    for (const row of childRows) {
+      if (!row.parentJobId) {
+        continue;
+      }
+      childCountByParent.set(
+        row.parentJobId,
+        (childCountByParent.get(row.parentJobId) ?? 0) + 1,
+      );
+    }
+  }
+
+  return jobs.map((job) => {
+    const relation = jobRelation(job);
+    return {
+      id: job.id,
+      printerId: job.printerId,
+      printerAgentId: job.printerAgentId,
+      status: job.status,
+      purpose: job.purpose,
+      parentJobId: job.parentJobId,
+      childCount: relation === 'parent'
+        ? (childCountByParent.get(job.id) ?? 0)
+        : 0,
+      relation,
+      payloadByteLength: job.payloadByteLength,
+      idempotencyKey: job.idempotencyKey,
+      errorMessage: job.errorMessage,
+      createdAt: job.createdAt,
+      completedAt: job.completedAt,
+    };
+  });
 }
 
 export async function getPrintJob(input: {
@@ -226,9 +323,13 @@ export async function enqueueRawJob(input: {
   printerId: string
   payloadBase64: string
   idempotencyKey?: string | null
+  purpose?: PrintJobPurpose
+  templateId?: string | null
 }): Promise<{ job: PrintJobPublic, children: PrintJobPublic[], deduped: boolean }> {
   const payload = decodePayloadBase64(input.payloadBase64);
   const idempotencyKey = input.idempotencyKey?.trim() || null;
+  const purpose = input.purpose ?? 'standard';
+  const templateId = input.templateId ?? null;
 
   if (idempotencyKey) {
     const existing = await findByIdempotencyKey({
@@ -278,6 +379,8 @@ export async function enqueueRawJob(input: {
         parentJobId: null,
         kind: 'single',
         status: 'queued',
+        purpose,
+        templateId,
         payloadBase64: payload.toString('base64'),
         payloadByteLength: payload.byteLength,
         idempotencyKey,
@@ -318,12 +421,21 @@ export async function enqueueRawJob(input: {
  */
 export async function enqueueTemplateJob(input: {
   organizationId: string
-  printerId: string
+  printerId?: string | null
+  printerGroupId?: string | null
   templateId: string
   inputs: Record<string, unknown>
   idempotencyKey?: string | null
+  purpose?: PrintJobPurpose
 }): Promise<{ job: PrintJobPublic, children: PrintJobPublic[], deduped: boolean }> {
+  const printerId = input.printerId?.trim() || null;
+  const printerGroupId = input.printerGroupId?.trim() || null;
+  if (Boolean(printerId) === Boolean(printerGroupId)) {
+    throw new EnqueueTargetRequiredError();
+  }
+
   const idempotencyKey = input.idempotencyKey?.trim() || null;
+  const purpose = input.purpose ?? 'standard';
 
   if (idempotencyKey) {
     const existing = await findByIdempotencyKey({
@@ -353,12 +465,26 @@ export async function enqueueTemplateJob(input: {
     definition: template.definition,
     inputs: input.inputs,
   });
+  const payloadBase64 = payload.toString('base64');
+
+  if (printerGroupId) {
+    return enqueueGroupJob({
+      organizationId: input.organizationId,
+      printerGroupId,
+      payloadBase64,
+      idempotencyKey,
+      purpose,
+      templateId: template.id,
+    });
+  }
 
   return enqueueRawJob({
     organizationId: input.organizationId,
-    printerId: input.printerId,
-    payloadBase64: payload.toString('base64'),
+    printerId: printerId!,
+    payloadBase64,
     idempotencyKey,
+    purpose,
+    templateId: template.id,
   });
 }
 
@@ -371,10 +497,14 @@ export async function enqueueGroupJob(input: {
   printerGroupId: string
   payloadBase64: string
   idempotencyKey?: string | null
+  purpose?: PrintJobPurpose
+  templateId?: string | null
 }): Promise<{ job: PrintJobPublic, children: PrintJobPublic[], deduped: boolean }> {
   const payload = decodePayloadBase64(input.payloadBase64);
   const idempotencyKey = input.idempotencyKey?.trim() || null;
   const payloadBase64 = payload.toString('base64');
+  const purpose = input.purpose ?? 'standard';
+  const templateId = input.templateId ?? null;
 
   if (idempotencyKey) {
     const existing = await findByIdempotencyKey({
@@ -424,6 +554,8 @@ export async function enqueueGroupJob(input: {
           printerGroupId: resolved.group.id,
           parentJobId: null,
           kind: 'parent',
+          purpose,
+          templateId,
           status: 'queued',
           payloadBase64,
           payloadByteLength: payload.byteLength,
@@ -448,6 +580,8 @@ export async function enqueueGroupJob(input: {
             printerGroupId: resolved.group.id,
             parentJobId: parentId,
             kind: 'child' as const,
+            purpose,
+            templateId,
             status: 'queued' as const,
             payloadBase64,
             payloadByteLength: payload.byteLength,
