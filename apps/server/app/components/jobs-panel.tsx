@@ -4,13 +4,17 @@
  */
 'use client';
 
-import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 
-export interface JobListItem {
+export type JobListItem = {
   id: string
-  printerId: string
+  printerId: string | null
+  printerGroupId: string | null
+  parentJobId: string | null
+  kind: string
+  purpose: string
+  templateId: string | null
   printerAgentId: string
   status: string
   payloadByteLength: number
@@ -18,24 +22,37 @@ export interface JobListItem {
   errorMessage: string | null
   createdAt: string
   completedAt: string | null
-}
+};
 
-export interface PrinterOption {
+export type PrinterOption = {
   id: string
   name: string
   status: string
-}
+};
 
-interface Props {
+export type PrinterGroupOption = {
+  id: string
+  name: string
+  printerIds: string[]
+};
+
+type Props = {
   initialJobs: JobListItem[]
   printers: PrinterOption[]
-}
+  printerGroups: PrinterGroupOption[]
+};
 
-export function JobsPanel({ initialJobs, printers }: Props) {
+export function JobsPanel({ initialJobs, printers, printerGroups }: Props) {
   const router = useRouter();
   const [jobs, setJobs] = useState(initialJobs);
+  const [targetKind, setTargetKind] = useState<'printer' | 'group'>(
+    printers.some(p => p.status === 'active') ? 'printer' : 'group',
+  );
   const [printerId, setPrinterId] = useState(
     printers.find(p => p.status === 'active')?.id ?? '',
+  );
+  const [printerGroupId, setPrinterGroupId] = useState(
+    printerGroups[0]?.id ?? '',
   );
   const [payloadText, setPayloadText] = useState('Hello from morden-escpos');
   const [idempotencyKey, setIdempotencyKey] = useState('');
@@ -47,8 +64,7 @@ export function JobsPanel({ initialJobs, printers }: Props) {
 
   async function refreshList() {
     const response = await fetch('/api/console/jobs');
-    if (!response.ok)
-      return;
+    if (!response.ok) return;
     const body = await response.json() as { jobs: JobListItem[] };
     setJobs(body.jobs);
     router.refresh();
@@ -65,7 +81,9 @@ export function JobsPanel({ initialJobs, printers }: Props) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        printerId,
+        ...(targetKind === 'printer'
+          ? { printerId }
+          : { printerGroupId }),
         payloadBase64,
         ...(idempotencyKey.trim()
           ? { idempotencyKey: idempotencyKey.trim() }
@@ -82,36 +100,95 @@ export function JobsPanel({ initialJobs, printers }: Props) {
 
     const body = await response.json() as {
       job: JobListItem
+      children?: JobListItem[]
       deduped: boolean
     };
+    const childCount = body.children?.length ?? 0;
     setLastMessage(
       body.deduped
         ? `Idempotent replay — existing job ${body.job.id} (${body.job.status})`
-        : `Enqueued job ${body.job.id}`,
+        : childCount > 0
+          ? `Enqueued parent ${body.job.id} with ${childCount} child jobs`
+          : `Enqueued job ${body.job.id}`,
     );
     await refreshList();
   }
+
+  async function onRetry(jobId: string) {
+    setError(null);
+    const response = await fetch(`/api/console/jobs/${jobId}/retry`, {
+      method: 'POST',
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({})) as { message?: string };
+      setError(body.message ?? 'Could not retry job');
+      return;
+    }
+    setLastMessage(`Retried child job ${jobId}`);
+    await refreshList();
+  }
+
+  const canSubmit = targetKind === 'printer'
+    ? activePrinters.length > 0 && printerId.length > 0
+    : printerGroups.length > 0 && printerGroupId.length > 0;
 
   return (
     <div className="stack">
       <form className="org-form" onSubmit={onEnqueue}>
         <label>
-          Target Printer
+          Target
           <select
-            value={printerId}
-            onChange={event => setPrinterId(event.target.value)}
-            required
-            disabled={activePrinters.length === 0}
+            value={targetKind}
+            onChange={event => setTargetKind(event.target.value as 'printer' | 'group')}
           >
-            {activePrinters.length === 0
-              ? <option value="">No active Printers</option>
-              : activePrinters.map(item => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
+            <option value="printer">Printer</option>
+            <option value="group">Printer Group</option>
           </select>
         </label>
+        {targetKind === 'printer'
+          ? (
+              <label>
+                Target Printer
+                <select
+                  value={printerId}
+                  onChange={event => setPrinterId(event.target.value)}
+                  required
+                  disabled={activePrinters.length === 0}
+                >
+                  {activePrinters.length === 0
+                    ? <option value="">No active Printers</option>
+                    : activePrinters.map(item => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                </select>
+              </label>
+            )
+          : (
+              <label>
+                Target Printer Group
+                <select
+                  value={printerGroupId}
+                  onChange={event => setPrinterGroupId(event.target.value)}
+                  required
+                  disabled={printerGroups.length === 0}
+                >
+                  {printerGroups.length === 0
+                    ? <option value="">No Printer Groups</option>
+                    : printerGroups.map(item => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                          {' '}
+                          (
+                          {item.printerIds.length}
+                          {' '}
+                          members)
+                        </option>
+                      ))}
+                </select>
+              </label>
+            )}
         <label>
           Raw text (encoded to ESC/POS-ish base64 for demo)
           <textarea
@@ -134,7 +211,7 @@ export function JobsPanel({ initialJobs, printers }: Props) {
         {lastMessage ? <p className="muted" role="status">{lastMessage}</p> : null}
         <button
           type="submit"
-          disabled={pending || activePrinters.length === 0 || payloadText.length === 0}
+          disabled={pending || !canSubmit || payloadText.length === 0}
         >
           {pending ? 'Enqueueing…' : 'Enqueue raw job'}
         </button>
@@ -155,7 +232,17 @@ export function JobsPanel({ initialJobs, printers }: Props) {
                   <li key={job.id} className="agent-row">
                     <div>
                       <div className="agent-name">
+                        {job.kind}
+                        {' '}
+                        ·
+                        {' '}
                         {job.status}
+                        {' '}
+                        ·
+                        {' '}
+                        {job.purpose === 'template_confirmation'
+                          ? 'template confirmation'
+                          : 'standard'}
                         {' '}
                         ·
                         {' '}
@@ -169,11 +256,45 @@ export function JobsPanel({ initialJobs, printers }: Props) {
                           {' '}
                           {job.id}
                         </span>
-                        <span className="agent-id">
-                          printerId:
-                          {' '}
-                          {job.printerId}
-                        </span>
+                        {job.purpose === 'template_confirmation'
+                          ? <span className="agent-id">purpose: template_confirmation</span>
+                          : null}
+                        {job.templateId
+                          ? (
+                              <span className="agent-id">
+                                templateId:
+                                {' '}
+                                {job.templateId}
+                              </span>
+                            )
+                          : null}
+                        {job.printerId
+                          ? (
+                              <span className="agent-id">
+                                printerId:
+                                {' '}
+                                {job.printerId}
+                              </span>
+                            )
+                          : null}
+                        {job.printerGroupId
+                          ? (
+                              <span className="agent-id">
+                                printerGroupId:
+                                {' '}
+                                {job.printerGroupId}
+                              </span>
+                            )
+                          : null}
+                        {job.parentJobId
+                          ? (
+                              <span className="agent-id">
+                                parentJobId:
+                                {' '}
+                                {job.parentJobId}
+                              </span>
+                            )
+                          : null}
                         <span>
                           Created:
                           {' '}
@@ -199,6 +320,17 @@ export function JobsPanel({ initialJobs, printers }: Props) {
                           : null}
                       </div>
                     </div>
+                    {job.kind === 'child' && job.status === 'failed'
+                      ? (
+                          <button
+                            type="button"
+                            className="secondary"
+                            onClick={() => void onRetry(job.id)}
+                          >
+                            Retry child
+                          </button>
+                        )
+                      : null}
                   </li>
                 ))}
               </ul>

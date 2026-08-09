@@ -33,8 +33,22 @@
     {
       "idx": 4,
       "version": "7",
+      "when": 1786246498011,
+      "tag": "0004_whole_wallflower",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
       "when": 1786246513214,
-      "tag": "0004_print_templates",
+      "tag": "0005_print_templates",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786246800000,
+      "tag": "0006_job_purpose_template",
       "breakpoints": true
     }
   ]

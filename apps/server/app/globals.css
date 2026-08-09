@@ -238,3 +238,11 @@ button.danger {
   background: var(--danger);
   color: #fff;
 }
+
+.template-editor-frame {
+  width: 100%;
+  min-height: 70vh;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: #fff;
+}

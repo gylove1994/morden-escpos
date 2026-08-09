@@ -32,12 +32,15 @@ export default async function ConsoleHomePage() {
       </p>
       <p className="muted">
         RBAC roles are owner, admin, and member. Updating Organization settings,
-        managing Printer Agent device tokens, and confirming Printers require
-        owner or admin. Members may enqueue raw jobs and view job status.
+        managing Printer Agent device tokens, Printers, Printer Groups, and
+        templates require owner or admin. Members may enqueue jobs (including
+        template confirmation) and view job status.
       </p>
       <p className="stack">
         <a href="/console/printer-agents">Manage Printer Agents</a>
         <a href="/console/printers">Manage Printers</a>
+        <a href="/console/printer-groups">Manage Printer Groups</a>
+        <a href="/console/templates">Templates + editor</a>
         <a href="/console/jobs">Job history</a>
       </p>
     </section>

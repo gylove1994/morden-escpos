@@ -49,6 +49,11 @@ const EnvSchema = z.object({
     .refine(v => v >= 1_000 && v <= 600_000, {
       message: 'JOB_LEASE_MS must be between 1000 and 600000',
     }),
+  /**
+   * Origin of the MIT Receipt Studio app used for console iframe embed.
+   * Preview stays in the MIT app; confirmation print is owned by this server.
+   */
+  TEMPLATE_EDITOR_ORIGIN: z.url().default('http://127.0.0.1:43127'),
 });
 
 const parsed = EnvSchema.safeParse(envForParse);
