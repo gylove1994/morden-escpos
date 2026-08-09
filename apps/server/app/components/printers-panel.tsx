@@ -363,7 +363,7 @@ export function PrintersPanel({
       <div className="stack">
         <div className="agent-actions">
           <h2>{messages.printers.title}</h2>
-          <button type="button" className="secondary" onClick={() => void refreshList()}>
+          <button type="button" className="secondary" onClick={() => void refreshLists()}>
             {messages.printers.refresh}
           </button>
         </div>

@@ -7,8 +7,8 @@ import {
   canManagePrinters,
   getConsoleSession,
 } from '../../../lib/console-auth';
-import { getConsoleMessages } from '../../../lib/i18n/server';
 import { listDiscoveries } from '../../../lib/discoveries';
+import { getConsoleMessages } from '../../../lib/i18n/server';
 import { listPrinterAgents } from '../../../lib/printer-agents';
 import { listPrinters } from '../../../lib/printers';
 import { PrintersPanel } from '../../components/printers-panel';
