@@ -1,3 +1,4 @@
+import type { BootedServer } from './harness';
 /**
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
@@ -15,7 +16,6 @@ import {
   signIn,
   signUp,
 } from './auth-helpers';
-import type { BootedServer } from './harness';
 import { bootServer } from './harness';
 
 async function protocolHeartbeat(baseUrl: string, token: string | null) {
@@ -29,7 +29,7 @@ async function protocolHeartbeat(baseUrl: string, token: string | null) {
   });
 }
 
-describe('Printer Agent registration and device token lifecycle', () => {
+describe('printer Agent registration and device token lifecycle', () => {
   let booted: BootedServer;
   const suffix = Date.now().toString(36);
 

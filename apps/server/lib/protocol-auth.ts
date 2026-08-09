@@ -2,10 +2,8 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import {
-  authenticatePrinterAgentDeviceToken,
-  type PrinterAgentPublic,
-} from './printer-agents';
+import type { PrinterAgentPublic } from './printer-agents';
+import { authenticatePrinterAgentDeviceToken } from './printer-agents';
 
 /**
  * Extract a Bearer device token from the Authorization header.
@@ -16,12 +14,12 @@ export function extractBearerDeviceToken(request: Request): string | null {
   if (!header) {
     return null;
   }
-  const match = /^Bearer\s+(.+)$/i.exec(header.trim());
+  // Use \S+ so the pattern cannot backtrack against whitespace (eslint regexp/no-super-linear-backtracking).
+  const match = /^Bearer\s+(\S+)$/i.exec(header.trim());
   if (!match?.[1]) {
     return null;
   }
-  const token = match[1].trim();
-  return token.length > 0 ? token : null;
+  return match[1];
 }
 
 export type ProtocolAuthResult

@@ -11,9 +11,9 @@ import { revokePrinterAgent } from '../../../../../../lib/printer-agents';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-type RouteContext = {
+interface RouteContext {
   params: Promise<{ printerAgentId: string }>
-};
+}
 
 /**
  * Revoke a Printer Agent device token. The old token stops authenticating.
