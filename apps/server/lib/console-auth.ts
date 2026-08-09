@@ -130,3 +130,13 @@ export function canManageTemplates(
 ): boolean {
   return role === 'owner' || role === 'admin';
 }
+
+/**
+ * Whether the role may create / update Printer Groups under a Printer Agent.
+ * owner and admin MAY; member MUST NOT.
+ */
+export function canManagePrinterGroups(
+  role: ConsoleSession['role'],
+): boolean {
+  return role === 'owner' || role === 'admin';
+}

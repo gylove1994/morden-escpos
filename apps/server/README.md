@@ -16,7 +16,7 @@ BSL SaaS print-queue control plane. See [`CONTEXT.md`](./CONTEXT.md).
 | `pnpm --filter @workspace/server build` | Production build |
 | `pnpm --filter @workspace/server db:generate` | Generate Drizzle migrations from `lib/db/schema.ts` |
 | `pnpm --filter @workspace/server db:migrate` | Apply migrations |
-| `pnpm --filter @workspace/server test` | Vitest (health, auth, tokens, billing/plan limits, queue, integrator auth, templates) |
+| `pnpm --filter @workspace/server test` | Vitest (health, auth, tokens, billing/plan limits, enqueue/lease/report) |
 | `pnpm --filter @workspace/server typecheck` | `tsc --noEmit` |
 
 ## Configuration
@@ -81,46 +81,30 @@ Optional lease duration:
 - Directional Business quotas: 25 printers / 5 Printer Agents / 5000 monthly jobs
 - Over-quota create/enqueue returns `403` with `error: "plan_limit_exceeded"`
 
-## Printers + queue (raw + templates)
+## Printers + Printer Groups + raw queue
 
 - Console: `/console/printers` (create under a Printer Agent with connection hints)
-- Console: `/console/jobs` (enqueue + job history)
-- APIs: `GET|POST /api/console/printers`, `GET|POST /api/console/jobs`
-- Template APIs: `GET|POST /api/console/templates`,
-  `GET|PATCH|DELETE /api/console/templates/:templateId`
-  (owner/admin mutate; members may list)
-- Enqueue body is either:
-  - raw: `{ printerId, payloadBase64, idempotencyKey? }`, or
-  - template: `{ printerId, templateId, inputs, idempotencyKey? }`
-- Template enqueue renders to raw ESC/POS on the server (MIT
-  `morden-node-escpos/render`) before the job is queued; invalid templates/inputs
-  fail at enqueue with `400`
+- Console: `/console/printer-groups` (fan-out target under exactly one Printer Agent)
+- Console: `/console/jobs` (enqueue raw base64 ESC/POS + job history + child retry)
+- APIs:
+  - `GET|POST /api/console/printers`
+  - `GET|POST /api/console/printer-groups`,
+    `PATCH /api/console/printer-groups/:printerGroupId`
+  - `GET|POST /api/console/jobs` (exactly one of `printerId` or `printerGroupId`)
+  - `POST /api/console/jobs/:jobId/retry` (failed child only)
 - Enqueue accepts optional `idempotencyKey` (dedupes per Organization)
+- Group enqueue creates one parent + N child jobs sharing `parentJobId`
+- Parent succeeds only when every child succeeds; mixed results → `partial_failed`
+- Empty / unknown Printer Group enqueue returns a clear error
 - Protocol:
   - `POST /api/protocol/v1/jobs/lease` → `200 { job }` or `204`
   - `POST /api/protocol/v1/jobs/{jobId}/report` with
     `printing` → `succeeded` | `failed` (`errorMessage` required on failure)
-- Job states: `queued` → `leased` → `printing` → `succeeded` | `failed`
+- Job states (single/child): `queued` → `leased` → `printing` → `succeeded` | `failed`
+- Parent states: `queued` while children run → `succeeded` | `partial_failed` | `failed`
 - Expired leases return to `queued`
 - Leased payloads include `payloadBase64`, `payloadByteLength`, and
-  `connectionHints` (raw bytes only — never template JSON)
-
-## Integrator API keys + webhook auth
-
-- Console: `/console/integrator-auth` (create / list / revoke)
-- APIs:
-  - `GET|POST /api/console/api-keys`,
-    `POST /api/console/api-keys/:apiKeyId/revoke`
-  - `GET|POST /api/console/webhook-secrets`,
-    `POST /api/console/webhook-secrets/:webhookSecretId/revoke`
-- Enqueue surfaces (not human session cookies):
-  - `POST /api/integrator/v1/jobs` with `Authorization: Bearer ik_…`
-  - `POST /api/webhooks/v1/jobs` with `X-Webhook-Secret: whsec_…`
-    **or** signed headers `X-Webhook-Id`, `X-Webhook-Timestamp`,
-    `X-Webhook-Signature: sha256=<hmac>` over `${timestamp}.${rawBody}`
-- owner/admin manage credentials; member may list only
-- Credentials are kind-separated from Printer Agent device tokens (`pa_…`):
-  cross-use is rejected with 401
+  `connectionHints`
 
 ## Edition stub
 
@@ -132,15 +116,8 @@ trimming is deferred.
 
 OpenAPI: `contracts/print-queue-agent-protocol.openapi.yaml`.
 
-Shared JSON fixtures for Printer Agent contract tests:
-`contracts/fixtures/` (consumed by `apps/client-node`, later Go).
-
-The server references and serves OpenAPI at `GET /api/protocol/openapi`.
+The server references and serves it at `GET /api/protocol/openapi`.
 Integration tests drive lease/report with an in-process fake Printer Agent.
-
-Shared wire-format fixtures for Printer Agent clients live under
-`contracts/fixtures/` (see that README). The Go Printer Agent
-(`apps/client-go`) runs contract tests against them.
 
 ## Health
 

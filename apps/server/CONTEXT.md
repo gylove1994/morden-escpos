@@ -17,24 +17,24 @@ those surfaces out via the `EDITION` stub (`cloud` | `self-hosted`).
 | ---- | ------- |
 | **Printer Agent** | On-site print client process (Node or Go). MUST NOT be called a bare “Agent”. |
 | **printerAgentId** | Stable identifier for a Printer Agent registration. |
-| **device token** | Secret Bearer credential for Printer Agent protocol auth (`pa_…`). Shown once on create/rotate; stored hashed at rest. MUST stay distinct from human sessions, integrator API keys, and webhook secrets. |
-| **integrator API key** | Secret Bearer credential for integrator REST enqueue (`ik_…`). Shown once on create; stored hashed at rest. MUST NOT authenticate the Print Queue Agent Protocol. |
-| **webhook signing secret** | Secret for webhook enqueue (`whsec_…`). Auth via shared-secret header or HMAC-signed request. Shown once on create; stored hashed (+ encrypted for signature verify). MUST NOT authenticate device-token or API-key surfaces. |
-| **Printer** | Confirmed physical device under exactly one Printer Agent. Jobs target a Printer (or later a Printer Group), never a bare Printer Agent. |
+| **device token** | Secret Bearer credential for Printer Agent protocol auth. Shown once on create/rotate; stored hashed at rest. MUST stay distinct from human sessions and future integrator API keys. |
+| **Printer** | Confirmed physical device under exactly one Printer Agent. Jobs target a Printer or a Printer Group, never a bare Printer Agent. |
 | **connection hints** | Transport + endpoint metadata (TCP / USB / Serial) stored on the Printer and copied onto leased job payloads. |
 | **Print Queue Agent Protocol** | HTTP contract between the server and Printer Agents (OpenAPI under `contracts/`). Primary test seam. |
-| **lease** | Exclusive claim on a job by a Printer Agent until completion or `leaseExpiresAt`. Expired leases return to `queued`. |
-| **idempotency key** | Optional enqueue key unique per Organization; retries return the existing job. |
-| **job status** | `queued` → `leased` → `printing` → `succeeded` \| `failed`. |
+| **lease** | Exclusive claim on a job by a Printer Agent until completion or `leaseExpiresAt`. Expired leases return to `queued`. Parent aggregation jobs are never leased. |
+| **idempotency key** | Optional enqueue key unique per Organization; retries return the existing job (parent + children for group enqueue). |
+| **job kind** | `single` (one Printer), `parent` (group aggregation), or `child` (one fan-out copy). |
+| **job status** | Child/single: `queued` → `leased` → `printing` → `succeeded` \| `failed`. Parent: `queued` while children run, then `succeeded` \| `partial_failed` \| `failed`. |
 | **edition** | Build flavor: `cloud` or `self-hosted`. |
 | **Organization** | Tenant that owns Printer Agents, printers, groups, jobs, and templates. |
-| **Printer Group** | Fan-out target under exactly one Printer Agent (MVP; later ticket). |
+| **Printer Group** | Fan-out target under exactly one Printer Agent. Membership is a set of Printers on that same Printer Agent. |
+| **parent job** | Aggregation job created when enqueueing to a Printer Group. Succeeds only when every child succeeds. |
+| **child job** | One leased print targeting a single Printer; shares `parentJobId` with siblings. Failed children MAY be retried without reprinting successful siblings. |
 | **human session auth** | Better Auth email/password sessions for console users (cookies). MUST stay distinct from Printer Agent device tokens. |
 | **RBAC role** | Organization membership role: `owner`, `admin`, or `member`. |
 | **Personal / Business** | Self-serve cloud plans via Stripe Checkout (~$1/mo / ~$5+/mo directional). |
 | **Reseller** | Negotiated pricing path — contact CTA only, not self-serve Checkout. |
 | **plan limits** | Numeric cloud quotas on printers, Printer Agents, and monthly jobs. |
-| **print template** | Organization-scoped JSON `PrintJobJSON` definition. Rendered to raw ESC/POS at enqueue. |
 
 ## Auth boundaries
 
@@ -72,21 +72,17 @@ This package currently provides:
 
 - Next.js app shell with `/api/health`
 - Postgres + Drizzle migration wiring (auth, Organization, Printer Agent,
-  billing, Printer, PrintJob, PrintTemplate tables)
+  billing, Printer, Printer Group, PrintJob tables)
 - Better Auth email/password signup/login and Organization plugin
 - Signed-in Organization console shell under `/console` (incl. Billing + Printer Agents)
 - Printer Agent console management (`/console/printer-agents`) with create /
   list / revoke / rotate and cloud plan limits on create
 - Printer console management (`/console/printers`) with connection hints
-- Template CRUD (`/api/console/templates`) for stored JSON definitions
-- Job enqueue + minimal job history (`/console/jobs`):
-  - raw `payloadBase64`, or
-  - `templateId + inputs` (server renders via MIT `morden-node-escpos/render`
-    before the job is queued; leased payloads are raw ESC/POS only)
-- Integrator auth console (`/console/integrator-auth`) for API keys + webhook secrets
-- Integrator enqueue surfaces:
-  - `POST /api/integrator/v1/jobs` (API key)
-  - `POST /api/webhooks/v1/jobs` (shared secret or signed request)
+- Printer Group console management (`/console/printer-groups`) under one
+  Printer Agent
+- Raw job enqueue + minimal job history (`/console/jobs`) for Printer or
+  Printer Group targets; failed child retry at
+  `POST /api/console/jobs/{jobId}/retry`
 - Device-token auth on Print Queue Agent Protocol:
   - `POST /api/protocol/v1/printer-agents/heartbeat`
   - `POST /api/protocol/v1/jobs/lease`
@@ -94,14 +90,13 @@ This package currently provides:
 - Cloud Stripe Checkout / Customer Portal / webhook sync
 - Plan-limit enforcement on Printer Agent create, Printer create, and job enqueue
 - Exclusive lease with expiry requeue (`JOB_LEASE_MS`)
+- Group fan-out: parent + N children; parent aggregates to
+  `succeeded` / `partial_failed` / `failed`
 - Idempotent enqueue via `idempotencyKey`
 - `EDITION` compile/build stub (no route trimming yet)
 - Print Queue Agent Protocol OpenAPI, served at `/api/protocol/openapi`
-- Shared protocol fixtures under `contracts/fixtures/v1/` for Printer Agent
-  client contract tests (consumed by `apps/client-go`, `apps/client-node`)
 - Vitest harness covering health, human-session auth, device-token lifecycle,
-  billing HTTP boundaries, templates, and in-process fake Printer Agent queue tests
+  billing HTTP boundaries, and in-process fake Printer Agent queue tests
 
-Out of scope here: Printer Groups, embedded template editor, discovery, landing,
-self-hosted compile-out. Go/Node Printer Agent binaries live in
-`apps/client-go` (#12) / `apps/client-node` (#6).
+Out of scope here: templates, Node/Go agents, discovery, integrator API keys,
+landing, self-hosted compile-out.
