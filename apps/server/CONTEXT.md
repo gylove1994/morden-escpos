@@ -9,7 +9,7 @@ from publication; Change License is AGPL-3.0-or-later.
 Operators enqueue print work from business systems; the control plane queues it
 and delivers raw ESC/POS to physical printers through on-site **Printer Agents**.
 Cloud edition adds billing and light tenant ops; self-hosted edition compiles
-those surfaces out via the `EDITION` stub (`cloud` | `self-hosted`).
+those surfaces out via the `EDITION` build flag (`cloud` | `self-hosted`).
 
 ## Glossary
 
@@ -32,6 +32,7 @@ those surfaces out via the `EDITION` stub (`cloud` | `self-hosted`).
 | **console locale** | UI language cookie (`console_locale`): `en` or `zh` only for MVP. |
 | **human session auth** | Better Auth email/password sessions for console users (cookies). MUST stay distinct from Printer Agent device tokens. |
 | **RBAC role** | Organization membership role: `owner`, `admin`, or `member`. |
+| **platform admin** | Cloud-only operator using `PLATFORM_ADMIN_SECRET` for minimal tenant ops. |
 | **Personal / Business** | Self-serve cloud plans via Stripe Checkout (~$1/mo / ~$5+/mo directional). |
 | **Reseller** | Negotiated pricing path — contact CTA only, not self-serve Checkout. |
 | **plan limits** | Numeric cloud quotas on printers, Printer Agents, and monthly jobs. |
@@ -57,6 +58,23 @@ those surfaces out via the `EDITION` stub (`cloud` | `self-hosted`).
 - Plan limits reject over-quota printer create, Printer Agent create, and monthly
   job enqueue at the HTTP boundary (`plan_limit_exceeded`).
 
+## Edition compile-out
+
+- `EDITION=self-hosted` builds omit Stripe/subscription and platform tenant-ops
+  App Router surfaces by dropping `*.cloud.ts(x)` from `pageExtensions`.
+- Cloud-only files use the `route.cloud.ts` / `page.cloud.tsx` suffix.
+- Self-hosted retains org users, Printer Agents, printers, jobs, and templates
+  routes; plan-limit checks no-op when not cloud.
+- Acceptance tests MUST prove omitted routes are absent from the self-hosted
+  production build manifest (not merely hidden by runtime env).
+
+## Platform tenant ops (cloud)
+
+- Look up Organization by id / slug / name: `GET /api/platform/organizations?q=`
+- Ban / suspend / restore: `PATCH /api/platform/organizations/:id/status`
+- Auth: `Authorization: Bearer <PLATFORM_ADMIN_SECRET>`
+- Console UI: `/console/platform` (cloud build only)
+
 ## Current slice
 
 This package currently provides:
@@ -65,7 +83,7 @@ This package currently provides:
 - Postgres + Drizzle migration wiring (auth, Organization, Printer Agent,
   billing, Printer, PrintJob tables)
 - Better Auth email/password signup/login and Organization plugin
-- Signed-in Organization console shell under `/console` (incl. Billing + Printer Agents)
+- Signed-in Organization console shell under `/console` (incl. Billing on cloud)
 - Printer Agent console management (`/console/printer-agents`) with create /
   list / revoke / rotate and cloud plan limits on create
 - Printer console management (`/console/printers`) with connection hints
@@ -81,10 +99,14 @@ This package currently provides:
 - Plan-limit enforcement on Printer Agent create, Printer create, and job enqueue
 - Exclusive lease with expiry requeue (`JOB_LEASE_MS`)
 - Idempotent enqueue via `idempotencyKey`
-- `EDITION` compile/build stub (no route trimming yet)
+- `EDITION` compile-out via `pageExtensions` + `*.cloud.ts(x)` surfaces
+- Minimal cloud platform tenant ops (lookup / ban / suspend)
 - Print Queue Agent Protocol OpenAPI, served at `/api/protocol/openapi`
 - Vitest harness covering health, human-session auth, device-token lifecycle,
-  billing HTTP boundaries, and in-process fake Printer Agent queue tests
+  billing HTTP boundaries, queue tests, platform ops, and self-hosted compile-out
+  proofs
 
 Out of scope here: full Printer Group admin UI, embedded template editor,
-Node/Go agents, discovery, integrator API keys, landing, self-hosted compile-out.
+discovery, integrator API keys, landing.
+Go/Node Printer Agent binaries live in `apps/client-go` (#12) /
+`apps/client-node` (#6).

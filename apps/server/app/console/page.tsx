@@ -4,6 +4,7 @@
  */
 import { redirect } from 'next/navigation';
 import { getConsoleSession } from '../../lib/console-auth';
+import { isCloudEdition } from '../../lib/edition';
 import { getConsoleMessages } from '../../lib/i18n/server';
 
 export default async function ConsoleHomePage() {
@@ -17,6 +18,7 @@ export default async function ConsoleHomePage() {
   }
 
   const { messages } = await getConsoleMessages();
+  const cloud = isCloudEdition();
 
   return (
     <section className="stack">
@@ -39,8 +41,14 @@ export default async function ConsoleHomePage() {
       <p className="stack">
         <a href="/console/printer-agents">{messages.home.managePrinterAgents}</a>
         {' · '}
-        <a href="/console/billing">{messages.home.billing}</a>
-        {' · '}
+        {cloud
+          ? (
+              <>
+                <a href="/console/billing">{messages.home.billing}</a>
+                {' · '}
+              </>
+            )
+          : null}
         <a href="/console/printers">{messages.home.managePrinters}</a>
         {' · '}
         <a href="/console/jobs">{messages.home.jobHistory}</a>

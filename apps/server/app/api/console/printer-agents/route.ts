@@ -9,6 +9,7 @@ import {
   canManagePrinterAgents,
   getConsoleSession,
 } from '../../../../lib/console-auth';
+import { organizationStatusBlockResponse } from '../../../../lib/platform/org-guard';
 import {
   createPrinterAgent,
   listPrinterAgents,
@@ -73,6 +74,13 @@ export async function POST(request: Request) {
       },
       { status: 403 },
     );
+  }
+
+  const inactive = await organizationStatusBlockResponse(
+    consoleSession.organization.id,
+  );
+  if (inactive) {
+    return inactive;
   }
 
   let body: unknown;

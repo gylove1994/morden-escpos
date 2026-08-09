@@ -5,6 +5,7 @@
 import type { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { getConsoleSession } from '../../lib/console-auth';
+import { isCloudEdition } from '../../lib/edition';
 import { getConsoleMessages } from '../../lib/i18n/server';
 import { SignOutButton } from '../components/auth-forms';
 import { LocaleSwitcher } from '../components/locale-switcher';
@@ -16,6 +17,7 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
   }
 
   const { messages } = await getConsoleMessages();
+  const cloud = isCloudEdition();
 
   return (
     <div className="shell">
@@ -55,12 +57,13 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
           ? (
               <>
                 <a href="/console/printer-agents">{messages.nav.printerAgents}</a>
-                <a href="/console/billing">{messages.nav.billing}</a>
+                {cloud ? <a href="/console/billing">{messages.nav.billing}</a> : null}
                 <a href="/console/printers">{messages.nav.printers}</a>
                 <a href="/console/jobs">{messages.nav.jobs}</a>
               </>
             )
           : <a href="/console/create-organization">{messages.nav.createOrganization}</a>}
+        {cloud ? <a href="/console/platform">Platform</a> : null}
       </nav>
       <div className="shell-body">{children}</div>
     </div>

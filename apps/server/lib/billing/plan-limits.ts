@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import type { PlanResource } from './errors';
+import { isCloudEdition } from '../edition';
 import { PlanLimitError } from './errors';
 import { isPlanId, resolveEffectiveLimits } from './plans';
 import {
@@ -13,6 +14,7 @@ import {
 /**
  * Enforce cloud plan quotas at create/enqueue seams.
  *
+ * Self-hosted edition skips quota checks (no Stripe/subscription surface).
  * Call before inserting a printer / Printer Agent or accepting a monthly job.
  * Throws PlanLimitError when the Organization is at or over quota.
  */
@@ -20,6 +22,10 @@ export async function assertPlanAllows(
   organizationId: string,
   resource: PlanResource,
 ): Promise<void> {
+  if (!isCloudEdition()) {
+    return;
+  }
+
   const billing = await getOrCreateBilling(organizationId);
   const plan = isPlanId(billing.plan) ? billing.plan : 'none';
   const limits = resolveEffectiveLimits(plan, billing.status);

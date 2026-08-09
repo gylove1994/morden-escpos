@@ -18,6 +18,7 @@ import {
   TemplateNotFoundError,
   TemplateRenderError,
 } from '../../../../lib/jobs';
+import { organizationStatusBlockResponse } from '../../../../lib/platform/org-guard';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -87,6 +88,13 @@ export async function POST(request: Request) {
       { error: 'no_organization', message: 'Active Organization required' },
       { status: 400 },
     );
+  }
+
+  const inactive = await organizationStatusBlockResponse(
+    consoleSession.organization.id,
+  );
+  if (inactive) {
+    return inactive;
   }
 
   let body: unknown;
