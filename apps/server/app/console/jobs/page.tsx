@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { redirect } from 'next/navigation';
-import { JobsPanel } from '../../components/jobs-panel';
 import { getConsoleSession } from '../../../lib/console-auth';
 import { listPrintJobs } from '../../../lib/jobs';
 import { listPrinters } from '../../../lib/printers';
+import { JobsPanel } from '../../components/jobs-panel';
 
 export default async function JobsPage() {
   const session = await getConsoleSession();

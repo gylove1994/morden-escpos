@@ -7,7 +7,7 @@
  * In-process fake Printer Agent that drives the Print Queue Agent Protocol
  * at the HTTP seam (lease + report). Used by server integration tests.
  */
-export type FakeLeasedJob = {
+export interface FakeLeasedJob {
   id: string
   printerId: string
   printerAgentId: string
@@ -17,15 +17,15 @@ export type FakeLeasedJob = {
   connectionHints: unknown
   leaseExpiresAt: string
   createdAt: string
-};
+}
 
-export type FakeJobPublic = {
+export interface FakeJobPublic {
   id: string
   status: string
   errorMessage: string | null
   payloadBase64: string
   payloadByteLength: number
-};
+}
 
 export class FakePrinterAgent {
   constructor(

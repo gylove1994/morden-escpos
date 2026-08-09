@@ -17,9 +17,9 @@ const ReportBodySchema = z.object({
   errorMessage: z.string().trim().min(1).max(2000).optional(),
 });
 
-type RouteContext = {
+interface RouteContext {
   params: Promise<{ jobId: string }>
-};
+}
 
 /**
  * Report job progress: printing → succeeded | failed.

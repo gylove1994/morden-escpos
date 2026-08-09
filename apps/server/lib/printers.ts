@@ -2,22 +2,18 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import { and, desc, eq } from 'drizzle-orm';
+import type { ConnectionHints } from './connection-hints';
+import type { PrinterRow, PrinterStatus } from './db/schema';
 import { randomUUID } from 'node:crypto';
+import { and, desc, eq } from 'drizzle-orm';
 import {
-  type ConnectionHints,
   parseConnectionHintsJson,
   stringifyConnectionHints,
 } from './connection-hints';
 import { db } from './db';
-import {
-  printer,
-  printerAgent,
-  type PrinterRow,
-  type PrinterStatus,
-} from './db/schema';
+import { printer, printerAgent } from './db/schema';
 
-export type PrinterPublic = {
+export interface PrinterPublic {
   id: string
   organizationId: string
   printerAgentId: string
@@ -26,7 +22,7 @@ export type PrinterPublic = {
   connectionHints: ConnectionHints
   createdAt: string
   updatedAt: string
-};
+}
 
 function toPublic(row: PrinterRow): PrinterPublic {
   const status: PrinterStatus = row.status === 'disabled' ? 'disabled' : 'active';

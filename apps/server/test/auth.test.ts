@@ -1,8 +1,8 @@
-import type { BootedServer } from './harness';
 /**
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import type { BootedServer } from './harness';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { auth } from '../lib/auth';
 import {
