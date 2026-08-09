@@ -11,9 +11,9 @@ import { rotatePrinterAgentToken } from '../../../../../../lib/printer-agents';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-type RouteContext = {
+interface RouteContext {
   params: Promise<{ printerAgentId: string }>
-};
+}
 
 /**
  * Rotate a Printer Agent device token. Returns the new token once; old tokens stop authenticating.

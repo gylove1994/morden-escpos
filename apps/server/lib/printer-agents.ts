@@ -1,14 +1,14 @@
+import type { PrinterAgentRow, PrinterAgentStatus } from './db/schema';
+import { randomUUID } from 'node:crypto';
 /**
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { and, desc, eq } from 'drizzle-orm';
-import { randomUUID } from 'node:crypto';
 import { db } from './db';
 import {
   printerAgent,
-  type PrinterAgentRow,
-  type PrinterAgentStatus,
+
 } from './db/schema';
 import {
   deviceTokenPrefix,
@@ -16,7 +16,7 @@ import {
   hashDeviceToken,
 } from './device-token';
 
-export type PrinterAgentPublic = {
+export interface PrinterAgentPublic {
   id: string
   organizationId: string
   name: string
@@ -26,7 +26,7 @@ export type PrinterAgentPublic = {
   updatedAt: string
   revokedAt: string | null
   lastAuthenticatedAt: string | null
-};
+}
 
 function toPublic(row: PrinterAgentRow): PrinterAgentPublic {
   const status: PrinterAgentStatus = row.status === 'revoked' ? 'revoked' : 'active';

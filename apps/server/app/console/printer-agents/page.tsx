@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import { redirect } from 'next/navigation';
-import { PrinterAgentsPanel } from '../../components/printer-agents-panel';
 import {
   canManagePrinterAgents,
   getConsoleSession,
 } from '../../../lib/console-auth';
 import { listPrinterAgents } from '../../../lib/printer-agents';
+import { PrinterAgentsPanel } from '../../components/printer-agents-panel';
 
 export default async function PrinterAgentsPage() {
   const session = await getConsoleSession();
