@@ -10,12 +10,12 @@ import {
   canManagePrinters,
   getConsoleSession,
 } from '../../../../lib/console-auth';
+import { organizationStatusBlockResponse } from '../../../../lib/platform/org-guard';
 import {
   createPrinter,
   listPrinters,
   PrinterAgentNotFoundError,
 } from '../../../../lib/printers';
-import { organizationStatusBlockResponse } from '../../../../lib/platform/org-guard';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
