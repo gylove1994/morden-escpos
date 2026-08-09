@@ -31,11 +31,14 @@ export default async function ConsoleHomePage() {
         .
       </p>
       <p className="muted">
-        RBAC roles are owner, admin, and member. Updating Organization settings
-        and managing Printer Agent device tokens require owner or admin.
+        RBAC roles are owner, admin, and member. Updating Organization settings,
+        managing Printer Agent device tokens, and confirming Printers require
+        owner or admin. Members may enqueue raw jobs and view job status.
       </p>
-      <p>
+      <p className="stack">
         <a href="/console/printer-agents">Manage Printer Agents</a>
+        <a href="/console/printers">Manage Printers</a>
+        <a href="/console/jobs">Job history</a>
       </p>
     </section>
   );

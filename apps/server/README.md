@@ -16,7 +16,7 @@ BSL SaaS print-queue control plane. See [`CONTEXT.md`](./CONTEXT.md).
 | `pnpm --filter @workspace/server build` | Production build |
 | `pnpm --filter @workspace/server db:generate` | Generate Drizzle migrations from `lib/db/schema.ts` |
 | `pnpm --filter @workspace/server db:migrate` | Apply migrations |
-| `pnpm --filter @workspace/server test` | Vitest (health, OpenAPI, auth, Printer Agent tokens) |
+| `pnpm --filter @workspace/server test` | Vitest (health, auth, tokens, enqueue/lease/report) |
 | `pnpm --filter @workspace/server typecheck` | `tsc --noEmit` |
 
 ## Configuration
@@ -29,6 +29,11 @@ unprefixed keys in `env.example.server`. Required auth secret:
 
 `AUTH_SECRET` signs **human session** cookies (Better Auth). It is not a
 Printer Agent device token.
+
+Optional lease duration:
+
+- Dev: `APP_JOB_LEASE_MS` (default `30000`)
+- Server: `JOB_LEASE_MS` (default `30000`)
 
 ## Human session auth + Organization RBAC
 
@@ -45,9 +50,23 @@ Printer Agent device token.
 - APIs: `GET|POST /api/console/printer-agents`,
   `POST /api/console/printer-agents/:printerAgentId/revoke|rotate`
 - Create and rotate return the plaintext device token **once**; DB stores SHA-256
-- Protocol auth: `POST /api/protocol/v1/printer-agents/heartbeat` with
-  `Authorization: Bearer <device-token>` (401 for missing/invalid/revoked)
+- Protocol auth: Bearer device token on `/api/protocol/v1/*`
 - owner/admin manage tokens; member may list only
+
+## Printers + raw queue
+
+- Console: `/console/printers` (create under a Printer Agent with connection hints)
+- Console: `/console/jobs` (enqueue raw base64 ESC/POS + job history)
+- APIs: `GET|POST /api/console/printers`, `GET|POST /api/console/jobs`
+- Enqueue accepts optional `idempotencyKey` (dedupes per Organization)
+- Protocol:
+  - `POST /api/protocol/v1/jobs/lease` → `200 { job }` or `204`
+  - `POST /api/protocol/v1/jobs/{jobId}/report` with
+    `printing` → `succeeded` | `failed` (`errorMessage` required on failure)
+- Job states: `queued` → `leased` → `printing` → `succeeded` | `failed`
+- Expired leases return to `queued`
+- Leased payloads include `payloadBase64`, `payloadByteLength`, and
+  `connectionHints`
 
 ## Edition stub
 
@@ -60,7 +79,7 @@ trimming is deferred.
 OpenAPI: `contracts/print-queue-agent-protocol.openapi.yaml`.
 
 The server references and serves it at `GET /api/protocol/openapi`.
-Heartbeat requires a Printer Agent device token; job lease/report remain stubs.
+Integration tests drive lease/report with an in-process fake Printer Agent.
 
 ## Health
 

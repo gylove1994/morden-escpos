@@ -38,6 +38,17 @@ const EnvSchema = z.object({
   EDITION: z.enum(['cloud', 'self-hosted']).default('cloud'),
   // Better Auth human-session signing secret (NOT Printer Agent device tokens).
   AUTH_SECRET: z.string().min(32, { message: 'AUTH_SECRET must be at least 32 characters' }),
+  /**
+   * Exclusive job lease duration in milliseconds.
+   * Expired leases return to queued so another poll can pick them up.
+   */
+  JOB_LEASE_MS: z.string()
+    .regex(/^\d+$/)
+    .default('30000')
+    .transform(Number)
+    .refine(v => v >= 1_000 && v <= 600_000, {
+      message: 'JOB_LEASE_MS must be between 1000 and 600000',
+    }),
 });
 
 const parsed = EnvSchema.safeParse(envForParse);
