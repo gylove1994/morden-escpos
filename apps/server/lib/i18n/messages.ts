@@ -11,6 +11,8 @@ export interface ConsoleMessages {
     printerAgents: string
     billing: string
     printers: string
+    printerGroups: string
+    templates: string
     jobs: string
     createOrganization: string
     ariaLabel: string
@@ -146,6 +148,8 @@ const en: ConsoleMessages = {
     printerAgents: 'Printer Agents',
     billing: 'Billing',
     printers: 'Printers',
+    printerGroups: 'Printer Groups',
+    templates: 'Templates',
     jobs: 'Jobs',
     createOrganization: 'Create Organization',
     ariaLabel: 'Console',
@@ -285,6 +289,8 @@ const zh: ConsoleMessages = {
     printerAgents: '打印机代理',
     billing: '计费',
     printers: '打印机',
+    printerGroups: '打印机组',
+    templates: '模板',
     jobs: '任务',
     createOrganization: '创建组织',
     ariaLabel: '控制台',

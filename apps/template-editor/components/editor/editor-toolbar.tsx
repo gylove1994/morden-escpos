@@ -35,10 +35,11 @@ import { Textarea } from '@workspace/ui/components/ui/textarea';
 import { Braces, Download, FileJson, Redo2, RotateCcw, Undo2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useEditorStore } from '../../lib/editor-store';
 import { importPrintJob, toPrintJob } from '../../lib/print-job';
+import { isSaasEmbedMode } from '../../lib/saas-embed';
 import { LocaleSwitcher } from '../i18n/locale-switcher';
 import { InputSchemaBuilder } from './input-schema-builder';
 import { PrinterControl } from './printer-control';
@@ -63,7 +64,12 @@ export function EditorToolbar() {
   const t = useTranslations('Toolbar');
   const common = useTranslations('Common');
   const errors = useTranslations('Errors');
+  const [saasEmbed, setSaasEmbed] = useState(false);
   const document = useEditorStore(state => state.document);
+
+  useEffect(() => {
+    setSaasEmbed(isSaasEmbedMode());
+  }, []);
   const isReadOnly = useEditorStore(state => state.viewMode === 'printPreview');
   const pastLength = useEditorStore(state => state.past.length);
   const futureLength = useEditorStore(state => state.future.length);
@@ -167,7 +173,7 @@ export function EditorToolbar() {
         </Button>
         <Button
           type="button"
-          variant="default"
+          variant={saasEmbed ? 'outline' : 'default'}
           size="sm"
           onClick={() => {
             setExportDescription(document.description);
@@ -177,7 +183,23 @@ export function EditorToolbar() {
           <Download aria-hidden="true" />
           <span className="hidden sm:inline">{t('exportJson')}</span>
         </Button>
-        <PrinterControl />
+        {saasEmbed
+          ? (
+              <details className="relative">
+                <summary className="cursor-pointer list-none">
+                  <Button type="button" variant="ghost" size="sm" asChild={false}>
+                    Local print
+                  </Button>
+                </summary>
+                <div className="absolute right-0 z-20 mt-1 rounded-md border bg-background p-2 shadow-md">
+                  <p className="mb-2 max-w-56 text-[11px] text-muted-foreground">
+                    Local direct print is secondary inside SaaS. Prefer confirmation print in the console host.
+                  </p>
+                  <PrinterControl />
+                </div>
+              </details>
+            )
+          : <PrinterControl />}
 
         <AlertDialog>
           <AlertDialogTrigger asChild>

@@ -5,7 +5,7 @@
 import { redirect } from 'next/navigation';
 import { getConsoleSession } from '../../../lib/console-auth';
 import { getConsoleMessages } from '../../../lib/i18n/server';
-import { listPrintJobs } from '../../../lib/jobs';
+import { listConsolePrintJobs } from '../../../lib/jobs';
 import { listPrinters } from '../../../lib/printers';
 import { JobsPanel } from '../../components/jobs-panel';
 
@@ -21,7 +21,7 @@ export default async function JobsPage() {
 
   const [{ messages }, jobs, printers] = await Promise.all([
     getConsoleMessages(),
-    listPrintJobs(session.organization.id),
+    listConsolePrintJobs(session.organization.id),
     listPrinters(session.organization.id),
   ]);
 

@@ -159,64 +159,6 @@ button:disabled {
   border-bottom: 1px solid var(--line);
 }
 
-.shell-header-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-.auth-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
-}
-
-.locale-switcher {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--muted);
-}
-
-.locale-switcher select {
-  min-width: 7rem;
-  padding: 0.4rem 0.55rem;
-}
-
-.job-labels {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.4rem;
-}
-
-.job-label {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.15rem 0.45rem;
-  border: 1px solid var(--line);
-  border-radius: 0.3rem;
-  font-size: 0.78rem;
-  color: var(--muted);
-  background: #f8faf8;
-}
-
-.job-label-confirmation {
-  border-color: var(--brand);
-  color: var(--brand);
-  background: #eef7f2;
-}
-
-.job-label-relation {
-  border-style: dashed;
-}
-
-.job-status-failed {
-  color: var(--danger);
-}
-
 .shell-brand {
   font-family: var(--font-display);
   font-size: 1.25rem;
@@ -314,4 +256,12 @@ button:disabled {
 button.danger {
   background: var(--danger);
   color: #fff;
+}
+
+.template-editor-frame {
+  width: 100%;
+  min-height: 70vh;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  background: #fff;
 }

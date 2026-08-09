@@ -59,6 +59,8 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
                 <a href="/console/printer-agents">{messages.nav.printerAgents}</a>
                 {cloud ? <a href="/console/billing">{messages.nav.billing}</a> : null}
                 <a href="/console/printers">{messages.nav.printers}</a>
+                <a href="/console/printer-groups">{messages.nav.printerGroups}</a>
+                <a href="/console/templates">{messages.nav.templates}</a>
                 <a href="/console/jobs">{messages.nav.jobs}</a>
               </>
             )

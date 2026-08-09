@@ -325,6 +325,14 @@ export const printJob = pgTable(
     }),
     kind: text('kind').notNull().default('single'),
     status: text('status').notNull().default('queued'),
+    /**
+     * Why the job was enqueued (`standard` vs embedded-editor `template_confirmation`).
+     */
+    purpose: text('purpose').notNull().default('standard'),
+    /** Optional template used for server-side render (confirmation / template enqueue). */
+    templateId: text('template_id').references(() => printTemplate.id, {
+      onDelete: 'set null',
+    }),
     payloadBase64: text('payload_base64').notNull(),
     payloadByteLength: integer('payload_byte_length').notNull(),
     idempotencyKey: text('idempotency_key'),
@@ -482,6 +490,10 @@ export const printJobRelations = relations(printJob, ({ one, many }) => ({
     fields: [printJob.printerGroupId],
     references: [printerGroup.id],
   }),
+  template: one(printTemplate, {
+    fields: [printJob.templateId],
+    references: [printTemplate.id],
+  }),
   parentJob: one(printJob, {
     fields: [printJob.parentJobId],
     references: [printJob.id],
@@ -494,6 +506,7 @@ export const printJobRelations = relations(printJob, ({ one, many }) => ({
 
 export type PrintJobRow = typeof printJob.$inferSelect;
 export type PrintJobKind = 'single' | 'parent' | 'child';
+export type PrintJobPurpose = 'standard' | 'template_confirmation';
 export type PrintJobStatus
   = | 'queued'
     | 'leased'

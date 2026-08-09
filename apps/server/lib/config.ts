@@ -60,6 +60,10 @@ const EnvSchema = z.object({
     .refine(v => v >= 1_000 && v <= 600_000, {
       message: 'JOB_LEASE_MS must be between 1000 and 600000',
     }),
+  /**
+   * Origin of the MIT Receipt Studio app used for console iframe embed.
+   */
+  TEMPLATE_EDITOR_ORIGIN: z.url().default('http://127.0.0.1:43127'),
 
   // Platform tenant-ops (cloud). Bearer secret for /api/platform/* — unused on self-hosted.
   PLATFORM_ADMIN_SECRET: z.string().min(32).optional(),

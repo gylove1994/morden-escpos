@@ -110,7 +110,7 @@ describe('console job history + zh/en i18n (#14)', () => {
         id: string
         status: string
         errorMessage: string | null
-        kind: string
+        purpose: string
         parentJobId: string | null
         childCount: number
         relation: string
@@ -120,7 +120,7 @@ describe('console job history + zh/en i18n (#14)', () => {
     expect(listed).toBeDefined();
     expect(listed?.status).toBe('failed');
     expect(listed?.errorMessage).toBe('paper jam at cutter');
-    expect(listed?.kind).toBe('raw');
+    expect(listed?.purpose).toBe('standard');
     expect(listed?.parentJobId).toBeNull();
     expect(listed?.childCount).toBe(0);
     expect(listed?.relation).toBe('standalone');
@@ -135,23 +135,23 @@ describe('console job history + zh/en i18n (#14)', () => {
       body: JSON.stringify({
         printerId: ctx.printerId,
         payloadBase64: ESC_POS_BASE64,
-        kind: 'template_confirmation',
+        purpose: 'template_confirmation',
       }),
     });
     expect(enqueue.status).toBe(201);
     const enqueued = await enqueue.json() as {
-      job: { id: string, kind: string }
+      job: { id: string, purpose: string }
     };
-    expect(enqueued.job.kind).toBe('template_confirmation');
+    expect(enqueued.job.purpose).toBe('template_confirmation');
 
     const history = await fetch(`${booted.baseUrl}/api/console/jobs`, {
       headers: { Cookie: ctx.cookie },
     });
     const body = await history.json() as {
-      jobs: Array<{ id: string, kind: string }>
+      jobs: Array<{ id: string, purpose: string }>
     };
     const listed = body.jobs.find(j => j.id === enqueued.job.id);
-    expect(listed?.kind).toBe('template_confirmation');
+    expect(listed?.purpose).toBe('template_confirmation');
   });
 
   it('exposes parent/child relationships when present (compatible with #8)', async () => {
