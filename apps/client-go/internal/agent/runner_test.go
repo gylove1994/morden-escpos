@@ -11,6 +11,7 @@ import (
 	"io"
 	"log/slog"
 	"net"
+	"os"
 	"strconv"
 	"sync"
 	"testing"
@@ -185,7 +186,7 @@ func TestRunnerIdleBackoffWhenNoWork(t *testing.T) {
 	}
 }
 
-func TestTCPPrinterDelegatesToDriver(t *testing.T) {
+func TestLocalPrinterDelegatesToDriver(t *testing.T) {
 	t.Parallel()
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -207,12 +208,124 @@ func TestTCPPrinterDelegatesToDriver(t *testing.T) {
 
 	host, portStr, _ := net.SplitHostPort(ln.Addr().String())
 	port, _ := strconv.Atoi(portStr)
-	p := agent.TCPPrinter{}
+	p := agent.LocalPrinter{}
 	if err := p.PrintRawTCP(context.Background(), host, port, want); err != nil {
 		t.Fatalf("PrintRawTCP: %v", err)
 	}
 	got := <-gotCh
 	if !bytes.Equal(got, want) {
 		t.Fatalf("got %q", got)
+	}
+
+	usbPath := t.TempDir() + "/lp0"
+	if err := p.PrintRawUSB(context.Background(), usbPath, want); err != nil {
+		t.Fatalf("PrintRawUSB: %v", err)
+	}
+	usbGot, err := os.ReadFile(usbPath)
+	if err != nil {
+		t.Fatalf("read usb: %v", err)
+	}
+	if !bytes.Equal(usbGot, want) {
+		t.Fatalf("usb got %q", usbGot)
+	}
+
+	serialPath := t.TempDir() + "/ttyUSB0"
+	if err := p.PrintRawSerial(context.Background(), serialPath, 9600, want); err != nil {
+		t.Fatalf("PrintRawSerial: %v", err)
+	}
+	serialGot, err := os.ReadFile(serialPath)
+	if err != nil {
+		t.Fatalf("read serial: %v", err)
+	}
+	if !bytes.Equal(serialGot, want) {
+		t.Fatalf("serial got %q", serialGot)
+	}
+}
+
+func TestRunnerDrainsUSBAndSerialJobs(t *testing.T) {
+	t.Parallel()
+
+	payload := []byte{0x1b, 0x40, 0x52, 0x41, 0x57, 0x0a}
+	usbPath := t.TempDir() + "/lp0"
+	serialPath := t.TempDir() + "/ttyUSB0"
+	baud := 115200
+
+	proto := &fakeProtocol{
+		leases: []*protocol.LeasedJob{
+			{
+				ID:                "job_usb",
+				PrinterID:         "ptr_usb",
+				PrinterAgentID:    "pa_1",
+				Status:            "leased",
+				PayloadBase64:     base64.StdEncoding.EncodeToString(payload),
+				PayloadByteLength: len(payload),
+				ConnectionHints: protocol.ConnectionHints{
+					Transport: "usb",
+					Path:      usbPath,
+				},
+			},
+			{
+				ID:                "job_serial",
+				PrinterID:         "ptr_serial",
+				PrinterAgentID:    "pa_1",
+				Status:            "leased",
+				PayloadBase64:     base64.StdEncoding.EncodeToString(payload),
+				PayloadByteLength: len(payload),
+				ConnectionHints: protocol.ConnectionHints{
+					Transport: "serial",
+					Path:      serialPath,
+					BaudRate:  &baud,
+				},
+			},
+		},
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	runner := &agent.Runner{
+		Protocol:       proto,
+		Printer:        agent.LocalPrinter{},
+		Logger:         slog.New(slog.NewTextHandler(io.Discard, nil)),
+		PollInterval:   10 * time.Millisecond,
+		IdleBackoff:    10 * time.Millisecond,
+		IdleBackoffMax: 20 * time.Millisecond,
+	}
+
+	done := make(chan error, 1)
+	go func() { done <- runner.Run(ctx) }()
+
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		proto.mu.Lock()
+		n := len(proto.reports)
+		proto.mu.Unlock()
+		if n >= 4 {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	cancel()
+	<-done
+
+	usbGot, err := os.ReadFile(usbPath)
+	if err != nil {
+		t.Fatalf("usb read: %v", err)
+	}
+	if !bytes.Equal(usbGot, payload) {
+		t.Fatalf("usb payload=%v", usbGot)
+	}
+	serialGot, err := os.ReadFile(serialPath)
+	if err != nil {
+		t.Fatalf("serial read: %v", err)
+	}
+	if !bytes.Equal(serialGot, payload) {
+		t.Fatalf("serial payload=%v", serialGot)
+	}
+
+	proto.mu.Lock()
+	defer proto.mu.Unlock()
+	if len(proto.reports) < 4 {
+		t.Fatalf("reports=%v", proto.reports)
 	}
 }

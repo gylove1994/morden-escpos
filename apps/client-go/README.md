@@ -1,13 +1,14 @@
 # Go Printer Agent (`@workspace/client-go`)
 
 BSL on-site **Printer Agent** that polls the Print Queue Agent Protocol and
-prints leased raw ESC/POS bytes over **TCP**.
+prints leased raw ESC/POS bytes over **TCP**, **USB**, and **Serial**.
 
 ## Requirements
 
 - Go 1.22+
 - A registered Printer Agent device token from the SaaS console
-- Reachable control plane (`SERVER_URL`) and TCP printers
+- Reachable control plane (`SERVER_URL`) and local printers matching
+  `connectionHints`
 
 ## Configuration
 
@@ -57,13 +58,16 @@ go test ./...
 ```
 
 Contract tests load shared fixtures from
-`apps/server/contracts/fixtures/v1/` (see that directory’s README).
+`apps/server/contracts/fixtures/v1/` (see that directory’s README). Protocol
+seam tests MUST NOT require real hardware. Manual printer steps:
+`driver/TRANSPORT-CHECKLIST.md`.
 
 ## Driver boundary
 
-`driver/` sends raw bytes over TCP and MUST NOT import protocol/agent packages.
-It is shaped for a future MIT extract into a standalone Go driver library; while
-it lives under `apps/client-go` it remains BSL.
+`driver/` sends raw bytes over TCP / USB / Serial and MUST NOT import
+protocol/agent packages. It is shaped for a future MIT extract into a
+standalone Go driver library; while it lives under `apps/client-go` it remains
+BSL.
 
 ## License
 

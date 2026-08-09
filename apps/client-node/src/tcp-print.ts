@@ -2,54 +2,23 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
-import type { Buffer } from 'node:buffer';
 import type { LeasedJob, TcpConnectionHints } from './protocol/types';
-import { NetworkAdapter, Printer } from 'morden-node-escpos';
 import { decodeJobPayload } from './protocol/codec';
-
-function openAdapter(adapter: NetworkAdapter): Promise<void> {
-  return new Promise((resolve, reject) => {
-    adapter.open((error) => {
-      if (error)
-        reject(error);
-      else resolve();
-    });
-  });
-}
+import { printRawOverTcp } from './print-job';
 
 /**
- * Print leased raw ESC/POS bytes over TCP using the MIT NetworkAdapter stack.
+ * Print leased raw ESC/POS bytes over TCP.
+ * Prefer {@link printLeasedJob} from `./print-job` when connectionHints may be USB/Serial.
  */
 export async function printLeasedJobOverTcp(job: LeasedJob): Promise<void> {
   const hints = job.connectionHints;
   if (hints.transport !== 'tcp') {
     throw new Error(
-      `Unsupported connectionHints.transport "${hints.transport}" in this Printer Agent slice (TCP only)`,
+      `Unsupported connectionHints.transport "${hints.transport}" for TCP helper; use printLeasedJob`,
     );
   }
   await printRawOverTcp(hints, decodeJobPayload(job));
 }
 
-export async function printRawOverTcp(
-  hints: TcpConnectionHints,
-  payload: Buffer,
-): Promise<void> {
-  const adapter = new NetworkAdapter(hints.address, hints.port);
-  await openAdapter(adapter);
-
-  const printer = new Printer(adapter, {
-    encoding: 'GB18030',
-    width: 48,
-  });
-
-  try {
-    printer.raw(payload);
-    await printer.close();
-  }
-  catch (error) {
-    await new Promise<void>((resolve) => {
-      adapter.close(() => resolve());
-    });
-    throw error;
-  }
-}
+export { printRawOverTcp };
+export type { TcpConnectionHints };

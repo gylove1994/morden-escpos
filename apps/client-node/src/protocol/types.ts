@@ -4,28 +4,34 @@
  */
 import { z } from 'zod';
 
-/** Connection hints carried on leased jobs (TCP only in this slice). */
+/** Connection hints carried on leased jobs (TCP / USB / Serial). */
 export const TcpConnectionHintsSchema = z.object({
   transport: z.literal('tcp'),
   address: z.string().trim().min(1),
   port: z.number().int().min(1).max(65535),
 });
 
+export const UsbConnectionHintsSchema = z.object({
+  transport: z.literal('usb'),
+  path: z.string().trim().min(1),
+});
+
+export const SerialConnectionHintsSchema = z.object({
+  transport: z.literal('serial'),
+  path: z.string().trim().min(1),
+  baudRate: z.number().int().min(300).max(1_000_000).optional(),
+});
+
 export const ConnectionHintsSchema = z.discriminatedUnion('transport', [
   TcpConnectionHintsSchema,
-  z.object({
-    transport: z.literal('usb'),
-    path: z.string().trim().min(1),
-  }),
-  z.object({
-    transport: z.literal('serial'),
-    path: z.string().trim().min(1),
-    baudRate: z.number().int().min(300).max(1_000_000).optional(),
-  }),
+  UsbConnectionHintsSchema,
+  SerialConnectionHintsSchema,
 ]);
 
 export type ConnectionHints = z.infer<typeof ConnectionHintsSchema>;
 export type TcpConnectionHints = z.infer<typeof TcpConnectionHintsSchema>;
+export type UsbConnectionHints = z.infer<typeof UsbConnectionHintsSchema>;
+export type SerialConnectionHints = z.infer<typeof SerialConnectionHintsSchema>;
 
 export const JobStatusSchema = z.enum([
   'queued',

@@ -18,15 +18,30 @@ import (
 // Printer prints raw ESC/POS bytes using connection hints from a leased job.
 type Printer interface {
 	PrintRawTCP(ctx context.Context, address string, port int, payload []byte) error
+	PrintRawUSB(ctx context.Context, path string, payload []byte) error
+	PrintRawSerial(ctx context.Context, path string, baudRate int, payload []byte) error
 }
 
-// TCPPrinter is the production Printer backed by driver.PrintRawTCP.
-type TCPPrinter struct{}
+// LocalPrinter is the production Printer backed by driver transports.
+type LocalPrinter struct{}
 
 // PrintRawTCP implements Printer.
-func (TCPPrinter) PrintRawTCP(ctx context.Context, address string, port int, payload []byte) error {
+func (LocalPrinter) PrintRawTCP(ctx context.Context, address string, port int, payload []byte) error {
 	return driver.PrintRawTCP(ctx, address, port, payload)
 }
+
+// PrintRawUSB implements Printer.
+func (LocalPrinter) PrintRawUSB(ctx context.Context, path string, payload []byte) error {
+	return driver.PrintRawUSB(ctx, path, payload)
+}
+
+// PrintRawSerial implements Printer.
+func (LocalPrinter) PrintRawSerial(ctx context.Context, path string, baudRate int, payload []byte) error {
+	return driver.PrintRawSerial(ctx, path, baudRate, payload)
+}
+
+// TCPPrinter is an alias for LocalPrinter kept for call-site compatibility.
+type TCPPrinter = LocalPrinter
 
 // Protocol is the Print Queue Agent Protocol surface used by the runner.
 type Protocol interface {
@@ -52,7 +67,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		r.Logger = slog.Default()
 	}
 	if r.Printer == nil {
-		r.Printer = TCPPrinter{}
+		r.Printer = LocalPrinter{}
 	}
 	if r.PollInterval <= 0 {
 		r.PollInterval = time.Second
@@ -138,6 +153,7 @@ func (r *Runner) handleJob(ctx context.Context, job *protocol.LeasedJob) error {
 		"jobId", job.ID,
 		"printerId", job.PrinterID,
 		"printerAgentId", job.PrinterAgentID,
+		"transport", job.ConnectionHints.Transport,
 	)
 	return nil
 }
@@ -147,8 +163,20 @@ func (r *Runner) printJob(ctx context.Context, job *protocol.LeasedJob, payload 
 	switch hints.Transport {
 	case "tcp":
 		return r.Printer.PrintRawTCP(ctx, hints.Address, hints.Port, payload)
-	case "usb", "serial":
-		return fmt.Errorf("transport %q is not supported in this Printer Agent slice (TCP only)", hints.Transport)
+	case "usb":
+		if hints.Path == "" {
+			return fmt.Errorf("usb connectionHints.path is required")
+		}
+		return r.Printer.PrintRawUSB(ctx, hints.Path, payload)
+	case "serial":
+		if hints.Path == "" {
+			return fmt.Errorf("serial connectionHints.path is required")
+		}
+		baud := 0
+		if hints.BaudRate != nil {
+			baud = *hints.BaudRate
+		}
+		return r.Printer.PrintRawSerial(ctx, hints.Path, baud, payload)
 	default:
 		return fmt.Errorf("unknown connectionHints.transport %q", hints.Transport)
 	}

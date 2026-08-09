@@ -8,11 +8,11 @@ import { fileURLToPath } from 'node:url';
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * Shared Print Queue Agent Protocol fixtures (also used by future Go client).
- * Located under apps/server/contracts/fixtures.
+ * Shared Print Queue Agent Protocol fixtures (also used by the Go client).
+ * Located under apps/server/contracts/fixtures/v1.
  */
 export function getProtocolFixturesDir(): string {
-  return path.resolve(moduleDir, '../../server/contracts/fixtures');
+  return path.resolve(moduleDir, '../../server/contracts/fixtures/v1');
 }
 
 export function protocolFixturePath(name: string): string {
