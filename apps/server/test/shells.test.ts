@@ -107,5 +107,14 @@ describe('console shell plane guards', () => {
     expect(businessHtml).toContain('data-nav="Billing"');
     expect(businessHtml).not.toContain('data-nav="Platform"');
     expect(businessHtml).not.toMatch(/href="\/console\/platform"/);
+
+    const platform = await fetch(`${booted.baseUrl}/console/platform`, {
+      headers: { Cookie: cookie },
+    });
+    expect(platform.status).toBe(200);
+    const platformHtml = await platform.text();
+    expect(platformHtml).toContain('data-shell="platform"');
+    expect(platformHtml).toContain('data-testid="platform-nav"');
+    expect(platformHtml).not.toContain('data-testid="business-nav"');
   });
 });

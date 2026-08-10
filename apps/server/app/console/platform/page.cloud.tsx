@@ -10,7 +10,7 @@ import { PlatformTenantOps } from '../../components/platform-tenant-ops';
  */
 export default function PlatformTenantOpsPage() {
   return (
-    <section className="stack">
+    <section className="stack" data-testid="platform-tenant-ops">
       <h1>Platform tenant ops</h1>
       <p className="muted">
         Minimal cloud abuse controls: look up an Organization, then suspend or ban

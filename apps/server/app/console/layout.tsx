@@ -3,20 +3,39 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import type { ReactNode } from 'react';
+import { headers } from 'next/headers';
 import { getBusinessNavItems } from '../../lib/business-nav';
 import { requireConsoleSession } from '../../lib/console-guards';
 import { getConsoleLocale } from '../../lib/console-locale';
 import { listConsoleOrganizations } from '../../lib/console-organizations';
 import { SignOutButton } from '../components/auth-forms';
 import { BusinessShell } from '../components/business-shell';
+import { PlatformShell } from '../components/platform-shell';
 
 export default async function ConsoleLayout({ children }: { children: ReactNode }) {
   const session = await requireConsoleSession();
   const locale = await getConsoleLocale();
   const switchLocale = locale === 'en' ? 'zh' : 'en';
   const localeSwitchLabel = locale === 'en' ? '中文' : 'English';
+  const plane = (await headers()).get('x-console-plane') ?? 'business';
 
-  if (!session.organization) {
+  if (plane === 'platform') {
+    return (
+      <PlatformShell userEmail={session.user.email}>
+        {children}
+      </PlatformShell>
+    );
+  }
+
+  if (plane === 'status') {
+    return (
+      <div className="mx-auto w-[min(40rem,calc(100%-2rem))] py-16" data-shell="status">
+        {children}
+      </div>
+    );
+  }
+
+  if (!session.organization || plane === 'onboarding') {
     return (
       <div className="shell" data-shell="onboarding">
         <header className="shell-header flex items-center justify-between gap-4 py-4">

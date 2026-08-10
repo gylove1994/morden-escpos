@@ -39,6 +39,9 @@ const RETAINED_SELF_HOSTED_URLS = [
   '/api/console/printers',
   '/api/console/jobs',
   '/console',
+  '/console/onboarding',
+  '/console/suspended',
+  '/console/forbidden',
   '/login',
   '/signup',
 ] as const;
