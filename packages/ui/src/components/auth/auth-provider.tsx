@@ -1,19 +1,19 @@
-import type { AuthProviderProps } from '@better-auth-ui/react';
-import type {
-  ComponentPropsWithoutRef,
-  ComponentType,
-  PropsWithChildren,
-  ReactNode,
-} from 'react';
 /**
  * Copyright (c) 2026 morden-escpos-contributors
  * SPDX-License-Identifier: MIT
  */
 import {
   AuthProvider as AuthProviderPrimitive,
-
+  type AuthProviderProps,
 } from '@better-auth-ui/react';
+import type {
+  ComponentPropsWithoutRef,
+  ComponentType,
+  PropsWithChildren,
+  ReactNode,
+} from 'react';
 
+import '#lib/auth/auth-plugin';
 import { ErrorToaster } from './error-toaster';
 
 declare module '@better-auth-ui/core' {
