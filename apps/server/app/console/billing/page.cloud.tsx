@@ -5,7 +5,7 @@
 import { redirect } from 'next/navigation';
 import { getSubscriptionSummary } from '../../../lib/billing/subscription';
 import { SERVER_CONFIG } from '../../../lib/config';
-import { getConsoleSession } from '../../../lib/console-auth';
+import { requireConsoleOrganization } from '../../../lib/console-guards';
 import { isCloudEdition } from '../../../lib/edition';
 import { BillingActions } from '../../components/billing-actions';
 
@@ -14,13 +14,7 @@ export default async function ConsoleBillingPage() {
     redirect('/console');
   }
 
-  const session = await getConsoleSession();
-  if (!session) {
-    redirect('/login');
-  }
-  if (!session.organization) {
-    redirect('/console/create-organization');
-  }
+  const session = await requireConsoleOrganization();
 
   const summary = await getSubscriptionSummary(session.organization.id);
   const canManageBilling = session.role === 'owner' || session.role === 'admin';

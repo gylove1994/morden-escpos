@@ -58,7 +58,7 @@ Optional lease / presence:
 ## Human session auth + Organization RBAC
 
 - Signup / login: `/signup`, `/login` → Better Auth at `/api/auth/*`
-- Create Organization (creator becomes **owner**): `/console/create-organization`
+- Zero-Organization onboarding (creator becomes **owner**): `/console/onboarding`
 - Signed-in Organization shell: `/console`
 - Roles: `owner` | `admin` | `member`
 - Protected example: `PATCH /api/console/org-settings` requires owner/admin
