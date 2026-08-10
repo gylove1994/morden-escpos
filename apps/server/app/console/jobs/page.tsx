@@ -16,12 +16,14 @@ export default async function JobsPage() {
   ]);
 
   return (
-    <section className="stack">
-      <h1>Print jobs</h1>
-      <p className="muted">
-        Enqueue raw ESC/POS work to a Printer and watch queued → leased →
-        printing → succeeded | failed. Idempotency keys dedupe integrator retries.
-      </p>
+    <section className="flex flex-col gap-4">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Print jobs</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Enqueue raw ESC/POS work to a Printer and watch queued → leased →
+          printing → succeeded | failed. Idempotency keys dedupe integrator retries.
+        </p>
+      </div>
       <JobsPanel initialJobs={jobs} printers={printers} />
     </section>
   );

@@ -17,13 +17,15 @@ export default async function PrintersPage() {
   ]);
 
   return (
-    <section className="stack">
-      <h1>Printers</h1>
-      <p className="muted">
-        Confirm Printers under a Printer Agent and attach connection hints.
-        Leased jobs carry those hints so the on-site Printer Agent can open the
-        correct local device.
-      </p>
+    <section className="flex flex-col gap-4">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Printers</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Confirm Printers under a Printer Agent and attach connection hints.
+          Leased jobs carry those hints so the on-site Printer Agent can open the
+          correct local device.
+        </p>
+      </div>
       <PrintersPanel
         initialPrinters={printers}
         printerAgents={printerAgents}

@@ -13,13 +13,15 @@ export default async function PrinterAgentsPage() {
   const printerAgents = await listPrinterAgents(session.organization.id);
 
   return (
-    <section className="stack">
-      <h1>Printer Agents</h1>
-      <p className="muted">
-        Register on-site Printer Agents and manage device tokens. Tokens are shown
-        once on create or rotate and stored hashed at rest. This is separate from
-        human session cookies.
-      </p>
+    <section className="flex flex-col gap-4">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Printer Agents</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Register on-site Printer Agents and manage device tokens. Tokens are shown
+          once on create or rotate and stored hashed at rest. This is separate from
+          human session cookies.
+        </p>
+      </div>
       <PrinterAgentsPanel
         initialPrinterAgents={printerAgents}
         canManage={canManagePrinterAgents(session.role)}
