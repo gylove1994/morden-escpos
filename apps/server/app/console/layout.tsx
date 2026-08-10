@@ -3,57 +3,66 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import type { ReactNode } from 'react';
+import { getBusinessNavItems } from '../../lib/business-nav';
 import { requireConsoleSession } from '../../lib/console-guards';
+import { getConsoleLocale } from '../../lib/console-locale';
+import { listConsoleOrganizations } from '../../lib/console-organizations';
 import { SignOutButton } from '../components/auth-forms';
+import { BusinessShell } from '../components/business-shell';
 
 export default async function ConsoleLayout({ children }: { children: ReactNode }) {
   const session = await requireConsoleSession();
-  const hasOrganization = Boolean(session.organization);
+  const locale = await getConsoleLocale();
+  const switchLocale = locale === 'en' ? 'zh' : 'en';
+  const localeSwitchLabel = locale === 'en' ? '中文' : 'English';
+
+  if (!session.organization) {
+    return (
+      <div className="shell" data-shell="onboarding">
+        <header className="shell-header flex items-center justify-between gap-4 py-4">
+          <div>
+            <div className="font-semibold">morden-escpos</div>
+            <div className="text-sm text-muted-foreground">
+              <span>{session.user.email}</span>
+              <span> · No active Organization</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <a
+              href={`/api/console/locale?locale=${switchLocale}&next=/console/onboarding`}
+              className="text-sm underline underline-offset-4"
+            >
+              {localeSwitchLabel}
+            </a>
+            <SignOutButton />
+          </div>
+        </header>
+        <nav className="mb-4" aria-label="Onboarding">
+          <a href="/console/onboarding">Onboarding</a>
+        </nav>
+        <div>{children}</div>
+      </div>
+    );
+  }
+
+  const organizations = await listConsoleOrganizations();
+  const navItems = getBusinessNavItems();
 
   return (
-    <div
-      className="shell"
-      data-shell={hasOrganization ? 'business' : 'onboarding'}
+    <BusinessShell
+      organizations={organizations}
+      activeOrganization={{
+        id: session.organization.id,
+        name: session.organization.name,
+        slug: session.organization.slug,
+      }}
+      role={session.role}
+      userEmail={session.user.email}
+      navItems={navItems}
+      localeSwitchHref={`/api/console/locale?locale=${switchLocale}&next=/console`}
+      localeSwitchLabel={localeSwitchLabel}
     >
-      <header className="shell-header">
-        <div>
-          <div className="shell-brand">morden-escpos</div>
-          <div className="shell-meta">
-            <span>{session.user.email}</span>
-            {session.organization
-              ? (
-                  <>
-                    <span>
-                      Organization:
-                      {' '}
-                      {session.organization.name}
-                    </span>
-                    <span>
-                      Role:
-                      {' '}
-                      {session.role ?? 'unknown'}
-                    </span>
-                  </>
-                )
-              : <span>No active Organization</span>}
-          </div>
-        </div>
-        <SignOutButton />
-      </header>
-      <nav className="shell-nav" aria-label="Console">
-        {hasOrganization
-          ? (
-              <>
-                <a href="/console">Overview</a>
-                <a href="/console/printer-agents">Printer Agents</a>
-                <a href="/console/billing">Billing</a>
-                <a href="/console/printers">Printers</a>
-                <a href="/console/jobs">Jobs</a>
-              </>
-            )
-          : <a href="/console/onboarding">Onboarding</a>}
-      </nav>
-      <div className="shell-body">{children}</div>
-    </div>
+      {children}
+    </BusinessShell>
   );
 }

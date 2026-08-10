@@ -96,5 +96,16 @@ describe('console shell plane guards', () => {
     const businessHtml = await business.text();
     expect(businessHtml).toContain('data-shell="business"');
     expect(businessHtml).not.toContain('data-shell="onboarding"');
+    expect(businessHtml).toContain('data-testid="business-nav"');
+    expect(businessHtml).toContain('data-testid="organization-switcher"');
+    expect(businessHtml).toContain('data-nav="Overview"');
+    expect(businessHtml).toContain('data-nav="Printer Agents"');
+    expect(businessHtml).toContain('data-nav="Printers"');
+    expect(businessHtml).toContain('data-nav="Printer Groups"');
+    expect(businessHtml).toContain('data-nav="Templates"');
+    expect(businessHtml).toContain('data-nav="Jobs"');
+    expect(businessHtml).toContain('data-nav="Billing"');
+    expect(businessHtml).not.toContain('data-nav="Platform"');
+    expect(businessHtml).not.toMatch(/href="\/console\/platform"/);
   });
 });
