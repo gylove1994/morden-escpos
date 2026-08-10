@@ -70,13 +70,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const inactive = await organizationStatusBlockResponse(
-    consoleSession.organization.id,
-  );
-  if (inactive) {
-    return inactive;
-  }
-
   if (!canManagePrinters(consoleSession.role)) {
     return Response.json(
       {
