@@ -5,19 +5,36 @@
 'use client';
 
 import type { FormEvent } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@workspace/ui/components/ui/alert';
+import { Badge } from '@workspace/ui/components/ui/badge';
+import { Button } from '@workspace/ui/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@workspace/ui/components/ui/card';
+import { Input } from '@workspace/ui/components/ui/input';
+import { Label } from '@workspace/ui/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@workspace/ui/components/ui/table';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useConsoleI18n } from '../../lib/i18n/client';
 
 export interface PrinterAgentListItem {
   id: string
   name: string
   status: 'active' | 'revoked'
-  presence: 'online' | 'offline'
   deviceTokenPrefix: string | null
   createdAt: string
   revokedAt: string | null
-  lastAuthenticatedAt: string | null
 }
 
 interface Props {
@@ -27,7 +44,6 @@ interface Props {
 
 export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
   const router = useRouter();
-  const { messages, locale } = useConsoleI18n();
   const [printerAgents, setPrinterAgents] = useState(initialPrinterAgents);
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +83,7 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
     setPending(false);
     if (!response.ok) {
       const body = await response.json().catch(() => ({})) as { message?: string };
-      setError(body.message ?? messages.printerAgents.createFailed);
+      setError(body.message ?? 'Could not create Printer Agent');
       return;
     }
 
@@ -97,7 +113,7 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
     setActionId(null);
     if (!response.ok) {
       const body = await response.json().catch(() => ({})) as { message?: string };
-      setError(body.message ?? messages.printerAgents.createFailed);
+      setError(body.message ?? 'Could not revoke device token');
       return;
     }
     if (revealedToken?.printerAgentId === printerAgentId) {
@@ -118,7 +134,7 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
     setActionId(null);
     if (!response.ok) {
       const body = await response.json().catch(() => ({})) as { message?: string };
-      setError(body.message ?? messages.printerAgents.createFailed);
+      setError(body.message ?? 'Could not rotate device token');
       return;
     }
     const body = await response.json() as {
@@ -135,139 +151,162 @@ export function PrinterAgentsPanel({ initialPrinterAgents, canManage }: Props) {
   }
 
   return (
-    <div className="stack">
+    <div className="flex flex-col gap-6">
       {revealedToken
         ? (
-            <div className="token-reveal" role="status">
-              <h2>
-                {revealedToken.reason === 'created'
-                  ? messages.printerAgents.tokenCreated
-                  : messages.printerAgents.tokenRotated}
-              </h2>
-              <p>
-                {messages.printerAgents.copyHint}
+            <Alert role="status">
+              <AlertTitle>
+                Device token
                 {' '}
-                <strong>{revealedToken.name}</strong>
-              </p>
-              <code className="token-value">{revealedToken.deviceToken}</code>
-              <button
-                type="button"
-                className="secondary"
-                onClick={() => setRevealedToken(null)}
-              >
-                OK
-              </button>
-            </div>
+                {revealedToken.reason === 'created' ? 'created' : 'rotated'}
+              </AlertTitle>
+              <AlertDescription>
+                <p>
+                  Copy the token for
+                  {' '}
+                  <strong>{revealedToken.name}</strong>
+                  {' '}
+                  now. It will not be shown again.
+                </p>
+                <code className="mt-2 block break-all rounded-md bg-muted px-2 py-1.5 font-mono text-xs">
+                  {revealedToken.deviceToken}
+                </code>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => setRevealedToken(null)}
+                >
+                  Dismiss
+                </Button>
+              </AlertDescription>
+            </Alert>
           )
         : null}
 
       {canManage
         ? (
-            <form className="org-form" onSubmit={onCreate}>
-              <label>
-                {messages.printerAgents.nameLabel}
-                <input
-                  name="name"
-                  value={name}
-                  onChange={event => setName(event.target.value)}
-                  required
-                  minLength={1}
-                  maxLength={120}
-                />
-              </label>
-              {error ? <p className="error" role="alert">{error}</p> : null}
-              <button type="submit" disabled={pending || name.trim().length === 0}>
-                {pending ? messages.printerAgents.creating : messages.printerAgents.create}
-              </button>
-            </form>
+            <Card>
+              <CardHeader>
+                <CardTitle>Create Printer Agent</CardTitle>
+                <CardDescription>
+                  Registers an on-site agent and issues a one-time device token.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form className="grid max-w-md gap-3" onSubmit={onCreate}>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="printer-agent-name">Printer Agent name</Label>
+                    <Input
+                      id="printer-agent-name"
+                      name="name"
+                      value={name}
+                      onChange={event => setName(event.target.value)}
+                      required
+                      minLength={1}
+                      maxLength={120}
+                      placeholder="Store front desk"
+                    />
+                  </div>
+                  {error
+                    ? (
+                        <Alert variant="destructive">
+                          <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                      )
+                    : null}
+                  <Button type="submit" disabled={pending || name.trim().length === 0}>
+                    {pending ? 'Creating…' : 'Create Printer Agent'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
           )
         : (
-            <p className="muted">{messages.printerAgents.membersReadOnly}</p>
+            <p className="text-sm text-muted-foreground">
+              Viewing only. owner or admin can create, revoke, or rotate device tokens.
+            </p>
           )}
 
-      {!canManage && error ? <p className="error" role="alert">{error}</p> : null}
+      {!canManage && error
+        ? (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )
+        : null}
 
-      <div className="stack">
-        <div className="agent-actions">
-          <h2>{messages.printerAgents.title}</h2>
-          <button type="button" className="secondary" onClick={() => void refreshList()}>
-            {messages.printerAgents.refresh}
-          </button>
-        </div>
-        {printerAgents.length === 0
-          ? <p className="muted">{messages.printerAgents.empty}</p>
-          : (
-              <ul className="agent-list">
-                {printerAgents.map(agent => (
-                  <li key={agent.id} className="agent-row">
-                    <div>
-                      <div className="agent-name">{agent.name}</div>
-                      <div className="muted agent-meta">
-                        <span>
-                          {agent.status === 'active'
-                            ? messages.printerAgents.statusActive
-                            : messages.printerAgents.statusRevoked}
-                        </span>
-                        <span>
-                          {messages.printerAgents.tokenPrefix}
-                          :
-                          {' '}
-                          {agent.deviceTokenPrefix ? `${agent.deviceTokenPrefix}…` : '—'}
-                        </span>
-                        <span>
-                          {messages.printerAgents.presence}
-                          :
-                          {' '}
-                          {agent.presence ?? '—'}
-                        </span>
-                        <span>
-                          {messages.printerAgents.lastSeen}
-                          :
-                          {' '}
-                          {agent.lastAuthenticatedAt
-                            ? new Date(agent.lastAuthenticatedAt).toLocaleString(locale)
-                            : messages.printerAgents.never}
-                        </span>
-                        <span className="agent-id">
-                          printerAgentId:
-                          {' '}
+      <Card>
+        <CardHeader>
+          <CardTitle>Registered Printer Agents</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {printerAgents.length === 0
+            ? (
+                <p className="text-sm text-muted-foreground">
+                  No Printer Agents yet. Create one to receive a device token.
+                </p>
+              )
+            : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Token</TableHead>
+                      <TableHead>ID</TableHead>
+                      {canManage ? <TableHead className="text-right">Actions</TableHead> : null}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {printerAgents.map(agent => (
+                      <TableRow key={agent.id}>
+                        <TableCell className="font-medium">{agent.name}</TableCell>
+                        <TableCell>
+                          <Badge variant={agent.status === 'active' ? 'secondary' : 'outline'}>
+                            {agent.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {agent.deviceTokenPrefix ? `${agent.deviceTokenPrefix}…` : 'none'}
+                        </TableCell>
+                        <TableCell className="max-w-[12rem] truncate font-mono text-xs text-muted-foreground">
                           {agent.id}
-                        </span>
-                        <span>
-                          {messages.printerAgents.created}
-                          :
-                          {' '}
-                          {new Date(agent.createdAt).toLocaleString(locale)}
-                        </span>
-                      </div>
-                    </div>
-                    {canManage
-                      ? (
-                          <div className="agent-actions">
-                            <button
-                              type="button"
-                              className="secondary"
-                              disabled={actionId === agent.id}
-                              onClick={() => onRotate(agent.id, agent.name)}
-                            >
-                              {messages.printerAgents.rotate}
-                            </button>
-                            <button
-                              type="button"
-                              className="danger"
-                              disabled={actionId === agent.id || agent.status === 'revoked'}
-                              onClick={() => onRevoke(agent.id)}
-                            >
-                              {messages.printerAgents.revoke}
-                            </button>
-                          </div>
-                        )
-                      : null}
-                  </li>
-                ))}
-              </ul>
-            )}
-      </div>
+                        </TableCell>
+                        {canManage
+                          ? (
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    disabled={actionId === agent.id}
+                                    onClick={() => onRotate(agent.id, agent.name)}
+                                  >
+                                    Rotate token
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="sm"
+                                    disabled={actionId === agent.id || agent.status === 'revoked'}
+                                    onClick={() => onRevoke(agent.id)}
+                                  >
+                                    Revoke
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            )
+                          : null}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

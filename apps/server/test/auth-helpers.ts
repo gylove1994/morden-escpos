@@ -2,6 +2,7 @@
  * Copyright (c) 2026 GYlove1994 <gylove1994@acgsteps.com>
  * SPDX-License-Identifier: BUSL-1.1
  */
+import { setOrganizationPlanForTests } from '../lib/billing/subscription';
 import { SERVER_CONFIG } from '../lib/config';
 
 export function authOriginHeaders(extra?: HeadersInit): Headers {
@@ -89,5 +90,21 @@ export async function createOrganization(
     headers: authOriginHeaders({ Cookie: cookie }),
     body: JSON.stringify(input),
   });
-  return { response, cookie: mergeCookies(cookie, response) };
+  const nextCookie = mergeCookies(cookie, response);
+
+  // Cloud plan defaults to `none` (zero quotas). Grant a Personal entitlement so
+  // HTTP harness tests can exercise Printer Agent / Printer / job seams without
+  // going through Stripe Checkout on every bootstrap.
+  if (response.ok) {
+    const body = await response.clone().json() as { id?: string };
+    if (body.id) {
+      await setOrganizationPlanForTests({
+        organizationId: body.id,
+        plan: 'personal',
+        status: 'active',
+      });
+    }
+  }
+
+  return { response, cookie: nextCookie };
 }

@@ -3,71 +3,90 @@
  * SPDX-License-Identifier: BUSL-1.1
  */
 import type { ReactNode } from 'react';
-import { redirect } from 'next/navigation';
-import { getConsoleSession } from '../../lib/console-auth';
-import { isCloudEdition } from '../../lib/edition';
-import { getConsoleMessages } from '../../lib/i18n/server';
+import { headers } from 'next/headers';
+import { getBusinessNavItems } from '../../lib/business-nav';
+import { requireConsoleSession } from '../../lib/console-guards';
+import { getConsoleLocale } from '../../lib/console-locale';
+import { listConsoleOrganizations } from '../../lib/console-organizations';
 import { SignOutButton } from '../components/auth-forms';
-import { LocaleSwitcher } from '../components/locale-switcher';
+import { BusinessShell } from '../components/business-shell';
+import { PlatformShell } from '../components/platform-shell';
 
 export default async function ConsoleLayout({ children }: { children: ReactNode }) {
-  const session = await getConsoleSession();
-  if (!session) {
-    redirect('/login');
+  const session = await requireConsoleSession();
+  const locale = await getConsoleLocale();
+  const switchLocale = locale === 'en' ? 'zh' : 'en';
+  const localeSwitchLabel = locale === 'en' ? '中文' : 'English';
+  const plane = (await headers()).get('x-console-plane') ?? 'business';
+
+  if (plane === 'platform') {
+    return (
+      <PlatformShell userEmail={session.user.email}>
+        {children}
+      </PlatformShell>
+    );
   }
 
-  const { messages } = await getConsoleMessages();
-  const cloud = isCloudEdition();
+  if (plane === 'status') {
+    return (
+      <div className="mx-auto w-[min(40rem,calc(100%-2rem))] py-16" data-shell="status">
+        {children}
+      </div>
+    );
+  }
+
+  if (!session.organization || plane === 'onboarding') {
+    return (
+      <div
+        className="mx-auto w-[min(40rem,calc(100%-2rem))] py-8"
+        data-shell="onboarding"
+      >
+        <header className="mb-6 flex items-center justify-between gap-4">
+          <div>
+            <div className="font-semibold">morden-escpos</div>
+            <div className="text-sm text-muted-foreground">
+              <span>{session.user.email}</span>
+              <span> · No active Organization</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <a
+              href={`/api/console/locale?locale=${switchLocale}&next=/console/onboarding`}
+              className="text-sm underline underline-offset-4"
+            >
+              {localeSwitchLabel}
+            </a>
+            <SignOutButton />
+          </div>
+        </header>
+        <nav className="mb-4 text-sm" aria-label="Onboarding">
+          <a href="/console/onboarding" className="underline underline-offset-4">
+            Onboarding
+          </a>
+        </nav>
+        <div>{children}</div>
+      </div>
+    );
+  }
+
+  const organizations = await listConsoleOrganizations();
+  const navItems = getBusinessNavItems();
 
   return (
-    <div className="shell">
-      <header className="shell-header">
-        <div>
-          <div className="shell-brand">{messages.brand}</div>
-          <div className="shell-meta">
-            <span>{session.user.email}</span>
-            {session.organization
-              ? (
-                  <>
-                    <span>
-                      {messages.shell.organization}
-                      :
-                      {' '}
-                      {session.organization.name}
-                    </span>
-                    <span>
-                      {messages.shell.role}
-                      :
-                      {' '}
-                      {session.role ?? 'unknown'}
-                    </span>
-                  </>
-                )
-              : <span>{messages.shell.noOrganization}</span>}
-          </div>
-        </div>
-        <div className="shell-header-actions">
-          <LocaleSwitcher />
-          <SignOutButton />
-        </div>
-      </header>
-      <nav className="shell-nav" aria-label={messages.nav.ariaLabel}>
-        <a href="/console">{messages.nav.overview}</a>
-        {session.organization
-          ? (
-              <>
-                <a href="/console/printer-agents">{messages.nav.printerAgents}</a>
-                {cloud ? <a href="/console/billing">{messages.nav.billing}</a> : null}
-                <a href="/console/printers">{messages.nav.printers}</a>
-                <a href="/console/printer-groups">{messages.nav.printerGroups}</a>
-                <a href="/console/templates">{messages.nav.templates}</a>
-                <a href="/console/jobs">{messages.nav.jobs}</a>
-              </>
-            )
-          : <a href="/console/create-organization">{messages.nav.createOrganization}</a>}
-        {cloud ? <a href="/console/platform">Platform</a> : null}
-      </nav>
-      <div className="shell-body">{children}</div>
-    </div>
+    <BusinessShell
+      organizations={organizations}
+      activeOrganization={{
+        id: session.organization.id,
+        name: session.organization.name,
+        slug: session.organization.slug,
+      }}
+      role={session.role}
+      userEmail={session.user.email}
+      navItems={navItems}
+      localeSwitchHref={`/api/console/locale?locale=${switchLocale}&next=/console`}
+      localeSwitchLabel={localeSwitchLabel}
+    >
+      {children}
+    </BusinessShell>
   );
 }

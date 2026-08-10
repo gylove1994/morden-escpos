@@ -18,6 +18,7 @@
     "utils": "#lib/utils"
   },
   "registries": {
-    "@storybook": "https://registry.lloydrichards.dev/v3/radix/{name}.json"
+    "@storybook": "https://registry.lloydrichards.dev/v3/radix/{name}.json",
+    "@better-auth-ui": "https://better-auth-ui.com/r/{style}/{name}.json"
   }
 }

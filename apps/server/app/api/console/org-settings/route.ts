@@ -37,6 +37,13 @@ export async function PATCH(request: Request) {
     );
   }
 
+  const inactive = await organizationStatusBlockResponse(
+    consoleSession.organization.id,
+  );
+  if (inactive) {
+    return inactive;
+  }
+
   const allowed = await canManageOrganizationSettings(request.headers);
   if (!allowed) {
     return Response.json(

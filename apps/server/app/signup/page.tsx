@@ -4,9 +4,8 @@
  */
 import { redirect } from 'next/navigation';
 import { getConsoleSession } from '../../lib/console-auth';
-import { getConsoleMessages } from '../../lib/i18n/server';
-import { SignUpForm } from '../components/auth-forms';
-import { LocaleSwitcher } from '../components/locale-switcher';
+import { getConsoleAuthLocalization, getConsoleLocale } from '../../lib/console-locale';
+import { AuthShell } from '../components/auth-shell';
 
 export default async function SignUpPage() {
   const session = await getConsoleSession();
@@ -14,18 +13,20 @@ export default async function SignUpPage() {
     redirect('/console');
   }
 
-  const { messages } = await getConsoleMessages();
+  const locale = await getConsoleLocale();
+  const localization = await getConsoleAuthLocalization();
+  const switchLocale = locale === 'en' ? 'zh' : 'en';
 
   return (
-    <main className="auth-panel">
-      <div className="auth-toolbar">
-        <LocaleSwitcher />
-      </div>
-      <h1>{messages.auth.signUpTitle}</h1>
-      <SignUpForm />
-      <p className="muted">
-        <a href="/login">{messages.auth.haveAccount}</a>
+    <AuthShell view="signUp" shell="signup" localization={localization}>
+      <p className="mt-4 text-center text-sm text-muted-foreground">
+        <a
+          href={`/api/console/locale?locale=${switchLocale}&next=/signup`}
+          className="underline underline-offset-4"
+        >
+          {locale === 'en' ? '中文' : 'English'}
+        </a>
       </p>
-    </main>
+    </AuthShell>
   );
 }

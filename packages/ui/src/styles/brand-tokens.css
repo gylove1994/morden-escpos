@@ -1,0 +1,65 @@
+/**
+ * Copyright (c) 2026 morden-escpos-contributors
+ * SPDX-License-Identifier: MIT
+ *
+ * Canonical light brand tokens (promoted from apps/landing). No dark mode.
+ */
+
+:root {
+  --background: oklch(0.97 0.012 165);
+  --foreground: oklch(0.22 0.03 250);
+  --card: oklch(0.995 0.004 160);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.995 0.004 160);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.32 0.04 250);
+  --primary-foreground: oklch(0.98 0.01 160);
+  --secondary: oklch(0.93 0.02 165);
+  --secondary-foreground: oklch(0.28 0.035 250);
+  --muted: oklch(0.94 0.015 170);
+  --muted-foreground: oklch(0.45 0.03 250);
+  --accent: oklch(0.55 0.14 155);
+  --accent-foreground: oklch(0.98 0.01 160);
+  --destructive: oklch(0.55 0.2 25);
+  --border: oklch(0.86 0.02 170);
+  --input: oklch(0.86 0.02 170);
+  --ring: oklch(0.55 0.14 155);
+  --radius: 0.5rem;
+  --ink: oklch(0.22 0.03 250);
+  --paper: oklch(0.985 0.01 120);
+  --queue: oklch(0.42 0.09 200);
+  --license-mit: oklch(0.48 0.11 155);
+  --license-bsl: oklch(0.45 0.08 55);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-queue: var(--queue);
+  --color-license-mit: var(--license-mit);
+  --color-license-bsl: var(--license-bsl);
+  --font-display: var(--font-display), ui-sans-serif, sans-serif;
+  --font-sans: var(--font-sans), ui-sans-serif, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
