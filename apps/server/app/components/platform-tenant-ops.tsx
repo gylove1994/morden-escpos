@@ -5,6 +5,26 @@
 'use client';
 
 import type { OrganizationStatus } from '../../lib/platform/tenant-status';
+import { Alert, AlertDescription } from '@workspace/ui/components/ui/alert';
+import { Badge } from '@workspace/ui/components/ui/badge';
+import { Button } from '@workspace/ui/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@workspace/ui/components/ui/card';
+import { Input } from '@workspace/ui/components/ui/input';
+import { Label } from '@workspace/ui/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@workspace/ui/components/ui/table';
 import { useState } from 'react';
 
 interface PlatformOrganization {
@@ -86,84 +106,127 @@ export function PlatformTenantOps() {
   }
 
   return (
-    <section className="stack">
-      <label className="stack">
-        <span>Platform admin secret</span>
-        <input
-          type="password"
-          autoComplete="off"
-          value={secret}
-          onChange={event => setSecret(event.target.value)}
-          placeholder="PLATFORM_ADMIN_SECRET"
-        />
-      </label>
-
-      <label className="stack">
-        <span>Look up Organization</span>
-        <input
-          type="search"
-          value={query}
-          onChange={event => setQuery(event.target.value)}
-          placeholder="id, slug, or name"
-        />
-      </label>
-
-      <button type="button" disabled={!secret || !query || pending !== null} onClick={() => void lookup()}>
-        {pending === 'lookup' ? 'Looking up…' : 'Lookup'}
-      </button>
-
-      {error ? <p className="error" role="alert">{error}</p> : null}
+    <div className="flex flex-col gap-6">
+      <Card className="max-w-xl">
+        <CardHeader>
+          <CardTitle>Lookup</CardTitle>
+          <CardDescription>
+            Authenticate with
+            {' '}
+            <code>PLATFORM_ADMIN_SECRET</code>
+            {' '}
+            then search by id, slug, or name.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3">
+          <div className="grid gap-1.5">
+            <Label htmlFor="platform-secret">Platform admin secret</Label>
+            <Input
+              id="platform-secret"
+              type="password"
+              autoComplete="off"
+              value={secret}
+              onChange={event => setSecret(event.target.value)}
+              placeholder="PLATFORM_ADMIN_SECRET"
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="platform-query">Organization query</Label>
+            <Input
+              id="platform-query"
+              type="search"
+              value={query}
+              onChange={event => setQuery(event.target.value)}
+              placeholder="id, slug, or name"
+            />
+          </div>
+          <Button
+            type="button"
+            disabled={!secret || !query || pending !== null}
+            onClick={() => void lookup()}
+          >
+            {pending === 'lookup' ? 'Looking up…' : 'Lookup'}
+          </Button>
+          {error
+            ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )
+            : null}
+        </CardContent>
+      </Card>
 
       {results.length > 0
         ? (
-            <ul className="stack">
-              {results.map(org => (
-                <li key={org.id}>
-                  <div>
-                    <strong>{org.name}</strong>
-                    {' '}
-                    (
-                    {org.slug}
-                    )
-                  </div>
-                  <div className="muted">
-                    id:
-                    {' '}
-                    {org.id}
-                  </div>
-                  <div>
-                    Status:
-                    {' '}
-                    <strong>{org.status}</strong>
-                  </div>
-                  <div className="row">
-                    <button
-                      type="button"
-                      disabled={pending !== null || org.status === 'suspended'}
-                      onClick={() => void setStatus(org.id, 'suspended')}
-                    >
-                      Suspend
-                    </button>
-                    <button
-                      type="button"
-                      disabled={pending !== null || org.status === 'banned'}
-                      onClick={() => void setStatus(org.id, 'banned')}
-                    >
-                      Ban
-                    </button>
-                    <button
-                      type="button"
-                      disabled={pending !== null || org.status === 'active'}
-                      onClick={() => void setStatus(org.id, 'active')}
-                    >
-                      Restore
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <Card>
+              <CardHeader>
+                <CardTitle>Results</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Organization</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>ID</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {results.map(org => (
+                      <TableRow key={org.id}>
+                        <TableCell>
+                          <div className="font-medium">{org.name}</div>
+                          <div className="text-xs text-muted-foreground">{org.slug}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={org.status === 'active' ? 'secondary' : 'destructive'}>
+                            {org.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="max-w-[12rem] truncate font-mono text-xs text-muted-foreground">
+                          {org.id}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="secondary"
+                              disabled={pending !== null || org.status === 'suspended'}
+                              onClick={() => void setStatus(org.id, 'suspended')}
+                            >
+                              Suspend
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="destructive"
+                              disabled={pending !== null || org.status === 'banned'}
+                              onClick={() => void setStatus(org.id, 'banned')}
+                            >
+                              Ban
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={pending !== null || org.status === 'active'}
+                              onClick={() => void setStatus(org.id, 'active')}
+                            >
+                              Restore
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           )
         : null}
-    </section>
+    </div>
   );
 }

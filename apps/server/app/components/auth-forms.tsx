@@ -5,6 +5,17 @@
 'use client';
 
 import type { FormEvent } from 'react';
+import { Alert, AlertDescription } from '@workspace/ui/components/ui/alert';
+import { Button } from '@workspace/ui/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@workspace/ui/components/ui/card';
+import { Input } from '@workspace/ui/components/ui/input';
+import { Label } from '@workspace/ui/components/ui/label';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { authClient } from '../../lib/auth-client';
@@ -43,20 +54,49 @@ export function CreateOrganizationForm() {
   }
 
   return (
-    <form className="org-form" onSubmit={onSubmit}>
-      <label>
-        Organization name
-        <input name="name" required minLength={2} placeholder="Acme Prints" />
-      </label>
-      <label>
-        Slug
-        <input name="slug" required minLength={2} placeholder="acme-prints" pattern="[a-z0-9-]+" />
-      </label>
-      {error ? <p className="error" role="alert">{error}</p> : null}
-      <button type="submit" disabled={pending}>
-        {pending ? 'Creating…' : 'Create Organization'}
-      </button>
-    </form>
+    <Card className="max-w-md">
+      <CardHeader>
+        <CardTitle>Organization details</CardTitle>
+        <CardDescription>
+          You become the Organization owner after create.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="grid gap-3" onSubmit={onSubmit}>
+          <div className="grid gap-1.5">
+            <Label htmlFor="org-name">Organization name</Label>
+            <Input
+              id="org-name"
+              name="name"
+              required
+              minLength={2}
+              placeholder="Acme Prints"
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="org-slug">Slug</Label>
+            <Input
+              id="org-slug"
+              name="slug"
+              required
+              minLength={2}
+              placeholder="acme-prints"
+              pattern="[a-z0-9-]+"
+            />
+          </div>
+          {error
+            ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )
+            : null}
+          <Button type="submit" disabled={pending}>
+            {pending ? 'Creating…' : 'Create Organization'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -72,8 +112,8 @@ export function SignOutButton() {
   }
 
   return (
-    <button type="button" className="secondary" disabled={pending} onClick={onClick}>
+    <Button type="button" variant="secondary" size="sm" disabled={pending} onClick={onClick}>
       {pending ? 'Signing out…' : 'Sign out'}
-    </button>
+    </Button>
   );
 }

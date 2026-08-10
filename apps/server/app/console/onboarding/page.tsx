@@ -9,12 +9,14 @@ export default async function OnboardingPage() {
   await requireConsoleOnboarding();
 
   return (
-    <section data-shell="onboarding" className="stack">
-      <h1>Create your Organization</h1>
-      <p className="muted">
-        You become the Organization owner. Business and Platform surfaces stay
-        unavailable until an Organization is active.
-      </p>
+    <section data-shell="onboarding" className="flex flex-col gap-4">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Create your Organization</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          You become the Organization owner. Business and Platform surfaces stay
+          unavailable until an Organization is active.
+        </p>
+      </div>
       <CreateOrganizationForm />
     </section>
   );

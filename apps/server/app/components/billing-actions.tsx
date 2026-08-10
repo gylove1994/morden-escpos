@@ -4,6 +4,8 @@
  */
 'use client';
 
+import { Alert, AlertDescription } from '@workspace/ui/components/ui/alert';
+import { Button } from '@workspace/ui/components/ui/button';
 import { useState } from 'react';
 
 type CheckoutPlan = 'personal' | 'business';
@@ -61,42 +63,49 @@ export function BillingActions({
 
   if (!canManageBilling) {
     return (
-      <p className="muted">
+      <p className="text-sm text-muted-foreground">
         Only Organization owners and admins can change billing.
       </p>
     );
   }
 
   return (
-    <div className="stack">
-      <div className="row" style={{ gap: '0.75rem', flexWrap: 'wrap' }}>
-        <button
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap gap-2">
+        <Button
           type="button"
           disabled={pending !== null}
           onClick={() => void startCheckout('personal')}
         >
           {pending === 'personal' ? 'Redirecting…' : 'Checkout Personal (~$1/mo)'}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           disabled={pending !== null}
           onClick={() => void startCheckout('business')}
         >
           {pending === 'business' ? 'Redirecting…' : 'Checkout Business (~$5+/mo)'}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="secondary"
           disabled={pending !== null || !hasStripeCustomer}
           onClick={() => void openPortal()}
         >
           {pending === 'portal' ? 'Redirecting…' : 'Manage in Customer Portal'}
-        </button>
-        <a className="button-link" href={resellerContactUrl}>
-          Contact for Reseller
-        </a>
+        </Button>
+        <Button type="button" variant="outline" asChild>
+          <a href={resellerContactUrl}>Contact for Reseller</a>
+        </Button>
       </div>
-      {error ? <p className="error">{error}</p> : null}
-      <p className="muted">
+      {error
+        ? (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )
+        : null}
+      <p className="text-sm text-muted-foreground">
         Reseller is contact-only — there is no self-serve Checkout for that path.
       </p>
     </div>

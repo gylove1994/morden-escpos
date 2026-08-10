@@ -10,15 +10,17 @@ import { PlatformTenantOps } from '../../components/platform-tenant-ops';
  */
 export default function PlatformTenantOpsPage() {
   return (
-    <section className="stack" data-testid="platform-tenant-ops">
-      <h1>Platform tenant ops</h1>
-      <p className="muted">
-        Minimal cloud abuse controls: look up an Organization, then suspend or ban
-        it. Requires
-        {' '}
-        <code>PLATFORM_ADMIN_SECRET</code>
-        .
-      </p>
+    <section className="flex flex-col gap-4" data-testid="platform-tenant-ops">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Platform tenant ops</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Minimal cloud abuse controls: look up an Organization, then suspend or ban
+          it. Requires
+          {' '}
+          <code>PLATFORM_ADMIN_SECRET</code>
+          .
+        </p>
+      </div>
       <PlatformTenantOps />
     </section>
   );

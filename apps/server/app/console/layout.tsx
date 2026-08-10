@@ -37,8 +37,11 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
 
   if (!session.organization || plane === 'onboarding') {
     return (
-      <div className="shell" data-shell="onboarding">
-        <header className="shell-header flex items-center justify-between gap-4 py-4">
+      <div
+        className="mx-auto w-[min(40rem,calc(100%-2rem))] py-8"
+        data-shell="onboarding"
+      >
+        <header className="mb-6 flex items-center justify-between gap-4">
           <div>
             <div className="font-semibold">morden-escpos</div>
             <div className="text-sm text-muted-foreground">
@@ -56,8 +59,10 @@ export default async function ConsoleLayout({ children }: { children: ReactNode 
             <SignOutButton />
           </div>
         </header>
-        <nav className="mb-4" aria-label="Onboarding">
-          <a href="/console/onboarding">Onboarding</a>
+        <nav className="mb-4 text-sm" aria-label="Onboarding">
+          <a href="/console/onboarding" className="underline underline-offset-4">
+            Onboarding
+          </a>
         </nav>
         <div>{children}</div>
       </div>
