@@ -4,3 +4,4 @@
  */
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./brand-tokens.css";
